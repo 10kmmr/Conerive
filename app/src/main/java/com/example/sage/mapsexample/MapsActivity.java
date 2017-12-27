@@ -17,6 +17,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
+//import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.LocationCallback;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -29,6 +33,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
@@ -42,12 +49,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private static final String TAG = "MyActivity";
 
-
+    //location
     private FusedLocationProviderClient mFusedLocationClient;
     private Location mLastKnownLocation;
 
+    //firebase
+    FirebaseDatabase database;
+    GeoFire geoFire;
+    //GeoQuery geoQuery;
+        //references to DB
+        DatabaseReference myRef;
+        DatabaseReference ref;
 
-
+    //Controller variables
+    public  String usr= "User1";
     private boolean mLocationPermissionGranted;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
 
@@ -59,7 +74,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
+
         final Toast toast = Toast.makeText(this, "location optained", Toast.LENGTH_LONG);
+        button =(Button)findViewById(R.id.button3);
+
+
+
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -68,18 +89,56 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
 
+
+        //firebase testing--------------------------------------------------------------------------//
+
+
+        // Write a message to the database
+        database = FirebaseDatabase.getInstance();
+        myRef = database.getReference("message");
+        myRef.setValue("Yeno");
+
+        //Writing geo location
+        ref = FirebaseDatabase.getInstance().getReference("path/to/geofire");
+        geoFire = new GeoFire(ref);
+//        geoFire.setLocation(usr, new GeoLocation(37.7853889, -122.4056973));
+
+
+        //------------------------------------------------------------------------------------------//
         getLocationPermission();
 
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            toast.show();
-                        }
-                    }
-                });
+
+
+        //this is just show toast that fusedlocationClient is returning a location
+//        mFusedLocationClient.getLastLocation()
+//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        if (location != null) {
+//                            toast.show();
+//                        }
+//                    }
+//                });
     }
+
+
+    //Button Code
+    public void onClickBtn(View v)
+    {
+        Toast.makeText(this, "Switching user", Toast.LENGTH_SHORT).show();
+        if(usr.equals("User1"))
+            usr = "User2";
+        else
+            usr="User1";
+        Toast.makeText(this, usr, Toast.LENGTH_LONG).show();
+        writeDB();
+
+        setMarkers();
+    }
+
+
+
+
     private void getLocationPermission() {
         /*
          * Request location permission, so that we can get the location of the
@@ -97,6 +156,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
+
+
+
+
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -109,30 +174,83 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        getLocationPermission();
-        @SuppressLint("MissingPermission")
-        Task<Location> locationResult = mFusedLocationClient.getLastLocation();
-        locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
-            @Override
-            public void onComplete(@NonNull Task<Location> task) {
-                if (task.isSuccessful()) {
-                    mLastKnownLocation = task.getResult();
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                            new LatLng(mLastKnownLocation.getLatitude(),
-                                    mLastKnownLocation.getLongitude()), 15));
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude())).title("Marker in Sydney"));
-                } else {
-                    mMap.moveCamera(CameraUpdateFactory
-                            .newLatLngZoom(new LatLng(-34, 151), 15));
-                    mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        //default marker
+//        LatLng sydney = new LatLng(-34, 151);
+//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
-                }
+        writeDB();
+
+        setMarkers();
+
+    }
+
+    private void writeDB() {
+        try {
+            if (mLocationPermissionGranted) {
+                Task<Location> locationResult = mFusedLocationClient.getLastLocation();
+                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Location> task) {
+                        if (task.isSuccessful()) {
+                            mLastKnownLocation = task.getResult();
+//                          mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+//                                    new LatLng(mLastKnownLocation.getLatitude(),
+//                                    mLastKnownLocation.getLongitude()), 15));
+                            /* SEND FIREBASE THE DATA*/
+                            geoFire.setLocation("User1", new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
+                            Log.d(TAG, "onComplete: Wrote to DB");
+//                          mMap.addMarker(new MarkerOptions().position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude())).title("Marker in Sydney"));
+                        } else {
+                            Log.d(TAG, "Current location is null. Using defaults.");
+                            Log.e(TAG, "Exception: %s", task.getException());
+                            mMap.moveCamera(CameraUpdateFactory
+                                    .newLatLngZoom(new LatLng(-34, 151), 15));
+                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                        }
+                    }
+                });
+            }
+        } catch (SecurityException e)  {
+            Log.e("Exception: %s", e.getMessage());
+        }
+    }
+
+    public void setMarkers(){
+
+        //BAD CODE (WET)
+
+        geoFire.getLocation("User1", new LocationCallback() {
+            @Override
+            public void onLocationResult(String key, GeoLocation location) {
+                mMap.moveCamera(CameraUpdateFactory
+                        .newLatLngZoom(new LatLng(location.latitude, location.longitude), 15));
+                mMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title("User1"));
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                mMap.moveCamera(CameraUpdateFactory
+                        .newLatLngZoom(new LatLng(-34, 151), 15));
             }
         });
 
+
+
+        geoFire.getLocation("User2", new LocationCallback() {
+            @Override
+            public void onLocationResult(String key, GeoLocation location) {
+                mMap.moveCamera(CameraUpdateFactory
+                        .newLatLngZoom(new LatLng(location.latitude, location.longitude), 15));
+                mMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title("User2"));
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                mMap.moveCamera(CameraUpdateFactory
+                        .newLatLngZoom(new LatLng(-38, 151), 15));
+            }
+        });
     }
 
 }

@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "505944589113",
+    "firebase_url": "https://roadtrip-app-efa3a.firebaseio.com",
+    "project_id": "roadtrip-app-efa3a",
+    "storage_bucket": "roadtrip-app-efa3a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505944589113:android:da4abc400e29873c",
+        "android_client_info": {
+          "package_name": "com.example.sage.mapsexample"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "505944589113-il1kp84d2etp25i17nm4oa4kla7okhql.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0f_FlVeMVlSkywDjKzp8wHA91Tf8SmjE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
