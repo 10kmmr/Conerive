@@ -63,6 +63,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Controller variables
     public  String usr= "User1";
+    public boolean usrSwitch=false;
     private boolean mLocationPermissionGranted;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
 
@@ -125,13 +126,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //Button Code
     public void onClickBtn(View v)
     {
-        Toast.makeText(this, "Switching user", Toast.LENGTH_SHORT).show();
-        if(usr.equals("User1"))
-            usr = "User2";
+        if(!usrSwitch)
+            usr="User2";
         else
             usr="User1";
+        try {
+            if (mLocationPermissionGranted) {
+                Task<Location> locationResult = mFusedLocationClient.getLastLocation();
+                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Location> task) {
+                        if (task.isSuccessful()) {
+                            mLastKnownLocation = task.getResult();
+//                          mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+//                                    new LatLng(mLastKnownLocation.getLatitude(),
+//                                    mLastKnownLocation.getLongitude()), 15));
+                            /* SEND FIREBASE THE DATA*/
+                            geoFire.setLocation(usr, new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
+                            Log.d(TAG, "onComplete: Wrote to DB");
+//                          mMap.addMarker(new MarkerOptions().position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude())).title("Marker in Sydney"));
+                        } else {
+                            Log.d(TAG, "Current location is null. Using defaults.");
+                            Log.e(TAG, "Exception: %s", task.getException());
+                            mMap.moveCamera(CameraUpdateFactory
+                                    .newLatLngZoom(new LatLng(-34, 151), 15));
+                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                        }
+                    }
+                });
+            }
+        } catch (SecurityException e)  {
+            Log.e("Exception: %s", e.getMessage());
+        }
         Toast.makeText(this, usr, Toast.LENGTH_LONG).show();
-        writeDB();
 
         setMarkers();
     }
@@ -145,9 +172,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
          * device. The result of the permission request is handled by a callback,
          * onRequestPermissionsResult.
          */
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MapsActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             mLocationPermissionGranted = true;
         } else {
             ActivityCompat.requestPermissions(this,
@@ -178,8 +204,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //        LatLng sydney = new LatLng(-34, 151);
 //        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
 //        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-        writeDB();
+        getLocationPermission();
+        @SuppressLint("MissingPermission") Task<Location> locationResult = mFusedLocationClient.getLastLocation();
+        locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+            @Override
+            public void onComplete(@NonNull Task<Location> task) {
+                if (task.isSuccessful()) {
+                    mLastKnownLocation = task.getResult();
+//                          mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+//                                    new LatLng(mLastKnownLocation.getLatitude(),
+//                                    mLastKnownLocation.getLongitude()), 15));
+                            /* SEND FIREBASE THE DATA*/
+                    geoFire.setLocation("User2", new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
+                    Log.d(TAG, "onComplete: Wrote to DB");
+//                          mMap.addMarker(new MarkerOptions().position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude())).title("Marker in Sydney"));
+                } else {
+                    Log.d(TAG, "Current location is null. Using defaults.");
+                    Log.e(TAG, "Exception: %s", task.getException());
+                    mMap.moveCamera(CameraUpdateFactory
+                            .newLatLngZoom(new LatLng(-34, 151), 15));
+                    mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                }
+            }
+        });
 
         setMarkers();
 
