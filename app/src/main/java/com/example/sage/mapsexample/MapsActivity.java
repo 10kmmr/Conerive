@@ -43,6 +43,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -50,6 +51,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     public Button button;
+    List<User> users;
 
 
     private static final String TAG = "MyActivity";
@@ -61,13 +63,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //firebase
     FirebaseDatabase database;
     GeoFire geoFire;
+    GeoFire newGeoFire; //abhijeeth's code
     //GeoQuery geoQuery;
         //references to DB
         DatabaseReference myRef;
         DatabaseReference ref;
+        DatabaseReference newRef; //abhijeeth's code
 
     //Controller variables
-    public  String usr= "User1";
+    public  String usr = "User1";
     public boolean usrSwitch=false;
     private boolean mLocationPermissionGranted;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
@@ -100,6 +104,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Write a message to the database
         database = FirebaseDatabase.getInstance();
         myRef = database.getReference("/path/to/geofire/User2");
+        newRef = database.getReference("User"); //Abhijeeth's code
 
 
         // Read from the database
@@ -108,19 +113,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // This method is called once with the initial value and again
                 // whenever data at this location is updated.
-                //
                 geoFire.getLocation("User2", new LocationCallback() {
-            @Override
-            public void onLocationResult(String key, GeoLocation location) {
-                Log.d(TAG, "this is changed value" + Double.toString(location.latitude));
-            }
+                    @Override
+                    public void onLocationResult(String key, GeoLocation location) {
+                        Log.d(TAG, "this is changed value" + Double.toString(location.latitude));
+                    }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                mMap.moveCamera(CameraUpdateFactory
-                        .newLatLngZoom(new LatLng(-38, 151), 15));
-            }
-        });
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        mMap.moveCamera(CameraUpdateFactory
+                                .newLatLngZoom(new LatLng(-38, 151), 15));
+                    }
+            });
 
 
 
@@ -272,7 +276,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        setMarkers();
+
+        //Abhijeeth's code
+        newGeoFire = new GeoFire(newRef);
+        newRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+//                String value = dataSnapshot.getValue(String.class);
+
+
+                users = new ArrayList<User>();
+                for(DataSnapshot data : dataSnapshot.getChildren()) {
+                    String mobileNumber = data.getKey();
+                    String name = "";
+                    for(DataSnapshot d : data.getChildren()){
+                        name = d.getValue(String.class);
+                    }
+                    users.add(new User(mobileNumber, name));
+                }
+
+                for(User u : users){
+                    Log.d(TAG, "user is: " + u);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w(TAG, "Failed to read value.", error.toException());
+            }
+        });
+
+
+
+
+        //setMarkers();
 
     }
 
