@@ -202,8 +202,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Exception: %s", e.getMessage());
         }
 
-
-
         Toast.makeText(this, usr, Toast.LENGTH_LONG).show();
 
         setMarkers();
