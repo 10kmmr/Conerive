@@ -33,10 +33,15 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -81,8 +86,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         button =(Button)findViewById(R.id.button3);
 
 
-
-
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -96,14 +99,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Write a message to the database
         database = FirebaseDatabase.getInstance();
-        myRef = database.getReference("message");
-        myRef.setValue("Yeno");
+        myRef = database.getReference("/path/to/geofire/User2");
+
+
+        // Read from the database
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                //
+                geoFire.getLocation("User2", new LocationCallback() {
+            @Override
+            public void onLocationResult(String key, GeoLocation location) {
+                Log.d(TAG, "this is changed value" + Double.toString(location.latitude));
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                mMap.moveCamera(CameraUpdateFactory
+                        .newLatLngZoom(new LatLng(-38, 151), 15));
+            }
+        });
+
+
+
+
+
+//                GenericTypeIndicator<List<String>> t = new GenericTypeIndicator<List<String>>() {};
+//                List<String> users = dataSnapshot.getValue(t);
+//                Iterator itr=users.iterator();
+//                while(itr.hasNext()){
+//                    Log.d(TAG, "this is from the looop :" + itr.next());
+//                }
+//                //Log.d(TAG, "Value is: " + users.toString());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                // Failed to read value
+                Log.w(TAG, "Failed to read value.", error.toException());
+            }
+        });
+
 
         //Writing geo location
-        ref = FirebaseDatabase.getInstance().getReference("path/to/geofire");
+        ref = database.getReference("path");
         geoFire = new GeoFire(ref);
 //        geoFire.setLocation(usr, new GeoLocation(37.7853889, -122.4056973));
-
 
         //------------------------------------------------------------------------------------------//
         getLocationPermission();
@@ -158,6 +201,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
+
+
+
         Toast.makeText(this, usr, Toast.LENGTH_LONG).show();
 
         setMarkers();
@@ -267,37 +313,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //BAD CODE (WET)
 
-        geoFire.getLocation("User1", new LocationCallback() {
-            @Override
-            public void onLocationResult(String key, GeoLocation location) {
-                mMap.moveCamera(CameraUpdateFactory
-                        .newLatLngZoom(new LatLng(location.latitude, location.longitude), 15));
-                mMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title("User1"));
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                mMap.moveCamera(CameraUpdateFactory
-                        .newLatLngZoom(new LatLng(-34, 151), 15));
-            }
-        });
-
-
-
-        geoFire.getLocation("User2", new LocationCallback() {
-            @Override
-            public void onLocationResult(String key, GeoLocation location) {
-                mMap.moveCamera(CameraUpdateFactory
-                        .newLatLngZoom(new LatLng(location.latitude, location.longitude), 15));
-                mMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title("User2"));
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                mMap.moveCamera(CameraUpdateFactory
-                        .newLatLngZoom(new LatLng(-38, 151), 15));
-            }
-        });
+//        geoFire.getLocation("User1", new LocationCallback() {
+//            @Override
+//            public void onLocationResult(String key, GeoLocation location) {
+//                mMap.moveCamera(CameraUpdateFactory
+//                        .newLatLngZoom(new LatLng(location.latitude, location.longitude), 15));
+//                mMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title("User1"));
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                mMap.moveCamera(CameraUpdateFactory
+//                        .newLatLngZoom(new LatLng(-34, 151), 15));
+//            }
+//        });
+//
+//
+//
+//        geoFire.getLocation("User2", new LocationCallback() {
+//            @Override
+//            public void onLocationResult(String key, GeoLocation location) {
+//                mMap.moveCamera(CameraUpdateFactory
+//                        .newLatLngZoom(new LatLng(location.latitude, location.longitude), 15));
+//                mMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title("User2"));
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                mMap.moveCamera(CameraUpdateFactory
+//                        .newLatLngZoom(new LatLng(-38, 151), 15));
+//            }
+//        });
     }
 
 }
