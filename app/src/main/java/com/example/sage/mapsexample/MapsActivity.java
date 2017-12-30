@@ -68,7 +68,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //firebase
     FirebaseDatabase database;
     //GeoQuery geoQuery;
-    GeoFire geoFire;
+        GeoFire geoFire;
 
     //
     String CurrentUser="";
@@ -84,7 +84,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public  String usr = "User1";
     public boolean usrSwitch=false;
     private boolean mLocationPermissionGranted;
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private static final int PERMISSIONS_REQUEST_PHONE_CALL = 100;
+    private static final int PERMISSIONS_REQUEST_SMS_MESSAGE = 100;
+
 
 
 
@@ -93,6 +95,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //ask permissions
+        getPhonePermission();
+        getLocationPermission();
+
+
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         button =(Button)findViewById(R.id.button3);
@@ -155,6 +163,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.d(TAG, "user is: " + u);
 
                 Log.d(TAG, "phoneNos : in onCreate :  "+phoneNos.toString());
+                setMarkers();
             }
 
             @Override
@@ -190,54 +199,61 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //Button Code
     public void onClickBtn(View v)
     {
-        if(!usrSwitch)
-            usr="User2";
-        else
-            usr="User1";
-        try {
-            if (mLocationPermissionGranted) {
-                Task<Location> locationResult = mFusedLocationClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Location> task) {
-                        if (task.isSuccessful()) {
-                            mLastKnownLocation = task.getResult();
-                            /* SEND FIREBASE THE DATA*/
-                            geoFire.setLocation(usr, new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
-                            Log.d(TAG, "onComplete: Wrote to DB");
-//                          mMap.addMarker(new MarkerOptions().position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude())).title("Marker in Sydney"));
-                        } else {
-                            ErrorT();
-                        }
-                    }
-                });
-            }
-        } catch (SecurityException e)  {
-            Log.e("Exception: %s", e.getMessage());
-        }
+//        if(!usrSwitch)
+//            usr="User2";
+//        else
+//            usr="User1";
+//        try {
+//            if (mLocationPermissionGranted) {
+//                Task<Location> locationResult = mFusedLocationClient.getLastLocation();
+//                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<Location> task) {
+//                        if (task.isSuccessful()) {
+//                            mLastKnownLocation = task.getResult();
+//                            /* SEND FIREBASE THE DATA*/
+//                            geoFire.setLocation(usr, new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
+//                            Log.d(TAG, "onComplete: Wrote to DB");
+////                          mMap.addMarker(new MarkerOptions().position(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude())).title("Marker in Sydney"));
+//                        } else {
+//                            ErrorT();
+//                        }
+//                    }
+//                });
+//            }
+//        } catch (SecurityException e)  {
+//            Log.e("Exception: %s", e.getMessage());
+//        }
 
-        Toast.makeText(this, usr, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "YENO", Toast.LENGTH_LONG).show();
 
-        setMarkers();
+
     }
 
 
 
 
     private void getLocationPermission() {
-        /*
-         * Request location permission, so that we can get the location of the
-         * device. The result of the permission request is handled by a callback,
-         * onRequestPermissionsResult.
-         */
         if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MapsActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-            mLocationPermissionGranted = true;
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            ActivityCompat.requestPermissions(MapsActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_PHONE_CALL);
+            mLocationPermissionGranted = true;}
+//        } else {
+//            ActivityCompat.requestPermissions(this,
+//                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+//                    1);
+//        }
+    }
+    private void getPhonePermission(){
+        if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ) {
+            ActivityCompat.requestPermissions(MapsActivity.this, new String[]{Manifest.permission.READ_PHONE_STATE}, PERMISSIONS_REQUEST_PHONE_CALL);
+            //mLocationPermissionGranted = true;
         }
+//        else {
+//            ActivityCompat.requestPermissions(this,
+//                    new String[]{Manifest.permission.READ_PHONE_STATE},
+//                    1);
+//        }
+
     }
 
 
@@ -258,8 +274,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        getLocationPermission();
 
         //GETTING LOCATION AND WRITING TO DB
         @SuppressLint("MissingPermission") Task<Location> locationResult = mFusedLocationClient.getLastLocation();
@@ -373,7 +387,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //    }
 //
 //
-
 
 
 
