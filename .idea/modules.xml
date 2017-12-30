@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://D:\roadTripApp\RoadTrip-App\MapsExample.iml" filepath="D:\roadTripApp\RoadTrip-App\MapsExample.iml" />
       <module fileurl="file://$PROJECT_DIR$/RoadTrip-App.iml" filepath="$PROJECT_DIR$/RoadTrip-App.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
