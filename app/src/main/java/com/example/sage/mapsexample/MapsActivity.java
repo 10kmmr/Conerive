@@ -128,7 +128,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         myRef = database.getReference("/path/to/geofire/User2");
         UserObjRef = database.getReference("User");//Abhijeeth's code
         LocationRef = database.getReference("Location");
-        refGeoData=database.getReference("GeoData");
+        refGeoData=database.getReference("Location");
 
         //Writing geo location
         geoFire = new GeoFire(LocationRef);
@@ -293,6 +293,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
         Log.d(TAG, "phoneNos : in onMapReady() :  "+phoneNos.toString());
         setMarkers();
+
+
+        //real time rendering
+
+        refGeoData.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                setMarkers();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                ErrorT();
+            }
+        });
 
     }
 
