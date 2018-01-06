@@ -17,6 +17,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,16 +28,14 @@ public class MainActivity extends AppCompatActivity {
     String[] PERMISSIONS = {android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION};
 
 
-
-    private static final String TAG = "MainActivity" ;
-
+    private static final String TAG = "MainActivity";
 
 
     //fireBase Auth
     private FirebaseAuth mAuth;
 
     //random values
-    private boolean isLoggedin=false;
+    private boolean isLoggedin = false;
     int PERMISSION_ALL = 1;
 
     //View Declarations
@@ -45,6 +47,10 @@ public class MainActivity extends AppCompatActivity {
     public TextView emailD;
     public Button goMap;
 
+    //Database
+    FirebaseDatabase database;
+    DatabaseReference dbref;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,14 +60,25 @@ public class MainActivity extends AppCompatActivity {
         getLocationPermission();
         mAuth = FirebaseAuth.getInstance();
         //view Declarations
-        submit=(Button)findViewById(R.id.Login);
-        Name=(EditText)findViewById(R.id.Name);
-        groupName=(EditText)findViewById(R.id.groupName);
-        Email=(EditText)findViewById(R.id.Email);
-        pass=(EditText)findViewById(R.id.Password);
-        emailD=(TextView)findViewById(R.id.EmailD);
-        goMap=(Button)findViewById(R.id.goMaps);
+        submit = (Button) findViewById(R.id.Login);
+        Name = (EditText) findViewById(R.id.Name);
+        groupName = (EditText) findViewById(R.id.groupName);
+        Email = (EditText) findViewById(R.id.Email);
+        pass = (EditText) findViewById(R.id.Password);
+        emailD = (TextView) findViewById(R.id.EmailD);
+        goMap = (Button) findViewById(R.id.goMaps);
+
+        database = FirebaseDatabase.getInstance();
+
+
+        goMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                done();
+            }
+        });
     }
+
     //firebase Auth methords
     //----------------------------------------------------------------------------------------------//
     @Override
@@ -69,13 +86,11 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser!=null)
-        {
+        if (currentUser != null) {
             Log.d(TAG, "onStart: logged in ");
-            isLoggedin=true;
+            isLoggedin = true;
             updateUI(currentUser);
         }
-
     }
 
 
@@ -89,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
         /*else
             startActivity(intent);*/
     }
+
     public static boolean hasPermissions(Context context, String... permissions) {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
             for (String permission : permissions) {
@@ -103,11 +119,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
-        Log.d(TAG, "onRequestPermissionsResult: requestcode"+requestCode);
-        Log.d(TAG, "onRequestPermissionsResult: permission"+permissions.toString());
-        Log.d(TAG, "onRequestPermissionsResult: grantResult"+grantResults.toString());
+        Log.d(TAG, "onRequestPermissionsResult: requestcode" + requestCode);
+        Log.d(TAG, "onRequestPermissionsResult: permission" + permissions.toString());
+        Log.d(TAG, "onRequestPermissionsResult: grantResult" + grantResults.toString());
         if (requestCode == PERMISSION_ALL) {
-            if(grantResults.length == 3) {
+            if (grantResults.length == 3) {
                 // We can now safely use the API we requested access to
                 Log.d(TAG, "onRequestPermissionsResult: if condition");
                 //startActivity(intent);
@@ -121,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
 // ALL THE PERMISSION CRAP ---------------------------------------------------------------------//
 
 
-    private void updateUI(FirebaseUser currentUser){
+    private void updateUI(FirebaseUser currentUser) {
         Email.setVisibility(View.INVISIBLE);
         pass.setVisibility(View.INVISIBLE);
         submit.setVisibility(View.INVISIBLE);
@@ -133,10 +149,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void SignButton(View v){
-        String email=  Email.getText().toString();
+    public void SignButton(View v) {
+        String email = Email.getText().toString();
         String passW = pass.getText().toString();
-        if(mAuth.getCurrentUser()==null){
+        if (mAuth.getCurrentUser() == null) {
             mAuth.createUserWithEmailAndPassword(email, passW)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
@@ -153,11 +169,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
 
-        }else{
-            signIn(email,passW);
+        } else {
+            signIn(email, passW);
         }
     }
-    private void signIn(String email,String passW){
+
+    private void signIn(String email, String passW) {
         mAuth.signInWithEmailAndPassword(email, passW)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -175,12 +192,30 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-    public void done(View v){
+
+    public void done() {
+        Log.d(TAG, "done: before write");
+        writeDB();
         //WRITE INTENT HERE
-        Intent intent=new Intent(this,MapsActivity.class);
-        intent.putExtra("Name", Name.getText().toString());
-        intent.putExtra("GroupID", groupName.getText().toString());
-        intent.putExtra("UserID", mAuth.getCurrentUser().getUid());
+        Log.d(TAG, "done: after write");
+        nextact();
+    }
+    public void writeDB(){
+        String name=Name.getText().toString();
+        String grpName=groupName.getText().toString();
+        String uniid = mAuth.getCurrentUser().getUid();
+        dbref= database.getReference("Details/"+uniid);
+        database.getReference("Details/"+uniid+"/Name").setValue(name);
+        database.getReference("Details/"+uniid+"/Group").push().setValue(grpName);
+    }
+    public void nextact(){
+        String name=Name.getText().toString();
+        String grpName=groupName.getText().toString();
+        String uniid = mAuth.getCurrentUser().getUid();
+        Intent intent = new Intent(this, MapsActivity.class);
+        intent.putExtra("Name",name );
+        intent.putExtra("GroupID",grpName);
+        intent.putExtra("UserID", uniid);
         startActivity(intent);
     }
 }

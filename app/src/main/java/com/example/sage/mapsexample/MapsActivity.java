@@ -79,7 +79,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(2000); // two minute interval
+        mLocationRequest.setInterval(2000);
         mLocationRequest.setFastestInterval(2000);
 
         // batery shit

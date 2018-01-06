@@ -25,8 +25,8 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="75dp"
         android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Email" />
+        android:hint="Email"
+        android:inputType="textPersonName" />
 
     <EditText
         android:id="@+id/Password"
@@ -36,6 +36,7 @@
         android:layout_alignStart="@+id/Email"
         android:layout_centerVertical="true"
         android:ems="10"
+        android:hint="Password"
         android:inputType="textPassword" />
 
     <EditText
@@ -46,8 +47,8 @@
         android:layout_alignEnd="@+id/Email"
         android:layout_alignRight="@+id/Email"
         android:ems="10"
+        android:hint="Name"
         android:inputType="textPersonName"
-        android:text="Name"
         android:visibility="invisible" />
 
     <EditText
@@ -57,8 +58,8 @@
         android:layout_alignBottom="@+id/Password"
         android:layout_centerHorizontal="true"
         android:ems="10"
+        android:hint="GroupName"
         android:inputType="textPersonName"
-        android:text="GroupName"
         android:visibility="invisible" />
 
     <TextView
@@ -78,7 +79,6 @@
         android:layout_alignBottom="@+id/Login"
         android:layout_alignLeft="@+id/Login"
         android:layout_alignStart="@+id/Login"
-        android:onClick="done"
         android:text="WEEEEEEE"
         android:visibility="invisible" />
 </RelativeLayout>
