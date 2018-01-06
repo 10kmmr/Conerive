@@ -1,6 +1,7 @@
 
 package com.example.sage.mapsexample;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -96,6 +97,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //Button Code
     public void onClickBtn(View v) {
         Toast.makeText(this, "YENO", Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(this, Groupselector.class);
+        intent.putExtra("UserID", userID);
+        startActivity(intent);
     }
     @Override
     public void onPause() {

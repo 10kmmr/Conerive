@@ -20,8 +20,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.util.HashMap;
-
 public class MainActivity extends AppCompatActivity {
 
     //list of permission
@@ -61,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         //view Declarations
         submit = (Button) findViewById(R.id.Login);
-        Name = (EditText) findViewById(R.id.Name);
+        Name = (EditText) findViewById(R.id.gName);
         groupName = (EditText) findViewById(R.id.groupName);
         Email = (EditText) findViewById(R.id.Email);
         pass = (EditText) findViewById(R.id.Password);

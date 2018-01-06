@@ -5,62 +5,57 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/newGroup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:text="New Group"
-        app:layout_constraintBottom_toBottomOf="@+id/listGroups"
-        app:layout_constraintEnd_toEndOf="@+id/listGroups"
-        app:layout_constraintStart_toStartOf="@+id/listGroups" />
-
-    <!--android:visibility="invisible" -->
-
-
     <EditText
-        android:id="@+id/groupName"
+        android:id="@+id/gPassword"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/Password"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="80dp"
-        android:ems="10"
-        android:hint="GroupName"
-        android:inputType="textPersonName"
-        app:layout_constraintBottom_toTopOf="@+id/newGroup"
-        tools:layout_editor_absoluteX="85dp" />
-
-    <EditText
-        android:id="@+id/Name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/Email"
-        android:layout_alignEnd="@+id/Email"
-        android:layout_alignRight="@+id/Email"
+        android:layout_height="49dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:ems="10"
+        android:hint="GroupPassword"
+        android:inputType="textPassword"
+        app:layout_constraintBottom_toTopOf="@+id/newGroup"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.503"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gName"
+        app:layout_constraintVertical_bias="0.494" />
+
+    <Button
+        android:id="@+id/newGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="76dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="New Group"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!--android:visibility="invisible" -->
+
+
+    <EditText
+        android:id="@+id/gName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/Email"
+        android:layout_alignEnd="@+id/Email"
+        android:layout_alignRight="@+id/Email"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="80dp"
+        android:ems="10"
         android:hint="Name"
         android:inputType="textPersonName"
-        app:layout_constraintBottom_toTopOf="@+id/groupName"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/listGroups" />
-
-    <ListView
-        android:id="@+id/listGroups"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:visibility="invisible"
         app:layout_constraintTop_toTopOf="parent" />
+
     <!--android:visibility="invisible" -->
 
 </android.support.constraint.ConstraintLayout>
