@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">MapsExample</string>
     <string name="title_activity_maps">O.o</string>
+    <string name="title_activity_groupselector">Groupselector</string>
 </resources>

@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         String uniid = mAuth.getCurrentUser().getUid();
         dbref= database.getReference("Details/"+uniid);
         database.getReference("Details/"+uniid+"/Name").setValue(name);
-        database.getReference("Details/"+uniid+"/Group").push().setValue(grpName);
+        //database.getReference("Details/"+uniid+"/Group").push().setValue(grpName);
         Intent intent = new Intent(this, MapsActivity.class);
         intent.putExtra("Name",name );
         intent.putExtra("GroupID",grpName);
