@@ -22,56 +22,22 @@ public class User {
     String name;
     String groupID;
     DatabaseReference userReference;
-
-    /*
-        GeoQueryDataEventListener Data;
-        GeoQuery g;
-        DataSnapshot d;
-        GeoLocation lowlow;
-    */
     GoogleMap googleMap;
     Marker marker;
     ValueEventListener listener;
+    GeoFire geoFire;
 
     public User(String mobileNumber, String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
         this.mobileNumber = mobileNumber;
         this.groupID = groupID;
         this.googleMap = googleMap;
-
-       /* g.addGeoQueryEventListener(new GeoQueryEventListener() {
-            @Override
-            public void onKeyEntered(String key, GeoLocation location) {
-                Log.d(TAG, "onKeyEntered: ");
-                marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title(name));
-            }
-
-            @Override
-            public void onKeyExited(String key) {
-
-            }
-
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
-
-            }
-
-            @Override
-            public void onGeoQueryReady() {
-
-            }
-
-            @Override
-            public void onGeoQueryError(DatabaseError error) {
-
-            }
-        });
-        */ // OLD CODE
         Log.d(TAG, "user-path :"+"Root/"+this.groupID+"/"+this.mobileNumber);
         userReference = Db.getReference("Root/"+this.groupID+"/"+this.mobileNumber);
+        geoFire = new GeoFire(userReference);
         listener = userReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                GeoFire geoFire = new GeoFire(userReference);
+
                 name = dataSnapshot.child("Name").getValue(String.class);
                 geoFire.getLocation("Location", new LocationCallback() {
                     @Override

@@ -1,11 +1,8 @@
 package com.example.sage.mapsexample;
-
-import android.*;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -15,9 +12,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
-
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -33,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity" ;
 
-    Intent intent;
+
 
     //fireBase Auth
     private FirebaseAuth mAuth;
@@ -56,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        intent=new Intent(this,MapsActivity.class);
+
         getLocationPermission();
         mAuth = FirebaseAuth.getInstance();
         //view Declarations
@@ -91,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "getLocationPermission: ");
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
-            }
+        }
         /*else
             startActivity(intent);*/
     }
@@ -117,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                 // We can now safely use the API we requested access to
                 Log.d(TAG, "onRequestPermissionsResult: if condition");
                 //startActivity(intent);
-                
+
             } else {
                 // Permission was denied or request was cancelled
                 Log.d(TAG, "onRequestPermissionsResult: else");
@@ -138,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         goMap.setVisibility(View.VISIBLE);
     }
 
-    
+
     public void SignButton(View v){
         String email=  Email.getText().toString();
         String passW = pass.getText().toString();
@@ -160,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
                     });
 
         }else{
-           signIn(email,passW);
+            signIn(email,passW);
         }
     }
     private void signIn(String email,String passW){
@@ -183,6 +177,10 @@ public class MainActivity extends AppCompatActivity {
     }
     public void done(View v){
         //WRITE INTENT HERE
-
+        Intent intent=new Intent(this,MapsActivity.class);
+        intent.putExtra("Name", Name.getText().toString());
+        intent.putExtra("GroupID", groupName.getText().toString());
+        intent.putExtra("UserID", mAuth.getCurrentUser().getUid());
+        startActivity(intent);
     }
 }
