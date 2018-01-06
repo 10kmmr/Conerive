@@ -194,24 +194,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void done() {
-        Log.d(TAG, "done: before write");
-        writeDB();
-        //WRITE INTENT HERE
-        Log.d(TAG, "done: after write");
-        nextact();
-    }
-    public void writeDB(){
         String name=Name.getText().toString();
         String grpName=groupName.getText().toString();
         String uniid = mAuth.getCurrentUser().getUid();
         dbref= database.getReference("Details/"+uniid);
         database.getReference("Details/"+uniid+"/Name").setValue(name);
         database.getReference("Details/"+uniid+"/Group").push().setValue(grpName);
-    }
-    public void nextact(){
-        String name=Name.getText().toString();
-        String grpName=groupName.getText().toString();
-        String uniid = mAuth.getCurrentUser().getUid();
         Intent intent = new Intent(this, MapsActivity.class);
         intent.putExtra("Name",name );
         intent.putExtra("GroupID",grpName);
