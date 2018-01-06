@@ -23,6 +23,7 @@ public class Groupselector extends AppCompatActivity {
     public ListView listGroups;
     public EditText gName;
     public EditText gPassword;
+    public Button join;
 
     //firebase
     FirebaseAuth mAuth;
@@ -44,6 +45,7 @@ public class Groupselector extends AppCompatActivity {
         //listGroups = (ListView)findViewById(R.id.listGroups);
         gName = (EditText)findViewById(R.id.gName);
         gPassword= (EditText)findViewById(R.id.gPassword);
+        join = (Button)findViewById(R.id.join);
         userID = getIntent().getStringExtra("UserID");
 
 
@@ -59,6 +61,14 @@ public class Groupselector extends AppCompatActivity {
                 db.getReference("Groups/"+pushID+"/Admin").setValue(userID);
                 db.getReference("Groups/"+pushID+"/Password").setValue(newgPass);
                 db.getReference("Groups/"+pushID+"/NoOfpeople").setValue(0);
+                db.getReference("Details/"+userID+"/Group/"+pushID).setValue(newGroup);
+            }
+        });
+
+        join.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
             }
         });
     }

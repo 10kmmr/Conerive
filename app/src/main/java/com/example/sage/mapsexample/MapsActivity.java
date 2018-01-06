@@ -99,6 +99,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Toast.makeText(this, "YENO", Toast.LENGTH_LONG).show();
         Intent intent = new Intent(this, Groupselector.class);
         intent.putExtra("UserID", userID);
+        intent.putExtra("Name",Name );
+        intent.putExtra("GroupID",groupID);
         startActivity(intent);
     }
     @Override
