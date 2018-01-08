@@ -67,7 +67,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         groupID = getIntent().getStringExtra("GroupID");
         userID = getIntent().getStringExtra("UserID");
         Name = getIntent().getStringExtra("Name");
-
+        //this is comment ok? yay you found it
 
         database = FirebaseDatabase.getInstance();
         groupReference = database.getReference("Root/"+groupID);
