@@ -11,7 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -37,13 +37,13 @@ public class MainActivity extends AppCompatActivity {
     int PERMISSION_ALL = 1;
 
     //View Declarations
-    public Button submit;
+    public Button login;
     public EditText Name;
     public EditText pass;
     public EditText Email;
-    public EditText groupName;
-    public TextView emailD;
-    public Button goMap;
+    public EditText PhoneNumber;
+    public Button signUp;
+    public Button getStarted;
 
     //Database
     FirebaseDatabase database;
@@ -58,23 +58,42 @@ public class MainActivity extends AppCompatActivity {
         getLocationPermission();
         mAuth = FirebaseAuth.getInstance();
         //view Declarations
-        submit = (Button) findViewById(R.id.Login);
-        Name = (EditText) findViewById(R.id.gName);
-        groupName = (EditText) findViewById(R.id.groupName);
+        login = (Button) findViewById(R.id.Login);
+        Name = (EditText) findViewById(R.id.Name);
         Email = (EditText) findViewById(R.id.Email);
         pass = (EditText) findViewById(R.id.Password);
-        emailD = (TextView) findViewById(R.id.EmailD);
-        goMap = (Button) findViewById(R.id.goMaps);
+        signUp = (Button)findViewById(R.id.signUp);
+        PhoneNumber = (EditText)findViewById(R.id.PhoneNumber);
+        getStarted = (Button)findViewById(R.id.getStarted);
 
         database = FirebaseDatabase.getInstance();
 
 
-        goMap.setOnClickListener(new View.OnClickListener() {
+        signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                done();
+                updateUI();
             }
         });
+        login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String email = Email.getText().toString();
+                String passW = pass.getText().toString();
+                signIn(email, passW);
+            }
+        });
+        getStarted.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String email = Email.getText().toString();
+                String passW = pass.getText().toString();
+                String PhoneNo=PhoneNumber.getText().toString();
+                String nameString = Name.getText().toString();
+                SignupButton(email,passW,PhoneNo,nameString);
+            }
+        });
+
     }
 
     //firebase Auth methords
@@ -87,8 +106,7 @@ public class MainActivity extends AppCompatActivity {
         if (currentUser != null) {
             Log.d(TAG, "onStart: logged in ");
             isLoggedin = true;
-            //updateUI(currentUser);
-            //Intent loggedin = new Intent(Groupselector.class)
+            NextActivity();
         }
     }
 
@@ -100,8 +118,6 @@ public class MainActivity extends AppCompatActivity {
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
-        /*else
-            startActivity(intent);*/
     }
 
     public static boolean hasPermissions(Context context, String... permissions) {
@@ -136,21 +152,18 @@ public class MainActivity extends AppCompatActivity {
 // ALL THE PERMISSION CRAP ---------------------------------------------------------------------//
 
 
-    private void updateUI(FirebaseUser currentUser) {
-        Email.setVisibility(View.INVISIBLE);
-        pass.setVisibility(View.INVISIBLE);
-        submit.setVisibility(View.INVISIBLE);
+    private void updateUI() {
+
+        login.setVisibility(View.INVISIBLE);
+        signUp.setVisibility(View.INVISIBLE);
+
         Name.setVisibility(View.VISIBLE);
-        groupName.setVisibility(View.VISIBLE);
-        emailD.setVisibility(View.VISIBLE);
-        emailD.setText(currentUser.getEmail());
-        goMap.setVisibility(View.VISIBLE);
+        PhoneNumber.setVisibility(View.VISIBLE);
+        getStarted.setVisibility(View.VISIBLE);
     }
 
 
-    public void SignButton(View v) {
-        String email = Email.getText().toString();
-        String passW = pass.getText().toString();
+    public void SignupButton(final String email, String passW, final String nameString, final String PhoneNumber) {
         if (mAuth.getCurrentUser() == null) {
             mAuth.createUserWithEmailAndPassword(email, passW)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -160,16 +173,16 @@ public class MainActivity extends AppCompatActivity {
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d(TAG, "createUserWithEmail:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
-                                updateUI(user);
+                                database.getReference("Details/"+mAuth.getUid()+"/Name").setValue(nameString);
+                                database.getReference("Details/"+mAuth.getUid()+"/phonenumber").setValue(PhoneNumber);
+                                database.getReference("Details/"+mAuth.getUid()+"/Email").setValue(email);
+                                NextActivity();
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Log.w(TAG, "createUserWithEmail:failure", task.getException());
                             }
                         }
                     });
-
-        } else {
-            signIn(email, passW);
         }
     }
 
@@ -182,27 +195,33 @@ public class MainActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            updateUI(user);
+                            NextActivity();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
-                            updateUI(null);
                         }
                     }
                 });
     }
 
-    public void done() {
-        String name=Name.getText().toString();
-        String grpName=groupName.getText().toString();
-        String uniid = mAuth.getCurrentUser().getUid();
-        dbref= database.getReference("Details/"+uniid);
-        database.getReference("Details/"+uniid+"/Name").setValue(name);
-        //database.getReference("Details/"+uniid+"/Group").push().setValue(grpName);
-        Intent intent = new Intent(this, MapsActivity.class);
-        intent.putExtra("Name",name );
-        intent.putExtra("GroupID",grpName);
-        intent.putExtra("UserID", uniid);
-        startActivity(intent);
+//    public void done() {
+//        String name=Name.getText().toString();
+//        String uniid = mAuth.getCurrentUser().getUid();
+//        dbref= database.getReference("Details/"+uniid);
+//        database.getReference("Details/"+uniid+"/Name").setValue(name);
+//        //database.getReference("Details/"+uniid+"/Group").push().setValue(grpName);
+//        Intent intent = new Intent(this, MapsActivity.class);
+//        intent.putExtra("Name",name );
+//        intent.putExtra("GroupID",grpName);
+//        intent.putExtra("UserID", uniid);
+//        startActivity(intent);
+//    }
+    public void NextActivity(){
+        Intent loggedin = new Intent(this,Groupselector.class);
+        String Name =database.getReference("Details/"+mAuth.getUid()+"/Name").getKey();
+        loggedin.putExtra("UserID", mAuth.getUid());
+        loggedin.putExtra("Name" , Name);
+        loggedin.putExtra("GroupID" , "NULL");
+        startActivity(loggedin);
     }
 }

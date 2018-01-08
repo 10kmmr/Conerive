@@ -13,72 +13,79 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="119dp"
-        android:onClick="SignButton"
-        android:text="Login" />
+        android:layout_marginBottom="37dp"
+        android:text="Login"
+        android:visibility="visible" />
 
     <EditText
         android:id="@+id/Email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="75dp"
+        android:layout_above="@+id/PhoneNumber"
+        android:layout_alignLeft="@+id/Name"
+        android:layout_alignStart="@+id/Name"
+        android:layout_marginBottom="25dp"
         android:ems="10"
         android:hint="Email"
-        android:inputType="textPersonName" />
+        android:inputType="textPersonName"
+        android:visibility="visible" />
 
     <EditText
         android:id="@+id/Password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/Email"
-        android:layout_alignStart="@+id/Email"
+        android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:ems="10"
         android:hint="Password"
-        android:inputType="textPassword" />
+        android:inputType="textPassword"
+        android:visibility="visible" />
 
     <EditText
-        android:id="@+id/gName"
+        android:id="@+id/Name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/Email"
-        android:layout_alignEnd="@+id/Email"
-        android:layout_alignRight="@+id/Email"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="19dp"
         android:ems="10"
         android:hint="Name"
         android:inputType="textPersonName"
         android:visibility="invisible" />
 
-    <EditText
-        android:id="@+id/groupName"
+    <Button
+        android:id="@+id/signUp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/Password"
-        android:layout_centerHorizontal="true"
-        android:ems="10"
-        android:hint="GroupName"
-        android:inputType="textPersonName"
-        android:visibility="invisible" />
+        android:layout_above="@+id/Login"
+        android:layout_alignLeft="@+id/Login"
+        android:layout_alignStart="@+id/Login"
+        android:layout_marginBottom="40dp"
+        android:text="Signup"
+        android:visibility="visible" />
 
-    <TextView
-        android:id="@+id/EmailD"
+    <EditText
+        android:id="@+id/PhoneNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/gName"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="16dp"
-        android:text="nothing"
+        android:layout_above="@+id/Password"
+        android:layout_alignLeft="@+id/Email"
+        android:layout_alignStart="@+id/Email"
+        android:layout_marginBottom="23dp"
+        android:ems="10"
+        android:hint="Phone Number"
+        android:inputType="number"
         android:visibility="invisible" />
 
     <Button
-        android:id="@+id/goMaps"
+        android:id="@+id/getStarted"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/Login"
-        android:layout_alignLeft="@+id/Login"
-        android:layout_alignStart="@+id/Login"
-        android:text="WEEEEEEE"
+        android:layout_alignEnd="@+id/signUp"
+        android:layout_alignRight="@+id/signUp"
+        android:layout_alignTop="@+id/signUp"
+        android:layout_marginTop="18dp"
+        android:text="GET STARTED"
         android:visibility="invisible" />
+
 </RelativeLayout>

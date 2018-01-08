@@ -2,10 +2,7 @@ package com.example.sage.mapsexample;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -44,10 +41,11 @@ public class Groupselector extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_groupselector);
 
-        //Intent receive daa
+        //Intent receive da
         groupID = getIntent().getStringExtra("GroupID");
         userID = getIntent().getStringExtra("UserID");
         Name = getIntent().getStringExtra("Name");
+
 
         //Intent to send
         goback= new Intent(this, MapsActivity.class);
@@ -58,7 +56,7 @@ public class Groupselector extends AppCompatActivity {
         //View controllers
         newGroup = (Button)findViewById(R.id.newGroup);
         //listGroups = (ListView)findViewById(R.id.listGroups);
-        gName = (EditText)findViewById(R.id.gName);
+        gName = (EditText)findViewById(R.id.Name);
         gPassword= (EditText)findViewById(R.id.gPassword);
         join = (Button)findViewById(R.id.join);
 
