@@ -87,7 +87,8 @@ public class MainActivity extends AppCompatActivity {
         if (currentUser != null) {
             Log.d(TAG, "onStart: logged in ");
             isLoggedin = true;
-            updateUI(currentUser);
+            //updateUI(currentUser);
+            //Intent loggedin = new Intent(Groupselector.class)
         }
     }
 

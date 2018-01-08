@@ -43,6 +43,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public String userID;
     public String Name;
 
+
     //location
     private FusedLocationProviderClient mFusedLocationClient;
     private Location mLastKnownLocation;
@@ -67,6 +68,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         groupID = getIntent().getStringExtra("GroupID");
         userID = getIntent().getStringExtra("UserID");
         Name = getIntent().getStringExtra("Name");
+
 
         database = FirebaseDatabase.getInstance();
         groupReference = database.getReference("Root/"+groupID);

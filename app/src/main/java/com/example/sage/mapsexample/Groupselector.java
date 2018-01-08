@@ -1,5 +1,6 @@
 package com.example.sage.mapsexample;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -32,21 +33,36 @@ public class Groupselector extends AppCompatActivity {
     //array list to store
     List<String> Groups=new ArrayList<String>();
 
+    Intent goback;
+
     String userID;
+    String groupID;
+    String Name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_groupselector);
 
+        //Intent receive daa
+        groupID = getIntent().getStringExtra("GroupID");
+        userID = getIntent().getStringExtra("UserID");
+        Name = getIntent().getStringExtra("Name");
+
+        //Intent to send
+        goback= new Intent(this, MapsActivity.class);
+
+
         db=FirebaseDatabase.getInstance();
 
+        //View controllers
         newGroup = (Button)findViewById(R.id.newGroup);
         //listGroups = (ListView)findViewById(R.id.listGroups);
         gName = (EditText)findViewById(R.id.gName);
         gPassword= (EditText)findViewById(R.id.gPassword);
         join = (Button)findViewById(R.id.join);
-        userID = getIntent().getStringExtra("UserID");
+
+
 
 
         //listGroups.setVisibility(View.VISIBLE);
@@ -62,6 +78,12 @@ public class Groupselector extends AppCompatActivity {
                 db.getReference("Groups/"+pushID+"/Password").setValue(newgPass);
                 db.getReference("Groups/"+pushID+"/NoOfpeople").setValue(0);
                 db.getReference("Details/"+userID+"/Group/"+pushID).setValue(newGroup);
+
+
+                goback.putExtra("UserID", userID);
+                goback.putExtra("Name",Name );
+                goback.putExtra("GroupID",pushID);
+                startActivity(goback);
             }
         });
 
