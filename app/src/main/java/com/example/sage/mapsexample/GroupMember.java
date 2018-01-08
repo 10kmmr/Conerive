@@ -17,21 +17,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import static android.content.ContentValues.TAG;
 
-public class UserClass extends User{
-    String mobileNumber;
-    String name;
+public class GroupMember extends User{
     String groupID;
-    DatabaseReference userReference;
-    GoogleMap googleMap;
-    Marker marker;
     ValueEventListener listener;
-    GeoFire geoFire;
 
-    public UserClass(String mobileNumber, String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
+    public GroupMember(String mobileNumber, String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
         this.mobileNumber = mobileNumber;
         this.groupID = groupID;
         this.googleMap = googleMap;
-        Log.d(TAG, "user-path :"+"Root/"+this.groupID+"/"+this.mobileNumber);
         userReference = Db.getReference("Root/"+this.groupID+"/"+this.mobileNumber);
         geoFire = new GeoFire(userReference);
         listener = userReference.addValueEventListener(new ValueEventListener() {
@@ -42,7 +35,6 @@ public class UserClass extends User{
                 geoFire.getLocation("Location", new LocationCallback() {
                     @Override
                     public void onLocationResult(String key, GeoLocation location) {
-                        Log.d(TAG, "location of  "+name+" has changed");
                         if(marker!=null)
                             marker.remove();
                         marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title(name));
@@ -59,6 +51,8 @@ public class UserClass extends User{
             }
         });
     }
+
+    @Override
     public String toString(){
         return groupID+ " : " +mobileNumber + " : " + name;
     }

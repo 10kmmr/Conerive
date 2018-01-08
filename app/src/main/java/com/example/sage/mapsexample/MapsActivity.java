@@ -33,7 +33,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback { /* can use LocationListener class */
@@ -55,7 +54,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DatabaseReference groupReference;
     DatabaseReference ownerReference;
 
-    HashMap<String, User> users = new HashMap<>();
+    HashMap<String, GroupMember> users = new HashMap<>();
 
     private static final String TAG = "MyActivity";
 
@@ -146,7 +145,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 String userID = dataSnapshot.getKey();
-                users.put(userID, new User(userID, groupID, mMap, database));
+                users.put(userID, new GroupMember(userID, groupID, mMap, database));
                 Log.d(TAG, "map :"+users.keySet());
             }
 
@@ -157,7 +156,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                //error when child is removed due to persistent event listener
+                users.get(dataSnapshot.getKey()).releaseListener();
+                users.remove(dataSnapshot.getKey());
             }
 
             @Override
@@ -179,14 +179,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
-
-
-
-
-    //New methods after extending the current class------------------------------------------------//
-
-
     LocationCallback mLocationCallback = new LocationCallback(){
         @Override
         public void onLocationResult(LocationResult locationResult) {
@@ -201,32 +193,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     };
-//
-//    @Override
-//    public void onLocationChanged(Location location) {
-//
-//    }
-//
-//    @Override
-//    public void onStatusChanged(String provider, int status, Bundle extras) {
-//
-//    }
-//
-//    @Override
-//    public void onProviderEnabled(String provider) {
-//
-//    }
-//
-//    @Override
-//    public void onProviderDisabled(String provider) {
-//
-//    }
-//
-//    @Override
-//    public void onPointerCaptureChanged(boolean hasCapture) {
-//
-//    }
 
-
-    //New methods after extending the current class------------------------------------------------//
 }

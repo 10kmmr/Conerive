@@ -1,8 +1,20 @@
 package com.example.sage.mapsexample;
 
-/**
- * Created by rkinabhi on 08-01-2018.
- */
+import com.firebase.geofire.GeoFire;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.Marker;
+import com.google.firebase.database.DatabaseReference;
 
 public class User {
+    String mobileNumber;
+    String name;
+    GoogleMap googleMap;
+    Marker marker;
+    DatabaseReference userReference;
+    GeoFire geoFire;
+
+    @Override
+    public String toString(){
+        return mobileNumber + " : " + name;
+    }
 }
