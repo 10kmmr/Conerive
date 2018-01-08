@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         if (currentUser != null) {
             Log.d(TAG, "onStart: logged in ");
             isLoggedin = true;
-            //NextActivity();
+            NextActivity();
         }
     }
 
