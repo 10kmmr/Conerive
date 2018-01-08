@@ -111,11 +111,13 @@ public class Groupselector extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         for(DataSnapshot names : dataSnapshot.getChildren()){
-                            if(names.getKey().equals(Group))
-                                groupID=names.getValue().toString();
+                            if(names.getKey().equals(Group)) {
+                                groupID = names.getValue().toString();
+                                MakeLog("in getting groupID :" + groupID);
                                 //Set 2
                                 Getpassword_handleAsyc(gPass);
                                 //Set 3 Security is handled inside that functions only
+                            }
                         }
                     }
                     @Override
@@ -135,7 +137,7 @@ public class Groupselector extends AppCompatActivity {
 
                 String GeneratedGroupID =db.getReference("Groups/").push().getKey();
                 db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroup);
-                db.getReference("GroupIDTable/"+GeneratedGroupID).setValue(newGroup);
+                db.getReference("GroupIDTable/"+newGroup).setValue(GeneratedGroupID);
                 db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
                 db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
                 db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
@@ -155,7 +157,6 @@ public class Groupselector extends AppCompatActivity {
         maps.putExtra("Name",Name );
         maps.putExtra("GroupID",groupID);
         startActivity(maps);
-
     }
     public void MakeToast(String message){
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
@@ -164,9 +165,11 @@ public class Groupselector extends AppCompatActivity {
         Log.d(TAG, "MakeLog: " +mesaage);
     }
     public void Getpassword_handleAsyc(final String gPass){
-            db.getReference("Groups").child(groupID).addValueEventListener(new ValueEventListener() {
+            MakeLog("before asyc"+groupID);
+            db.getReference("Groups/"+groupID).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
+                    MakeLog("insdie "+dataSnapshot.toString());
                     passW=dataSnapshot.child("Password").getValue().toString();
                     //Set 3 Security
                     GroupLogin(gPass);
@@ -179,10 +182,13 @@ public class Groupselector extends AppCompatActivity {
             });
     }
     public void GroupLogin(String pass){
-        if(passW.equals(pass)){
-            NextActivity();
-        }else{
-            MakeToast("HMMMMMM :/ ");
-        }
+       if(!passW.isEmpty())
+            if(passW.equals(pass)){
+                NextActivity();
+            }else{
+                MakeToast("HMMMMMM :/ ");
+            }
+        else
+            MakeToast("no pass");
     }
 }

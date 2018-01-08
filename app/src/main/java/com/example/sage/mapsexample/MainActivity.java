@@ -17,8 +17,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
+    Intent loggedin;
 
     //fireBase Auth
     private FirebaseAuth mAuth;
@@ -68,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
         database = FirebaseDatabase.getInstance();
 
+        loggedin = new Intent(this,Groupselector.class);
 
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
                 String passW = pass.getText().toString();
                 String PhoneNo=PhoneNumber.getText().toString();
                 String nameString = Name.getText().toString();
-                SignupButton(email,passW,PhoneNo,nameString);
+                SignupButton(email,passW,nameString,PhoneNo);
             }
         });
 
@@ -194,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithEmail:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
+                            //FirebaseUser user = mAuth.getCurrentUser();
                             NextActivity();
                         } else {
                             // If sign in fails, display a message to the user.
@@ -217,11 +222,20 @@ public class MainActivity extends AppCompatActivity {
 //        startActivity(intent);
 //    }
     public void NextActivity(){
-        Intent loggedin = new Intent(this,Groupselector.class);
-        String Name =database.getReference("Details/"+mAuth.getUid()+"/Name").getKey();
-        loggedin.putExtra("UserID", mAuth.getUid());
-        loggedin.putExtra("Name" , Name);
-        loggedin.putExtra("GroupID" , "NULL");
-        startActivity(loggedin);
+        database.getReference("Details").child(mAuth.getUid()).child("Name").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                loggedin.putExtra("UserID", mAuth.getUid());
+                loggedin.putExtra("Name" , dataSnapshot.getValue().toString());
+                loggedin.putExtra("GroupID" , "NULL");
+                startActivity(loggedin);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
     }
 }
