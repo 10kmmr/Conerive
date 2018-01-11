@@ -67,6 +67,7 @@ public class GroupMember extends User{
     }
 
     public void releaseListener(){
+        marker.remove();
         userReference.removeEventListener(listener);
     }
 }
