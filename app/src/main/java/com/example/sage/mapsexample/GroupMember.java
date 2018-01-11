@@ -7,6 +7,8 @@ import com.firebase.geofire.LocationCallback;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryDataEventListener;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -40,7 +42,7 @@ public class GroupMember extends User{
                         if(marker!=null)
                             marker.remove();
                         try {
-                            marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title(name));
+                            marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_name)));
                         } catch (NullPointerException e){
                             Log.d(TAG, "onLocationResult: "+e);
                             releaseListener();
