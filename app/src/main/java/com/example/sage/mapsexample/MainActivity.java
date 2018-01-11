@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         getStarted.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG, "onClick: hello world");
                 String email = Email.getText().toString();
                 String passW = pass.getText().toString();
                 String PhoneNo=PhoneNumber.getText().toString();
@@ -226,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 loggedin.putExtra("UserID", mAuth.getUid());
+                Log.d(TAG, "what is name here: "+dataSnapshot.getValue().toString());
                 loggedin.putExtra("Name" , dataSnapshot.getValue().toString());
                 loggedin.putExtra("GroupID" , "NULL");
                 startActivity(loggedin);

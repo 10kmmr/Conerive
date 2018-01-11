@@ -37,7 +37,12 @@ public class GroupMember extends User{
                     public void onLocationResult(String key, GeoLocation location) {
                         if(marker!=null)
                             marker.remove();
-                        marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title(name));
+                        try {
+                            marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title(name));
+                        } catch (NullPointerException e){
+                            Log.d(TAG, "onLocationResult: "+e);
+                            releaseListener();
+                        }
                     }
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
