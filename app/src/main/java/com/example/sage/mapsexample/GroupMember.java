@@ -20,6 +20,7 @@ import static android.content.ContentValues.TAG;
 public class GroupMember extends User{
     String groupID;
     ValueEventListener listener;
+    GeoLocation userLocation;
 
     public GroupMember(String mobileNumber, String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
         this.mobileNumber = mobileNumber;
@@ -35,6 +36,7 @@ public class GroupMember extends User{
                 geoFire.getLocation("Location", new LocationCallback() {
                     @Override
                     public void onLocationResult(String key, GeoLocation location) {
+                        userLocation = location;
                         if(marker!=null)
                             marker.remove();
                         try {

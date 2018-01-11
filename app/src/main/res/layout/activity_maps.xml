@@ -11,13 +11,31 @@ android:layout_height="fill_parent">
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/button3"
+        android:layout_below="@+id/groupMembers"
         tools:context="com.example.sage.mapsexample.MapsActivity" />
-    <Button
-        android:id="@+id/button3"
+
+    <Spinner
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:text="Manage Groups"
-        android:onClick="onClickBtn"/>
+        android:id="@+id/groupMembers"
+        android:layout_below="@+id/topButtonBar">
+    </Spinner>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/topButtonBar">
+
+        <Button
+            android:id="@+id/button3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:text="Manage Groups"
+            android:onClick="onClickBtn"/>
+
+
+    </LinearLayout>
+
 </RelativeLayout>

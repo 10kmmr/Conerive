@@ -11,6 +11,9 @@ import android.os.Bundle;
 import android.location.*;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.Toast;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -33,6 +36,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback { /* can use LocationListener class */
@@ -41,6 +45,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public String groupID;
     public String userID;
     public String Name;
+    Spinner spinner;
+    ArrayAdapter<String> adapter;
 
 
     //location
@@ -73,6 +79,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         groupReference = database.getReference("Root/"+groupID);
         ownerReference = database.getReference("Root/"+groupID+"/"+userID);
         ownerGeoFireObject = new GeoFire(ownerReference);
+        spinner = (Spinner)findViewById(R.id.groupMembers);
+        adapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item, new ArrayList<String>());
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+               try{
+                GroupMember temp = users.get(spinner.getSelectedItem().toString());
+                mMap.moveCamera(CameraUpdateFactory
+                        .newLatLngZoom(new LatLng(temp.userLocation.latitude, temp.userLocation.longitude), 15));
+
+               } catch (Exception e){
+
+               }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         //Location
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -147,6 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 String userID = dataSnapshot.getKey();
                 users.put(userID, new GroupMember(userID, groupID, mMap, database));
                 Log.d(TAG, "map :"+users.keySet());
+                adapter.add(userID);
             }
 
             @Override
