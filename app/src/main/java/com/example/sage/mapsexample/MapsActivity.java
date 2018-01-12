@@ -154,7 +154,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (task.isSuccessful()) {
 
                     mLastKnownLocation = task.getResult();
-                    database.getReference("Root/"+groupID+"/"+userID+"/Name").setValue(Name);
                     ownerGeoFireObject.setLocation("Location", new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
                     googleMap.moveCamera(CameraUpdateFactory
                             .newLatLngZoom(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), 15));

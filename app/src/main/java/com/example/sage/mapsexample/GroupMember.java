@@ -24,17 +24,31 @@ public class GroupMember extends User{
     ValueEventListener listener;
     GeoLocation userLocation;
 
-    public GroupMember(final String userID, final String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
+    public GroupMember(final String userID, final String groupID, final GoogleMap googleMap , final FirebaseDatabase database){
         this.userID = userID;
         this.groupID = groupID;
         this.googleMap = googleMap;
-        userReference = Db.getReference("Root/"+this.groupID+"/"+this.userID);
+        userReference = database.getReference("Root/"+this.groupID+"/"+this.userID);
         geoFire = new GeoFire(userReference);
         listener = userReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
-                name = dataSnapshot.child("Name").getValue(String.class);
+                database.getReference("Details/"+userID).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        name =  dataSnapshot.child("Name").getValue(String.class);
+                        mobileNumber = dataSnapshot.child("phonenumber").getValue(String.class);
+                        marker.setSnippet("mobile: "+mobileNumber);
+                        marker.setTitle(name);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
                 geoFire.getLocation("Location", new LocationCallback() {
                     @Override
                     public void onLocationResult(String key, GeoLocation location) {
@@ -46,7 +60,7 @@ public class GroupMember extends User{
                                 marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude))
                                             .title(name)
                                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_name)));
-                                marker.setSnippet("Car number : KA51EP6969");
+
                                 marker.setTag(userID);
                             }
                         } catch (NullPointerException e){
