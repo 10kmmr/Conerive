@@ -8,6 +8,7 @@ import com.google.firebase.database.DatabaseReference;
 public class User {
     String userID;
     String mobileNumber;
+    String emailID;
     String name;
     GoogleMap googleMap;
     Marker marker;

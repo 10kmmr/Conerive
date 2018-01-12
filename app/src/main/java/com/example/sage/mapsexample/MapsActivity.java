@@ -1,7 +1,9 @@
 
 package com.example.sage.mapsexample;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -9,11 +11,19 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.location.*;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.PopupWindow;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -49,6 +59,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Spinner spinner;
     ArrayAdapter<String> adapter;
 
+    private PopupWindow mPopupWindow;
 
     //location
     private FusedLocationProviderClient mFusedLocationClient;
@@ -168,12 +179,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Log.d(TAG, "onMarkerClick: "+marker.getTag());
+                Log.d(TAG, "onMarkerClick: "+marker.getTag().toString());
+                HashMap<String, String> tag = (HashMap<String, String>)marker.getTag();
+
                 Toast.makeText(MapsActivity.this, marker.getTitle(), Toast.LENGTH_SHORT).show();
+
+                LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+                View customView = inflater.inflate(R.layout.user_data_popup,null);
+                mPopupWindow = new PopupWindow(
+                        customView,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+
+                if(Build.VERSION.SDK_INT>=21){
+                    mPopupWindow.setElevation(5.0f);
+                }
+
+                Button close = customView.findViewById(R.id.Close);
+                close.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mPopupWindow.dismiss();
+                    }
+                });
+
+                TextView name = customView.findViewById(R.id.Name);
+                name.setText(tag.get("Name"));
+                TextView email = customView.findViewById(R.id.Email);
+                email.setText(tag.get("Email"));
+                TextView mobileNumber = customView.findViewById(R.id.MobileNumber);
+                mobileNumber.setText(tag.get("MobileNumber"));
+                mPopupWindow.showAtLocation(findViewById(R.id.MapsActivity), Gravity.CENTER,0,0);
+                mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
+                mPopupWindow.setOutsideTouchable(true);
+
                 return false;
+
             }
         });
+
     }
+
+
 
     public void getUsers() {
 

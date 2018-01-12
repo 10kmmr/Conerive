@@ -17,6 +17,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
+
 import static android.content.ContentValues.TAG;
 
 public class GroupMember extends User{
@@ -39,8 +42,15 @@ public class GroupMember extends User{
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         name =  dataSnapshot.child("Name").getValue(String.class);
                         mobileNumber = dataSnapshot.child("phonenumber").getValue(String.class);
+                        emailID = dataSnapshot.child("Email").getValue(String.class);
+
+                        HashMap<String, String> userData = new HashMap<>();
+                        userData.put("Name", name);
+                        userData.put("Email", emailID);
+                        userData.put("MobileNumber", mobileNumber);
                         marker.setSnippet("mobile: "+mobileNumber);
                         marker.setTitle(name);
+                        marker.setTag(userData);
                     }
 
                     @Override
@@ -61,7 +71,6 @@ public class GroupMember extends User{
                                             .title(name)
                                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_name)));
 
-                                marker.setTag(userID);
                             }
                         } catch (NullPointerException e){
                             Log.d(TAG, "onLocationResult: "+e);
