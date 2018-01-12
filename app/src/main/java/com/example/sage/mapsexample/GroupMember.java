@@ -24,7 +24,7 @@ public class GroupMember extends User{
     ValueEventListener listener;
     GeoLocation userLocation;
 
-    public GroupMember(String mobileNumber, String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
+    public GroupMember(final String mobileNumber, final String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
         this.mobileNumber = mobileNumber;
         this.groupID = groupID;
         this.googleMap = googleMap;
@@ -39,10 +39,16 @@ public class GroupMember extends User{
                     @Override
                     public void onLocationResult(String key, GeoLocation location) {
                         userLocation = location;
-                        if(marker!=null)
-                            marker.remove();
-                        try {
-                            marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude)).title(name).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_name)));
+                        try{
+                            if(marker!=null) {
+                                marker.setPosition(new LatLng(location.latitude, location.longitude));
+                            } else {
+                                marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude))
+                                            .title(name)
+                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_name)));
+                                marker.setSnippet("Car number : KA51EP6969");
+                                marker.setTag(mobileNumber);
+                            }
                         } catch (NullPointerException e){
                             Log.d(TAG, "onLocationResult: "+e);
                             releaseListener();
@@ -67,7 +73,8 @@ public class GroupMember extends User{
     }
 
     public void releaseListener(){
-        marker.remove();
+        if (marker!=null)
+            marker.remove();
         userReference.removeEventListener(listener);
     }
 }
