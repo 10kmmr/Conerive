@@ -24,11 +24,11 @@ public class GroupMember extends User{
     ValueEventListener listener;
     GeoLocation userLocation;
 
-    public GroupMember(final String mobileNumber, final String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
-        this.mobileNumber = mobileNumber;
+    public GroupMember(final String userID, final String groupID, final GoogleMap googleMap , FirebaseDatabase Db){
+        this.userID = userID;
         this.groupID = groupID;
         this.googleMap = googleMap;
-        userReference = Db.getReference("Root/"+this.groupID+"/"+this.mobileNumber);
+        userReference = Db.getReference("Root/"+this.groupID+"/"+this.userID);
         geoFire = new GeoFire(userReference);
         listener = userReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -47,7 +47,7 @@ public class GroupMember extends User{
                                             .title(name)
                                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_name)));
                                 marker.setSnippet("Car number : KA51EP6969");
-                                marker.setTag(mobileNumber);
+                                marker.setTag(userID);
                             }
                         } catch (NullPointerException e){
                             Log.d(TAG, "onLocationResult: "+e);
@@ -69,7 +69,7 @@ public class GroupMember extends User{
 
     @Override
     public String toString(){
-        return groupID+ " : " +mobileNumber + " : " + name;
+        return groupID+ " : " +userID + " : " + name;
     }
 
     public void releaseListener(){

@@ -6,7 +6,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.firebase.database.DatabaseReference;
 
 public class User {
-    String mobileNumber;
+    String userID;
     String name;
     GoogleMap googleMap;
     Marker marker;
@@ -15,6 +15,6 @@ public class User {
 
     @Override
     public String toString(){
-        return mobileNumber + " : " + name;
+        return userID + " : " + name;
     }
 }
