@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -182,6 +183,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.d(TAG, "onMarkerClick: "+marker.getTag().toString());
                 HashMap<String, String> tag = (HashMap<String, String>)marker.getTag();
 
+                String NameCurrent = tag.get("Name");
+                final String NumberCurrent = tag.get("MobileNumber");
+                String EmailCurrent = tag.get("Email");
+
                 Toast.makeText(MapsActivity.this, marker.getTitle(), Toast.LENGTH_SHORT).show();
 
                 LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -197,6 +202,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 Button close = customView.findViewById(R.id.Close);
+                Button call = customView.findViewById(R.id.Call);
+                call.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        NextDialer(NumberCurrent);
+                    }
+                });
                 close.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -205,11 +217,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
 
                 TextView name = customView.findViewById(R.id.Name);
-                name.setText(tag.get("Name"));
+                name.setText(NameCurrent);
                 TextView email = customView.findViewById(R.id.Email);
-                email.setText(tag.get("Email"));
+                email.setText(EmailCurrent);
                 TextView mobileNumber = customView.findViewById(R.id.MobileNumber);
-                mobileNumber.setText(tag.get("MobileNumber"));
+                mobileNumber.setText(NumberCurrent);
                 mPopupWindow.showAtLocation(findViewById(R.id.MapsActivity), Gravity.CENTER,0,0);
                 mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
                 mPopupWindow.setOutsideTouchable(true);
@@ -276,5 +288,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     };
-
+    @SuppressLint("MissingPermission") //check if this throws an error later
+    public void NextDialer(String number){
+        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + number));
+        startActivity(intent);
+    }
 }
