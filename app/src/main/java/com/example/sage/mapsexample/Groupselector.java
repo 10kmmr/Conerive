@@ -25,171 +25,44 @@ public class Groupselector extends AppCompatActivity {
 
     private static final String TAG = "Groupselector";
 
-    //Views
-    public Button newGroup;
-    public ListView listGroups;
-    public EditText gName;
-    public EditText gPassword;
-    public Button join;
-
-    //firebase
-    FirebaseAuth mAuth;
-    FirebaseDatabase db;
-
-    //array list to store
-    List<String> Groups=new ArrayList<String>();
-
-    String userID;
-    String groupID;
-    String Name;
-
-
-
-
-    //DONT TOUCH
-    String passW;
-
-
-
+    public void MakeLog(String mesaage){
+        Log.d(TAG, "MakeLog: " + mesaage);
+    }
+    public void MakeToast(String message){
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_groupselector);
-
-        //Intent receive da
-        groupID = getIntent().getStringExtra("GroupID");
-        userID = getIntent().getStringExtra("UserID");
-        Name = getIntent().getStringExtra("Name");
-
-
-        db=FirebaseDatabase.getInstance();
-
-        //View controllers
-        newGroup = (Button)findViewById(R.id.newGroup);
-        //listGroups = (ListView)findViewById(R.id.listGroups);
-        gName = (EditText)findViewById(R.id.Name);
-        gPassword= (EditText)findViewById(R.id.gPassword);
-        join = (Button)findViewById(R.id.join);
-
-        join.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final String Group=gName.getText().toString();
-                final String gPass =gPassword.getText().toString();
-
-                String GroupID ;
-                //METHORD 1 querry the inside the Structure
-/*
-                db.getReference("Groups").addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for(DataSnapshot GroupIDs:dataSnapshot.getChildren())
-                           for(DataSnapshot GroupIDelements:GroupIDs.getChildren()){
-                                String keyValue=GroupIDelements.getKey();
-                                if(keyValue.equals("Name"))
-                                    if(GroupIDelements.getValue().toString().equals(Group))
-                                        MakeLog("FOUND " + GroupIDelements.getValue().toString());
-                           }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
-*/
-
-
-
-                //Method 2 querry the new Structure
-                //First find the GroupID for that name
-                //then get password
-                //then pass to next activity
-                //Set 1
-                groupID="NULL";
-                db.getReference("GroupIDTable").addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for(DataSnapshot names : dataSnapshot.getChildren()){
-                            if(names.getKey().equals(Group)) {
-                                groupID = names.getValue().toString();
-                                MakeLog("in getting groupID :" + groupID);
-                                //Set 2
-                                Getpassword_handleAsyc(gPass);
-                                //Set 3 Security is handled inside that functions only
-                            }
-                        }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
+        MakeLog("OnCreate : GroupSelector");
+        View frag = findViewById(R.id.fragment_container);
+        if (frag != null) {
+            MakeLog("Started making Fragment");
+            // However, if we're being restored from a previous state,
+            // then we don't need to do anything and should return or else
+            // we could end up with overlapping fragments.
+            if (savedInstanceState != null) {
+                MakeLog("null saved instace state");
+                // return;
             }
-        });
 
-        //listGroups.setVisibility(View.VISIBLE);
-        newGroup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String newGroup=gName.getText().toString();
-                String newgPass =gPassword.getText().toString();
+            // Create a new Fragment to be placed in the activity layout
+            listfragment list = new listfragment();
+            JoinRegGroupFragment joinReg = new JoinRegGroupFragment();
 
-                String GeneratedGroupID =db.getReference("Groups/").push().getKey();
-                db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroup);
-                db.getReference("GroupIDTable/"+newGroup).setValue(GeneratedGroupID);
-                db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
-                db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
-                db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
-                db.getReference("Details/"+userID+"/Group/"+GeneratedGroupID).setValue(newGroup);
-                groupID=newGroup;
-                NextActivity();
-            }
-        });
-    }
-    public void updateUI(){
-        newGroup.setVisibility(View.INVISIBLE);
-        //listGroups.setVisibility(View.INVISIBLE);
-    }
-    public void NextActivity(){
-        Intent maps=new Intent(this,MapsActivity.class);
-        maps.putExtra("UserID", userID);
-        maps.putExtra("Name",Name );
-        maps.putExtra("GroupID",groupID);
-        startActivity(maps);
-    }
-    public void MakeToast(String message){
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    }
-    public void MakeLog(String mesaage){
-        Log.d(TAG, "MakeLog: " +mesaage);
-    }
-    public void Getpassword_handleAsyc(final String gPass){
-            MakeLog("before asyc"+groupID);
-            db.getReference("Groups/"+groupID).addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    MakeLog("insdie "+dataSnapshot.toString());
-                    passW=dataSnapshot.child("Password").getValue().toString();
-                    //Set 3 Security
-                    GroupLogin(gPass);
-                }
+            // In case this activity was started with special instructions from an
+            // Intent, pass the Intent's extras to the fragment as arguments
+            joinReg.setArguments(getIntent().getExtras());
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-    }
-    public void GroupLogin(String pass){
-       if(!passW.isEmpty())
-            if(passW.equals(pass)){
-                NextActivity();
-            }else{
-                MakeToast("HMMMMMM :/ ");
-            }
-        else
-            MakeToast("no pass");
+            // Add the fragment to the 'fragment_container' FrameLayout
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.fragment_container, joinReg).commit();
+            MakeLog("Done making everything");
+        } else {
+            MakeLog("NULL");
+            MakeToast("else part NULL");
+        }
     }
 }

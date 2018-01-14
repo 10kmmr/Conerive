@@ -1,4 +1,5 @@
 package com.example.sage.mapsexample;
+
 import android.*;
 import android.Manifest;
 import android.content.Context;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+
         getLocationPermission();
         mAuth = FirebaseAuth.getInstance();
         //view Declarations
@@ -68,13 +70,17 @@ public class MainActivity extends AppCompatActivity {
         Name = (EditText) findViewById(R.id.Name);
         Email = (EditText) findViewById(R.id.Email);
         pass = (EditText) findViewById(R.id.Password);
-        signUp = (Button)findViewById(R.id.signUp);
-        PhoneNumber = (EditText)findViewById(R.id.PhoneNumber);
-        getStarted = (Button)findViewById(R.id.getStarted);
+        signUp = (Button) findViewById(R.id.signUp);
+        PhoneNumber = (EditText) findViewById(R.id.PhoneNumber);
+        getStarted = (Button) findViewById(R.id.getStarted);
 
         database = FirebaseDatabase.getInstance();
 
-        loggedin = new Intent(this,Groupselector.class);
+        loggedin = new Intent(this, Groupselector.class);
+
+
+
+
 
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,9 +102,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onClick: hello world");
                 String email = Email.getText().toString();
                 String passW = pass.getText().toString();
-                String PhoneNo=PhoneNumber.getText().toString();
+                String PhoneNo = PhoneNumber.getText().toString();
                 String nameString = Name.getText().toString();
-                SignupButton(email,passW,nameString,PhoneNo);
+                SignupButton(email, passW, nameString, PhoneNo);
             }
         });
 
@@ -181,9 +187,9 @@ public class MainActivity extends AppCompatActivity {
                                 // Sign in success, update UI with the signed-in user's information
                                 Log.d(TAG, "createUserWithEmail:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
-                                database.getReference("Details/"+mAuth.getUid()+"/Name").setValue(nameString);
-                                database.getReference("Details/"+mAuth.getUid()+"/phonenumber").setValue(PhoneNumber);
-                                database.getReference("Details/"+mAuth.getUid()+"/Email").setValue(email);
+                                database.getReference("Details/" + mAuth.getUid() + "/Name").setValue(nameString);
+                                database.getReference("Details/" + mAuth.getUid() + "/phonenumber").setValue(PhoneNumber);
+                                database.getReference("Details/" + mAuth.getUid() + "/Email").setValue(email);
                                 NextActivity();
                             } else {
                                 // If sign in fails, display a message to the user.
@@ -212,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-//    public void done() {
+    //    public void done() {
 //        String name=Name.getText().toString();
 //        String uniid = mAuth.getCurrentUser().getUid();
 //        dbref= database.getReference("Details/"+uniid);
@@ -224,14 +230,14 @@ public class MainActivity extends AppCompatActivity {
 //        intent.putExtra("UserID", uniid);
 //        startActivity(intent);
 //    }
-    public void NextActivity(){
+    public void NextActivity() {
         database.getReference("Details").child(mAuth.getUid()).child("Name").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 loggedin.putExtra("UserID", mAuth.getUid());
-                Log.d(TAG, "what is name here: "+dataSnapshot.getValue().toString());
-                loggedin.putExtra("Name" , dataSnapshot.getValue().toString());
-                loggedin.putExtra("GroupID" , "NULL");
+                Log.d(TAG, "what is name here: " + dataSnapshot.getValue().toString());
+                loggedin.putExtra("Name", dataSnapshot.getValue().toString());
+                loggedin.putExtra("GroupID", "NULL");
                 startActivity(loggedin);
             }
 
@@ -241,5 +247,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    public void MakeLog(String mesaage) {
+        Log.d(TAG, " MakeLog  : MainActivity : " + mesaage);
     }
 }
