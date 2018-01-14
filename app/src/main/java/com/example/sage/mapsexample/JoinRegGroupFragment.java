@@ -100,29 +100,30 @@ public class JoinRegGroupFragment extends Fragment{
             }
         });
 
+        newGroup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String newGroup=gName.getText().toString();
+                String newgPass =gPassword.getText().toString();
+
+                String GeneratedGroupID =db.getReference("Groups/").push().getKey();
+                db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroup);
+                db.getReference("GroupIDTable/"+newGroup).setValue(GeneratedGroupID);
+                db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
+                db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
+                db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
+                db.getReference("Details/"+userID+"/Group/"+GeneratedGroupID).setValue(newGroup);
+                groupID=newGroup;
+                NextActivity();
+            }
+        });
+    
 
         return view;
    }
 
 //        //listGroups.setVisibility(View.VISIBLE);
-//        newGroup.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                String newGroup=gName.getText().toString();
-//                String newgPass =gPassword.getText().toString();
-//
-//                String GeneratedGroupID =db.getReference("Groups/").push().getKey();
-//                db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroup);
-//                db.getReference("GroupIDTable/"+newGroup).setValue(GeneratedGroupID);
-//                db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
-//                db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
-//                db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
-//                db.getReference("Details/"+userID+"/Group/"+GeneratedGroupID).setValue(newGroup);
-//                groupID=newGroup;
-//                NextActivity();
-//            }
-//        });
-//    }
+
 //    public void updateUI(){
 //        newGroup.setVisibility(View.INVISIBLE);
 //        //listGroups.setVisibility(View.INVISIBLE);
