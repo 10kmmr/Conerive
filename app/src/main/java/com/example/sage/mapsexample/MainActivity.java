@@ -10,10 +10,13 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -26,6 +29,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class MainActivity extends AppCompatActivity {
 
     //list of permission
@@ -33,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     private static final String TAG = "MainActivity";
-
     Intent loggedin;
 
     //fireBase Auth
@@ -52,6 +57,11 @@ public class MainActivity extends AppCompatActivity {
     public Button signUp;
     public Button getStarted;
 
+    boolean isEmailValid;
+    boolean isPassValid;
+    boolean isNameValid;
+    boolean isPhoneNumberValid;
+
     //Database
     FirebaseDatabase database;
     DatabaseReference dbref;
@@ -60,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        isEmailValid = false;
+        isPassValid = false;
+        isNameValid = false;
+        isPhoneNumberValid = false;
 
 
 
@@ -79,15 +94,93 @@ public class MainActivity extends AppCompatActivity {
         loggedin = new Intent(this, Groupselector.class);
 
 
+        Email.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String temp = charSequence.toString();
+                if(temp!=null){
+                    Pattern pattern = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}");
+                    Matcher mat = pattern.matcher(temp);
+                    if(mat.matches()){
+                        isEmailValid = true;
+                        Log.d(TAG, "onTextChanged: email is valid");
+                    }
+                    else{
+                        isEmailValid = false;
+                        Log.d(TAG, "onTextChanged: email is not valid");
+                    }
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable editable) { }
+        });
 
 
+        pass.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String temp = charSequence.toString();
+                if(temp.length()>0){
+                    isPassValid = true;
+                } else {
+                    isPassValid = false;
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+
+        Name.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String temp = charSequence.toString();
+                if(temp.length()>0){
+                    isNameValid = true;
+                } else {
+                    isNameValid = false;
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable editable) { }
+        });
+
+        PhoneNumber.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String temp = charSequence.toString();
+                if(temp.length()>0){
+                    isPhoneNumberValid = true;
+                } else {
+                    isPhoneNumberValid = false;
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
 
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                updateUI();
+                if(!isEmailValid){
+                    Toast.makeText(MainActivity.this, " invalid email id ", Toast.LENGTH_SHORT).show();
+                } else if(!isPassValid){
+                    Toast.makeText(MainActivity.this, " invalid password", Toast.LENGTH_SHORT).show();
+                } else {
+                    updateUI();
+                }
             }
         });
+
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -96,15 +189,21 @@ public class MainActivity extends AppCompatActivity {
                 signIn(email, passW);
             }
         });
+
         getStarted.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG, "onClick: hello world");
-                String email = Email.getText().toString();
-                String passW = pass.getText().toString();
-                String PhoneNo = PhoneNumber.getText().toString();
-                String nameString = Name.getText().toString();
-                SignupButton(email, passW, nameString, PhoneNo);
+                if(!isNameValid) {
+                    Toast.makeText(MainActivity.this, "name is invalid", Toast.LENGTH_SHORT).show();
+                } else if (!isPhoneNumberValid){
+                    Toast.makeText(MainActivity.this, "Phone number is invalid", Toast.LENGTH_SHORT).show();
+                } else{
+                    String email = Email.getText().toString();
+                    String passW = pass.getText().toString();
+                    String PhoneNo = PhoneNumber.getText().toString();
+                    String nameString = Name.getText().toString();
+                    SignupButton(email, passW, nameString, PhoneNo);
+                }
             }
         });
 

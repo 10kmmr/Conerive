@@ -86,9 +86,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         groupID = getIntent().getStringExtra("GroupID");
         userID = getIntent().getStringExtra("UserID");
         Name = getIntent().getStringExtra("Name");
-        Log.d(TAG, "onCreate: groupID received is :"+groupID);
-        //this is comment ok? yay you found it
-        //getActionBar().setTitle(groupID);
         database = FirebaseDatabase.getInstance();
         groupReference = database.getReference("Root/"+groupID);
         ownerReference = database.getReference("Root/"+groupID+"/"+userID);
@@ -103,16 +100,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 GroupMember temp = users.get(spinner.getSelectedItem().toString());
                 mMap.moveCamera(CameraUpdateFactory
                         .newLatLngZoom(new LatLng(temp.userLocation.latitude, temp.userLocation.longitude), 15));
-
-               } catch (Exception e){
-
-               }
+               } catch (Exception e){ e.printStackTrace(); }
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
+            public void onNothingSelected(AdapterView<?> adapterView) {}
         });
 
         //Location
@@ -124,16 +116,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(2000);
         mLocationRequest.setFastestInterval(2000);
-
-        // batery shit
-        // mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        //error handling do later
-//              if (ContextCompat.checkSelfPermission(this,
-//                        Manifest.permission.ACCESS_FINE_LOCATION)
-//                        == PackageManager.PERMISSION_GRANTED) {
-//              }
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-        // Log.d(TAG, "onCreate: Lat :" + Double.toString(mLastKnownLocation.getLatitude()) + " Log :" + Double.toString(mLastKnownLocation.getLongitude()));
     }
 
     //Button Code
@@ -145,15 +128,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         intent.putExtra("GroupID",groupID);
         startActivity(intent);
     }
+
+
     @Override
     public void onPause() {
         super.onPause();
-
         //stop location updates when Activity is no longer active
         if (mFusedLocationClient != null) {
             // mFusedLocationClient.removeLocationUpdates(mLocationCallback);
         }
     }
+
+
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
@@ -172,9 +158,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .newLatLngZoom(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), 15));
                     //retrieve all users in group
                     getUsers();
-                } else {
-                    ErrorT();
-                }
+                } else { ErrorT(); }
             }
         });
 
@@ -228,13 +212,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mPopupWindow.setOutsideTouchable(true);
 
                 return false;
-
             }
         });
 
     }
-
-
 
     public void getUsers() {
 
@@ -246,30 +227,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.d(TAG, "map :"+users.keySet());
                 adapter.add(userID);
             }
-
             @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) { }
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
                 users.get(dataSnapshot.getKey()).releaseListener();
                 users.remove(dataSnapshot.getKey());
             }
-
             @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) { }
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
     }
-
 
 
     public void ErrorT(){
