@@ -41,12 +41,12 @@ public class listfragment extends Fragment{
 
 
 
-        switchButon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
+//        switchButon.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//            }
+//        });
         //listGroups.setAdapter();
 
         //db.getReference("/Details/")

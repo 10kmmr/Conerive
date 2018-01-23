@@ -25,6 +25,7 @@ public class Groupselector extends AppCompatActivity {
 
     private static final String TAG = "Groupselector";
 
+    public Button button2;
     public void MakeLog(String mesaage){
         Log.d(TAG, "MakeLog: " + mesaage);
     }
@@ -49,7 +50,7 @@ public class Groupselector extends AppCompatActivity {
             }
 
             // Create a new Fragment to be placed in the activity layout
-            listfragment list = new listfragment();
+
             JoinRegGroupFragment joinReg = new JoinRegGroupFragment();
 
             // In case this activity was started with special instructions from an
@@ -64,5 +65,14 @@ public class Groupselector extends AppCompatActivity {
             MakeLog("NULL");
             MakeToast("else part NULL");
         }
+        button2 = (Button)findViewById(R.id.button2);
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick: hellow world");
+                listfragment list = new listfragment();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, list).commit() ;
+            }
+        });
     }
 }
