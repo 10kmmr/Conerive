@@ -77,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
         isPhoneNumberValid = false;
 
 
-
         getLocationPermission();
         mAuth = FirebaseAuth.getInstance();
         //view Declarations
@@ -96,73 +95,86 @@ public class MainActivity extends AppCompatActivity {
 
         Email.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 String temp = charSequence.toString();
-                if(temp!=null){
+                if (temp != null) {
                     Pattern pattern = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}");
                     Matcher mat = pattern.matcher(temp);
-                    if(mat.matches()){
+                    if (mat.matches()) {
                         isEmailValid = true;
                         Log.d(TAG, "onTextChanged: email is valid");
-                    }
-                    else{
+                    } else {
                         isEmailValid = false;
                         Log.d(TAG, "onTextChanged: email is not valid");
                     }
                 }
             }
+
             @Override
-            public void afterTextChanged(Editable editable) { }
+            public void afterTextChanged(Editable editable) {
+            }
         });
 
 
         pass.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 String temp = charSequence.toString();
-                if(temp.length()>0){
+                if (temp.length() > 0) {
                     isPassValid = true;
                 } else {
                     isPassValid = false;
                 }
             }
+
             @Override
-            public void afterTextChanged(Editable editable) {}
+            public void afterTextChanged(Editable editable) {
+            }
         });
 
         Name.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 String temp = charSequence.toString();
-                if(temp.length()>0){
+                if (temp.length() > 0) {
                     isNameValid = true;
                 } else {
                     isNameValid = false;
                 }
             }
+
             @Override
-            public void afterTextChanged(Editable editable) { }
+            public void afterTextChanged(Editable editable) {
+            }
         });
 
         PhoneNumber.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             }
+
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 String temp = charSequence.toString();
-                if(temp.length()>0){
+                if (temp.length() > 0) {
                     isPhoneNumberValid = true;
                 } else {
                     isPhoneNumberValid = false;
                 }
             }
+
             @Override
             public void afterTextChanged(Editable editable) {
             }
@@ -171,11 +183,13 @@ public class MainActivity extends AppCompatActivity {
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!isEmailValid){
-                    Toast.makeText(MainActivity.this, " invalid email id ", Toast.LENGTH_SHORT).show();
-                } else if(!isPassValid){
-                    Toast.makeText(MainActivity.this, " invalid password", Toast.LENGTH_SHORT).show();
-                } else {
+                //no need validations
+//                if(!isEmailValid){
+//                    Toast.makeText(MainActivity.this, " invalid email id ", Toast.LENGTH_SHORT).show();
+//                } else if(!isPassValid){
+//                    Toast.makeText(MainActivity.this, " invalid password", Toast.LENGTH_SHORT).show();
+//                } else
+                {
                     updateUI();
                 }
             }
@@ -193,11 +207,11 @@ public class MainActivity extends AppCompatActivity {
         getStarted.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!isNameValid) {
+                if (!isNameValid) {
                     Toast.makeText(MainActivity.this, "name is invalid", Toast.LENGTH_SHORT).show();
-                } else if (!isPhoneNumberValid){
+                } else if (!isPhoneNumberValid) {
                     Toast.makeText(MainActivity.this, "Phone number is invalid", Toast.LENGTH_SHORT).show();
-                } else{
+                } else {
                     String email = Email.getText().toString();
                     String passW = pass.getText().toString();
                     String PhoneNo = PhoneNumber.getText().toString();

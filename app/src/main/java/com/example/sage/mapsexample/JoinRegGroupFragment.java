@@ -103,21 +103,26 @@ public class JoinRegGroupFragment extends Fragment{
         newGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String newGroup=gName.getText().toString();
-                String newgPass =gPassword.getText().toString();
+                String newGroup = gName.getText().toString();
+                String newgPass = gPassword.getText().toString();
 
                 String GeneratedGroupID =db.getReference("Groups/").push().getKey();
+
+                //Writing to the Groups tabs in DB
                 db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroup);
-                db.getReference("GroupIDTable/"+newGroup).setValue(GeneratedGroupID);
                 db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
                 db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
                 db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
+
+                //GroupIDTable
+                db.getReference("GroupIDTable/"+newGroup).setValue(GeneratedGroupID);
+
+                //writing to the userID group
                 db.getReference("Details/"+userID+"/Group/"+GeneratedGroupID).setValue(newGroup);
-                groupID=newGroup;
+                groupID=newGroup; //groupName
                 NextActivity();
             }
         });
-    
 
         return view;
    }
@@ -159,7 +164,7 @@ public class JoinRegGroupFragment extends Fragment{
                         //Set 2
                         Getpassword_handleAsyc(gPass);
                         //Set 3 Security is handled inside that functions only
-                    }
+                    }//fix error handling
                 }
             }
             @Override

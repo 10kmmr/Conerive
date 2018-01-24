@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
 
@@ -21,7 +22,10 @@ public class listfragment extends Fragment{
     private ListView listGroups;
     private Button switchButon;
 
-    FirebaseDatabase db;
+
+
+    public FirebaseDatabase db;
+    private FirebaseAuth mAuth;
 
     private static final String TAG = "ListFragment";
 
@@ -30,7 +34,7 @@ public class listfragment extends Fragment{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         MakeLog("Fragment working ");
-
+        mAuth = FirebaseAuth.getInstance();
     }
 
     @Override
@@ -38,6 +42,8 @@ public class listfragment extends Fragment{
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.listfregment,container,false);
+
+       // db.getReference("/Details/"+ mAuth.getUid() + "/Group ").ad
 
 
 
