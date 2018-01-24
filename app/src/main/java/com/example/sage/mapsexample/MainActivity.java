@@ -117,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) { }
         });
 
-
         pass.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
