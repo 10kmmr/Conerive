@@ -22,6 +22,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -197,9 +198,15 @@ public class MainActivity extends AppCompatActivity {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = Email.getText().toString();
-                String passW = pass.getText().toString();
-                signIn(email, passW);
+                if(!isEmailValid){
+                    Toast.makeText(MainActivity.this, " invalid email id ", Toast.LENGTH_SHORT).show();
+                } else if(!isPassValid){
+                    Toast.makeText(MainActivity.this, " invalid password", Toast.LENGTH_SHORT).show();
+                } else {
+                    String email = Email.getText().toString();
+                    String passW = pass.getText().toString();
+                    signIn(email, passW);
+                }
             }
         });
 
@@ -304,8 +311,11 @@ public class MainActivity extends AppCompatActivity {
                                 database.getReference("Details/" + mAuth.getUid() + "/Email").setValue(email);
                                 NextActivity();
                             } else {
-                                // If sign in fails, display a message to the user.
-                                Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                                try{
+
+                                } catch (Exception otherExcetption){
+                                    otherExcetption.printStackTrace();
+                                }
                             }
                         }
                     });
@@ -323,8 +333,13 @@ public class MainActivity extends AppCompatActivity {
                             //FirebaseUser user = mAuth.getCurrentUser();
                             NextActivity();
                         } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithEmail:failure", task.getException());
+                            try{
+                                throw task.getException();
+                            } catch (FirebaseAuthInvalidUserException e) {
+                                Toast.makeText(MainActivity.this, "User with this email does not exist", Toast.LENGTH_SHORT).show();
+                            } catch (Exception otherException){
+                                otherException.printStackTrace();
+                            }
                         }
                     }
                 });
