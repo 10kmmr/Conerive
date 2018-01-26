@@ -25,6 +25,11 @@ public class Groupselector extends AppCompatActivity {
 
     private static final String TAG = "Groupselector";
 
+    private int switchView = 1;
+
+    listfragment list = new listfragment();
+    JoinRegGroupFragment joinReg = new JoinRegGroupFragment();
+
     public Button button2;
     public void MakeLog(String mesaage){
         Log.d(TAG, "MakeLog: " + mesaage);
@@ -49,30 +54,28 @@ public class Groupselector extends AppCompatActivity {
                 // return;
             }
 
-            // Create a new Fragment to be placed in the activity layout
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, list).commit();
 
-            JoinRegGroupFragment joinReg = new JoinRegGroupFragment();
+            button2 = (Button) findViewById(R.id.button2);
+            button2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (switchView == 1) {
+                        joinReg.setArguments(getIntent().getExtras());
+                        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, joinReg).commit();
+                        button2.setText("Back");
+                        switchView = 0;
 
-            // In case this activity was started with special instructions from an
-            // Intent, pass the Intent's extras to the fragment as arguments
-            joinReg.setArguments(getIntent().getExtras());
+                    } else {
 
-            // Add the fragment to the 'fragment_container' FrameLayout
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragment_container, joinReg).commit();
-            MakeLog("Done making everything");
-        } else {
-            MakeLog("NULL");
-            MakeToast("else part NULL");
+                        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, list).commit();
+                        button2.setText("ADD NEW GROUD");
+                        switchView = 1;
+                    }
+
+
+                }
+            });
         }
-        button2 = (Button)findViewById(R.id.button2);
-        button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "onClick: hellow world");
-                listfragment list = new listfragment();
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, list).commit() ;
-            }
-        });
     }
 }

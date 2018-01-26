@@ -6,6 +6,7 @@ package com.example.sage.mapsexample;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.Dimension;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
@@ -33,15 +34,18 @@ import java.util.Map;
 
 public class listfragment extends Fragment{
     private ListView listGroups;
-    private Button switchButon;
     String[] groupsArray;
     private String name;
     private String Uid;
 
 
+    public TextView listcontent;
+
 
     public FirebaseDatabase db;
     private FirebaseAuth mAuth;
+
+
 
     private static final String TAG = "ListFragment";
 
@@ -57,9 +61,26 @@ public class listfragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+
+
         View view = inflater.inflate(R.layout.list_fragment,container,false);
         listGroups = view.findViewById(R.id.listView2);
-        switchButon = view.findViewById(R.id.switchButon);
+
+
+        //styling
+        listcontent = (TextView) view.findViewById(R.id.list_content);
+        int widthlist = view.getLayoutParams().width;
+        Log.d(TAG, "onCreateView: " + widthlist);
+        listGroups.setPadding(100,300,100,300);
+        
+
+
+
+
+
+
+
+
 //        name = ;
         Uid = mAuth.getUid();
 
@@ -118,12 +139,6 @@ public class listfragment extends Fragment{
         });
 
 
-        switchButon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "onClick: "+"switch button clickd");
-            }
-        });
 
         return view;
     }
