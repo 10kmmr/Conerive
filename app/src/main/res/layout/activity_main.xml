@@ -15,6 +15,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="37dp"
         android:text="Login"
+        android:background="@drawable/rounded_button"
         android:visibility="visible" />
 
     <EditText
@@ -46,6 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+
         android:layout_centerHorizontal="true"
         android:layout_marginTop="19dp"
         android:ems="10"
@@ -62,6 +64,7 @@
         android:layout_alignStart="@+id/Login"
         android:layout_marginBottom="40dp"
         android:text="Signup"
+        android:background="@drawable/rounded_button"
         android:visibility="visible" />
 
     <EditText
