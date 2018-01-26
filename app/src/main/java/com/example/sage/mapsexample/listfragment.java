@@ -69,9 +69,9 @@ public class listfragment extends Fragment{
 
         //styling
         listcontent = (TextView) view.findViewById(R.id.list_content);
-        int widthlist = view.getLayoutParams().width;
-        Log.d(TAG, "onCreateView: " + widthlist);
-        listGroups.setPadding(100,300,100,300);
+        listGroups.setPadding(50,50,50,0);
+
+
         
 
 
