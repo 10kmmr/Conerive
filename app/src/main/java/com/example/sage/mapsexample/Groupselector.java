@@ -69,7 +69,7 @@ public class Groupselector extends AppCompatActivity {
                     } else {
 
                         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, list).commit();
-                        button2.setText("ADD NEW GROUD");
+                        button2.setText("ADD GROUP");
                         switchView = 1;
                     }
 

@@ -4,9 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <EditText
         android:id="@+id/gPassword"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="49dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
@@ -15,13 +16,13 @@
         android:ems="10"
         android:hint="GroupPassword"
         android:inputType="textPassword"
+        android:textColor="@color/colorAccent"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Name"
-        app:layout_constraintVertical_bias="0.331" />
+        app:layout_constraintVertical_bias="0.214" />
 
     <Button
         android:id="@+id/newGroup"
@@ -31,49 +32,55 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:width="252dp"
+        android:background="@drawable/rounded_button"
         android:text="New Group"
+        android:textColor="@color/buttonAndTextColor"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/join"
-        app:layout_constraintStart_toStartOf="@+id/gPassword"
-        app:layout_constraintTop_toBottomOf="@+id/gPassword"
-        app:layout_constraintVertical_bias="0.569" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/join"
+        app:layout_constraintVertical_bias="0.2" />
 
     <!--android:visibility="invisible" -->
 
 
     <EditText
         android:id="@+id/Name"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/Email"
         android:layout_alignEnd="@+id/Email"
         android:layout_alignRight="@+id/Email"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="116dp"
         android:ems="10"
+
         android:hint="GroupName"
         android:inputType="textPersonName"
+        android:textColor="@color/colorAccent"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/join"
-        android:layout_width="91dp"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="44dp"
+        android:width="252dp"
+        android:background="@drawable/rounded_button"
         android:text="Join"
+        android:textColor="@color/buttonAndTextColor"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/gPassword"
-        app:layout_constraintTop_toBottomOf="@+id/gPassword"
-        app:layout_constraintVertical_bias="0.569" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gPassword" />
 
 
     <!--android:visibility="invisible" -->
