@@ -46,7 +46,6 @@ public class listfragment extends Fragment{
     private FirebaseAuth mAuth;
 
 
-
     private static final String TAG = "ListFragment";
 
 
@@ -71,17 +70,6 @@ public class listfragment extends Fragment{
         listcontent = (TextView) view.findViewById(R.id.list_content);
         listGroups.setPadding(50,50,50,0);
 
-
-        
-
-
-
-
-
-
-
-
-//        name = ;
         Uid = mAuth.getUid();
 
         db = FirebaseDatabase.getInstance();

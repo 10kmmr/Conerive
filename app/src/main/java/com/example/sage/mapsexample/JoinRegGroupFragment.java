@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +40,8 @@ public class JoinRegGroupFragment extends Fragment{
     public EditText gPassword;
     public Button join;
 
+    boolean isGNameValid = false;
+    boolean isGPasswordValid = false;
 
     //firebase
     FirebaseDatabase db;
@@ -78,73 +82,130 @@ public class JoinRegGroupFragment extends Fragment{
 
         //View controllers
         newGroup = (Button)view.findViewById(R.id.newGroup);
+
+
+
         gName = (EditText)view.findViewById(R.id.Name);
         gPassword= (EditText)view.findViewById(R.id.gPassword);
+
         join = (Button)view.findViewById(R.id.join);
 
         join.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                newGroupName=gName.getText().toString();
-                final String gPass =gPassword.getText().toString();
-                String GroupID ;
+                if(isGNameValid){
+                    if(isGPasswordValid){
+                        newGroupName=gName.getText().toString();
+                        final String gPass =gPassword.getText().toString();
+                        String GroupID ;
 
-                //METHORD 1 querry the inside the Structure (nested querrying)
-                    //methord1();
+                        //METHORD 1 querry the inside the Structure (nested querrying)
+                        //methord1();
 
 
-                //Method 2 querry the new Structure
-                //First find the GroupID for that name
-                //then get password
-                //then pass to next activity
-                    //Set 1
-                groupID=null;
-                method2(newGroupName , gPass);
+                        //Method 2 querry the new Structure
+                        //First find the GroupID for that name
+                        //then get password
+                        //then pass to next activity
+                        //Set 1
+                        groupID=null;
+                        method2(newGroupName , gPass);
+                    } else {
+                        Toast.makeText(getActivity().getApplicationContext(), "invalid group password", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getActivity().getApplicationContext(), "invalid group name", Toast.LENGTH_SHORT).show();
+                }
+
+
             }
         });
 
         newGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                newGroupName = gName.getText().toString();
-                db.getReference("GroupIDTable").addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        boolean isPresent = false;
-                        for(DataSnapshot d : dataSnapshot.getChildren()){
-                            if(newGroupName.equals(d.getKey())){
-                                isPresent = true;
-                                break;
+                if(isGNameValid){
+                    if(isGPasswordValid){
+                        newGroupName = gName.getText().toString();
+                        db.getReference("GroupIDTable").addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                boolean isPresent = false;
+                                for(DataSnapshot d : dataSnapshot.getChildren()){
+                                    if(newGroupName.equals(d.getKey())){
+                                        isPresent = true;
+                                        break;
+                                    }
+                                }
+                                if(!isPresent){
+                                    String newgPass = gPassword.getText().toString();
+                                    String GeneratedGroupID =db.getReference("Groups/").push().getKey();
+
+                                    //Writing to the Groups tabs in DB
+                                    db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroupName);
+                                    db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
+                                    db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
+                                    db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
+
+                                    //GroupIDTable
+                                    db.getReference("GroupIDTable/"+newGroupName).setValue(GeneratedGroupID);
+
+                                    //writing to the userID group
+
+                                    groupID=GeneratedGroupID;
+                                    NextActivity();
+                                } else {
+                                    Toast.makeText(getActivity().getApplicationContext(), "choose different group name", Toast.LENGTH_SHORT).show();
+                                }
                             }
-                        }
-                        if(!isPresent){
-                            String newgPass = gPassword.getText().toString();
-                            String GeneratedGroupID =db.getReference("Groups/").push().getKey();
-
-                            //Writing to the Groups tabs in DB
-                            db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroupName);
-                            db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
-                            db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
-                            db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
-
-                            //GroupIDTable
-                            db.getReference("GroupIDTable/"+newGroupName).setValue(GeneratedGroupID);
-
-                            //writing to the userID group
-
-                            groupID=GeneratedGroupID;
-                            NextActivity();
-                        } else {
-                            Toast.makeText(getActivity().getApplicationContext(), "choose different group name", Toast.LENGTH_SHORT).show();
-                        }
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
+                    } else {
+                        Toast.makeText(getActivity().getApplicationContext(), "invalid group password", Toast.LENGTH_SHORT).show();
                     }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
+                } else {
+                    Toast.makeText(getActivity().getApplicationContext(), "invalid group name", Toast.LENGTH_SHORT).show();
+                }
 
             }
         });
+
+        gName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String temp = charSequence.toString();
+                if (temp.length() > 0) {
+                    isGNameValid = true;
+                } else {
+                    isGNameValid = false;
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+
+        gPassword.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String temp = charSequence.toString();
+                if (temp.length() > 0) {
+                    isGPasswordValid = true;
+                } else {
+                    isGPasswordValid = false;
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
+
+
+
 
         return view;
    }
@@ -157,25 +218,26 @@ public class JoinRegGroupFragment extends Fragment{
 //        //listGroups.setVisibility(View.INVISIBLE);
 //    }
 
-    public void methord1(){
-        final String Group=gName.getText().toString();
-        db.getReference("Groups").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot GroupIDs:dataSnapshot.getChildren())
-                    for(DataSnapshot GroupIDelements:GroupIDs.getChildren()){
-                        String keyValue=GroupIDelements.getKey();
-                        if(keyValue.equals("Name"))
-                            if(GroupIDelements.getValue().toString().equals(Group))
-                                MakeLog("FOUND " + GroupIDelements.getValue().toString());
-                    }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+//    public void methord1(){
+//        final String Group=gName.getText().toString();
+//        db.getReference("Groups").addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                for(DataSnapshot GroupIDs:dataSnapshot.getChildren())
+//                    for(DataSnapshot GroupIDelements:GroupIDs.getChildren()){
+//                        String keyValue=GroupIDelements.getKey();
+//                        if(keyValue.equals("Name"))
+//                            if(GroupIDelements.getValue().toString().equals(Group))
+//                                MakeLog("FOUND " + GroupIDelements.getValue().toString());
+//                    }
+//            }
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
-            }
-        });
-    }
     public void  method2(final String gGroup, final String gPass){
         db.getReference("GroupIDTable").addValueEventListener(new ValueEventListener() {
             @Override
@@ -220,7 +282,7 @@ public class JoinRegGroupFragment extends Fragment{
                 //db.getReference("Details/"+userID+"/Group/"+groupID).setValue(newGroup);
                 NextActivity();
             }else{
-                MakeToast("HMMMMMM :/ ");
+                Toast.makeText(getActivity().getApplicationContext(), "invalid group  password", Toast.LENGTH_SHORT).show();
             }else
             MakeToast("no pass");
     }

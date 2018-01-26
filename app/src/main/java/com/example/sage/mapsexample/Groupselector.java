@@ -65,9 +65,7 @@ public class Groupselector extends AppCompatActivity {
                         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, joinReg).commit();
                         button2.setText("Back");
                         switchView = 0;
-
                     } else {
-
                         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, list).commit();
                         button2.setText("ADD GROUP");
                         switchView = 1;

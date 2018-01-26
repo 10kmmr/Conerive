@@ -23,6 +23,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -312,7 +314,11 @@ public class MainActivity extends AppCompatActivity {
                                 NextActivity();
                             } else {
                                 try{
-
+                                    throw task.getException();
+                                } catch (FirebaseAuthUserCollisionException e) {
+                                    Toast.makeText(MainActivity.this, "User with this email id already exists", Toast.LENGTH_SHORT).show();
+                                } catch (FirebaseAuthWeakPasswordException e){
+                                    Toast.makeText(MainActivity.this, "Password should have at least 6 characters", Toast.LENGTH_SHORT).show();
                                 } catch (Exception otherExcetption){
                                     otherExcetption.printStackTrace();
                                 }
