@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
@@ -37,12 +38,14 @@ public class JoinRegGroupFragment extends Fragment{
     public EditText gPassword;
     public Button join;
 
+
     //firebase
     FirebaseDatabase db;
 
     String userID;
     String groupID;
     String Name;
+    String newGroupName;
 
 
     //DONT TOUCH
@@ -82,7 +85,7 @@ public class JoinRegGroupFragment extends Fragment{
         join.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String gGroup=gName.getText().toString();
+                newGroupName=gName.getText().toString();
                 final String gPass =gPassword.getText().toString();
                 String GroupID ;
 
@@ -96,32 +99,50 @@ public class JoinRegGroupFragment extends Fragment{
                 //then pass to next activity
                     //Set 1
                 groupID=null;
-                method2(gGroup , gPass);
+                method2(newGroupName , gPass);
             }
         });
 
         newGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String newGroup = gName.getText().toString();
-                String newgPass = gPassword.getText().toString();
+                newGroupName = gName.getText().toString();
+                db.getReference("GroupIDTable").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        boolean isPresent = false;
+                        for(DataSnapshot d : dataSnapshot.getChildren()){
+                            if(newGroupName.equals(d.getKey())){
+                                isPresent = true;
+                                break;
+                            }
+                        }
+                        if(!isPresent){
+                            String newgPass = gPassword.getText().toString();
+                            String GeneratedGroupID =db.getReference("Groups/").push().getKey();
 
-                String GeneratedGroupID =db.getReference("Groups/").push().getKey();
+                            //Writing to the Groups tabs in DB
+                            db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroupName);
+                            db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
+                            db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
+                            db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
 
-                //Writing to the Groups tabs in DB
-                db.getReference("Groups/"+GeneratedGroupID+"/Name").setValue(newGroup);
-                db.getReference("Groups/"+GeneratedGroupID+"/Admin").setValue(userID);
-                db.getReference("Groups/"+GeneratedGroupID+"/Password").setValue(newgPass);
-                db.getReference("Groups/"+GeneratedGroupID+"/NoOfpeople").setValue(0);
+                            //GroupIDTable
+                            db.getReference("GroupIDTable/"+newGroupName).setValue(GeneratedGroupID);
 
-                //GroupIDTable
-                db.getReference("GroupIDTable/"+newGroup).setValue(GeneratedGroupID);
+                            //writing to the userID group
 
-                //writing to the userID group
-                db.getReference("Details/"+userID+"/Group/"+GeneratedGroupID).setValue(newGroup);
+                            groupID=GeneratedGroupID;
+                            NextActivity();
+                        } else {
+                            Toast.makeText(getActivity().getApplicationContext(), "choose different group name", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
 
-                groupID=GeneratedGroupID;
-                NextActivity();
             }
         });
 
@@ -132,6 +153,7 @@ public class JoinRegGroupFragment extends Fragment{
 
 //    public void updateUI(){
 //        newGroup.setVisibility(View.INVISIBLE);
+
 //        //listGroups.setVisibility(View.INVISIBLE);
 //    }
 
@@ -195,6 +217,7 @@ public class JoinRegGroupFragment extends Fragment{
         if(!passW.isEmpty())
             if(passW.equals(pass)){
                 MakeLog("intent to" + groupID);
+                //db.getReference("Details/"+userID+"/Group/"+groupID).setValue(newGroup);
                 NextActivity();
             }else{
                 MakeToast("HMMMMMM :/ ");
@@ -203,11 +226,17 @@ public class JoinRegGroupFragment extends Fragment{
     }
     public void NextActivity(){
         if(groupID!=null) {
-            Intent maps = new Intent(getActivity(), MapsActivity.class);
-            maps.putExtra("UserID", userID);
-            maps.putExtra("Name", Name);
-            maps.putExtra("GroupID", groupID);
-            startActivity(maps);
+            db.getReference("Details/"+userID+"/Group").child(groupID).setValue(newGroupName, new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                    Intent maps = new Intent(getActivity(), MapsActivity.class);
+                    maps.putExtra("UserID", userID);
+                    maps.putExtra("Name", Name);
+                    maps.putExtra("GroupID", groupID);
+                    startActivity(maps);
+                }
+            });
+
         }
     }
 
