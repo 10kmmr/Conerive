@@ -347,7 +347,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 loggedin.putExtra("UserID", mAuth.getUid());
-                Log.d(TAG, "what is name here: " + dataSnapshot.getValue().toString());
                 loggedin.putExtra("Name", dataSnapshot.getValue().toString());
                 loggedin.putExtra("GroupID", "NULL");
                 startActivity(loggedin);

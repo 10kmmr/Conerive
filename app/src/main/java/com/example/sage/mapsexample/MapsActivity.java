@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -37,8 +38,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
@@ -50,8 +54,9 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback { /* can use LocationListener class */
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     public GoogleMap mMap;
     public String groupID;
@@ -73,6 +78,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DatabaseReference groupReference;
     DatabaseReference ownerReference;
 
+    Circle limitCircle;
+    Circle inclusiveCircle;
+
+    double limitRadius = 4000;
+    double inclusiveRadius = 0;
+
+
     HashMap<String, GroupMember> users = new HashMap<>();
 
     private static final String TAG = "MyActivity";
@@ -84,6 +96,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         groupID = getIntent().getStringExtra("GroupID");
+        Log.d(TAG, "groupID is : " + groupID);
         userID = getIntent().getStringExtra("UserID");
         Name = getIntent().getStringExtra("Name");
         database = FirebaseDatabase.getInstance();
@@ -207,13 +220,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 email.setText(EmailCurrent);
                 TextView mobileNumber = customView.findViewById(R.id.MobileNumber);
                 mobileNumber.setText(NumberCurrent);
+                /*
                 mPopupWindow.showAtLocation(findViewById(R.id.MapsActivity), Gravity.CENTER,0,0);
                 mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
                 mPopupWindow.setOutsideTouchable(true);
+                */
 
                 return false;
             }
         });
+
+        resetCircle();
 
     }
 
@@ -226,6 +243,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 users.put(userID, new GroupMember(userID, groupID, mMap, database));
                 Log.d(TAG, "map :"+users.keySet());
                 adapter.add(userID);
+
             }
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) { }
@@ -239,6 +257,69 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onCancelled(DatabaseError databaseError) { }
         });
+    }
+
+    private void resetCircle() {
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    ArrayList<Location> tempArray = new ArrayList<>();
+                    double latSum = 0.0, lngSum = 0.0;
+
+                    if (users != null && users.size() > 0) {
+                        for (Map.Entry<String, GroupMember> u : users.entrySet()) {
+                            Location temp = new Location(LocationManager.GPS_PROVIDER);
+                            temp.setLongitude(u.getValue().userLocation.longitude);
+                            temp.setLatitude(u.getValue().userLocation.latitude);
+                            tempArray.add(temp);
+                            latSum += temp.getLatitude();
+                            lngSum += temp.getLongitude();
+                        }
+                    }
+                    Location midPoint = new Location(LocationManager.GPS_PROVIDER);
+                    midPoint.setLatitude(latSum/users.size());
+                    midPoint.setLongitude(lngSum/users.size());
+                    double inclusiveRadius = 0;
+                    if (users != null && users.size() > 0) {
+                        for (Map.Entry<String, GroupMember> u : users.entrySet()) {
+                            Location temp = new Location(LocationManager.GPS_PROVIDER);
+                            temp.setLongitude(u.getValue().userLocation.longitude);
+                            temp.setLatitude(u.getValue().userLocation.latitude);
+                            double distanceFromMid = midPoint.distanceTo(temp);
+                            if(distanceFromMid>inclusiveRadius)
+                                inclusiveRadius = distanceFromMid;
+                        }
+                    }
+
+                    if(limitCircle == null) {
+                        limitCircle = mMap.addCircle(new CircleOptions()
+                                .center(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()))
+                                .radius(limitRadius));
+                    } else {
+                        limitCircle.setCenter(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()));
+                    }
+
+                    if(inclusiveCircle == null) {
+                        inclusiveCircle = mMap.addCircle(new CircleOptions()
+                                .center(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()))
+                                .radius(inclusiveRadius));
+                    } else {
+                        inclusiveCircle.setCenter(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()));
+                        inclusiveCircle.setRadius(inclusiveRadius+ 100);
+                    }
+
+                } catch (Exception e){
+                    handler.postDelayed(this, 80);
+                } finally {
+                    handler.postDelayed(this, 160);
+                }
+            }
+        });
+
+
     }
 
 
@@ -264,4 +345,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + number));
         startActivity(intent);
     }
+
+
 }
