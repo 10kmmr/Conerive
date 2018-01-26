@@ -3,6 +3,7 @@ package com.example.sage.mapsexample;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -297,7 +298,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if(limitCircle == null) {
                         limitCircle = mMap.addCircle(new CircleOptions()
                                 .center(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()))
-                                .radius(limitRadius));
+                                .radius(limitRadius)
+                                .strokeColor(Color.GREEN));
                     } else {
                         limitCircle.setCenter(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()));
                     }
@@ -305,10 +307,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if(inclusiveCircle == null) {
                         inclusiveCircle = mMap.addCircle(new CircleOptions()
                                 .center(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()))
-                                .radius(inclusiveRadius));
+                                .radius(inclusiveRadius)
+                                .strokeColor(Color.BLUE));
                     } else {
                         inclusiveCircle.setCenter(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()));
                         inclusiveCircle.setRadius(inclusiveRadius+ 100);
+                        if(inclusiveRadius>limitRadius){
+                            inclusiveCircle.setStrokeColor(Color.RED);
+                        } else {
+                            inclusiveCircle.setStrokeColor(Color.BLUE);
+                        }
                     }
 
                 } catch (Exception e){
@@ -321,8 +329,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
-
-
+    
     public void ErrorT(){
         Toast.makeText(this, "Error ", Toast.LENGTH_LONG).show();
     }
