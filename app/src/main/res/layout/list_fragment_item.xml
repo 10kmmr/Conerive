@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp">
 
     <TextView
         android:id="@+id/list_content"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_margin="4dip"
-        android:background="@drawable/listitem"
+        android:background="@drawable/card"
         android:gravity="left"
         android:paddingLeft="50dp"
-        android:textSize="30dp"
+        android:textSize="15dp"
         android:text="sample"
         android:textColor="#000000"
-
+        android:padding="15dp"
         />
 
 </android.support.constraint.ConstraintLayout>
