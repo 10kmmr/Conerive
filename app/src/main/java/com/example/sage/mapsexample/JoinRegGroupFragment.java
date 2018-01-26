@@ -119,7 +119,7 @@ public class JoinRegGroupFragment extends Fragment{
 
                 //writing to the userID group
                 db.getReference("Details/"+userID+"/Group/"+GeneratedGroupID).setValue(newGroup);
-                groupID=newGroup; //groupName
+                groupID=newGroup;
                 NextActivity();
             }
         });
