@@ -10,7 +10,7 @@
 
     <Button
         android:id="@+id/Login"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
@@ -21,7 +21,7 @@
 
     <EditText
         android:id="@+id/Email"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
         android:layout_above="@+id/PhoneNumber"
         android:layout_alignLeft="@+id/Name"
@@ -34,7 +34,7 @@
 
     <EditText
         android:id="@+id/Password"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
@@ -45,7 +45,7 @@
 
     <EditText
         android:id="@+id/Name"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
 
@@ -58,7 +58,7 @@
 
     <Button
         android:id="@+id/signUp"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
         android:layout_above="@+id/Login"
         android:layout_alignLeft="@+id/Login"
@@ -70,7 +70,7 @@
 
     <EditText
         android:id="@+id/PhoneNumber"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
         android:layout_above="@+id/Password"
         android:layout_alignLeft="@+id/Email"
@@ -83,7 +83,7 @@
 
     <Button
         android:id="@+id/getStarted"
-        android:layout_width="wrap_content"
+        android:layout_width="252dp"
         android:layout_height="wrap_content"
         android:layout_alignEnd="@+id/signUp"
         android:layout_alignRight="@+id/signUp"
