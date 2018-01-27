@@ -255,10 +255,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 String userID = dataSnapshot.getKey();
-                users.put(userID, new GroupMember(userID, groupID, mMap, database));
+                users.put(userID, new GroupMember(userID, groupID, mMap, database, adapter));
                 Log.d(TAG, "map :"+users.keySet());
-                adapter.add(userID);
-
             }
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) { }

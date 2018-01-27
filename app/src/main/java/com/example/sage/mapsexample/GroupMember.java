@@ -1,5 +1,7 @@
 package com.example.sage.mapsexample;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQueryEventListener;
@@ -27,67 +29,61 @@ public class GroupMember extends User{
     ValueEventListener listener;
     GeoLocation userLocation;
 
-    public GroupMember(final String userID, final String groupID, final GoogleMap googleMap , final FirebaseDatabase database){
+    public GroupMember(final String userID, final String groupID, final GoogleMap googleMap , final FirebaseDatabase database,final ArrayAdapter<String> adapter){
         this.userID = userID;
         this.groupID = groupID;
         this.googleMap = googleMap;
         userReference = database.getReference("Root/"+this.groupID+"/"+this.userID);
         geoFire = new GeoFire(userReference);
-        listener = userReference.addValueEventListener(new ValueEventListener() {
+
+        database.getReference("Details/"+userID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                name =  dataSnapshot.child("Name").getValue(String.class);
+                adapter.add(name);
+                mobileNumber = dataSnapshot.child("phonenumber").getValue(String.class);
+                emailID = dataSnapshot.child("Email").getValue(String.class);
 
-                database.getReference("Details/"+userID).addListenerForSingleValueEvent(new ValueEventListener() {
+                listener = userReference.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        name =  dataSnapshot.child("Name").getValue(String.class);
-                        mobileNumber = dataSnapshot.child("phonenumber").getValue(String.class);
-                        emailID = dataSnapshot.child("Email").getValue(String.class);
+                        geoFire.getLocation("Location", new LocationCallback() {
+                            @Override
+                            public void onLocationResult(String key, GeoLocation location) {
+                                userLocation = location;
+                                try{
+                                    if(marker!=null) {
+                                        marker.setPosition(new LatLng(location.latitude, location.longitude));
+                                    } else {
+                                        marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude))
+                                                .title(name)
+                                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_name)));
 
-                        HashMap<String, String> userData = new HashMap<>();
-                        userData.put("Name", name);
-                        userData.put("Email", emailID);
-                        userData.put("MobileNumber", mobileNumber);
-                        marker.setSnippet("mobile: "+mobileNumber);
-                        marker.setTitle(name);
-                        marker.setTag(userData);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
-
-                geoFire.getLocation("Location", new LocationCallback() {
-                    @Override
-                    public void onLocationResult(String key, GeoLocation location) {
-                        userLocation = location;
-                        try{
-                            if(marker!=null) {
-                                marker.setPosition(new LatLng(location.latitude, location.longitude));
-                            } else {
-                                marker = googleMap.addMarker(new MarkerOptions().position(new LatLng(location.latitude, location.longitude))
-                                            .title(name)
-                                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_name)));
-
+                                    }
+                                    HashMap<String, String> userData = new HashMap<>();
+                                    userData.put("Name", name);
+                                    userData.put("Email", emailID);
+                                    userData.put("MobileNumber", mobileNumber);
+                                    marker.setSnippet("mobile: "+mobileNumber);
+                                    marker.setTitle(name);
+                                    marker.setTag(userData);
+                                } catch (NullPointerException e){
+                                    Log.d(TAG, "onLocationResult: "+e);
+                                    releaseListener();
+                                }
                             }
-                        } catch (NullPointerException e){
-                            Log.d(TAG, "onLocationResult: "+e);
-                            releaseListener();
-                        }
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) { }
+                        });
                     }
                     @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
+                    public void onCancelled(DatabaseError databaseError) { }
                 });
             }
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
+
     }
 
     @Override
