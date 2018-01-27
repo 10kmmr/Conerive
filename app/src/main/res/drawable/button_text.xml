@@ -2,10 +2,10 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:state_pressed="true"
-        android:drawable="@drawable/rounded_button_orange" />
+        android:color = "@color/buttonAndTextOrangeColor"/>
     <item
         android:state_focused="true"
-        android:drawable="@drawable/rounded_button_orange"/>
+        android:color = "@color/buttonAndTextOrangeColor"/>
     <item
-        android:drawable="@drawable/rounded_button_yellow"/>
+        android:color = "@color/buttonAndTextYellowColor"/>
 </selector>
