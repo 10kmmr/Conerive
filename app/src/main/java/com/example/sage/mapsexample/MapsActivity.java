@@ -3,6 +3,7 @@ package com.example.sage.mapsexample;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -42,6 +43,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -159,6 +161,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(final GoogleMap googleMap) {
         mMap = googleMap;
 
+        try {
+            boolean success = googleMap.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            this, R.raw.style_json));
+
+            if (!success) {
+                Log.e(TAG, "Style parsing failed.");
+            }
+        } catch (Resources.NotFoundException e) {
+            Log.e(TAG, "Can't find style. Error: ", e);
+        }
+
         //GETTING LOCATION AND WRITING TO DB
         @SuppressLint("MissingPermission") Task<Location> locationResult = mFusedLocationClient.getLastLocation();
         locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
@@ -241,10 +255,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 String userID = dataSnapshot.getKey();
-                users.put(userID, new GroupMember(userID, groupID, mMap, database));
+                users.put(userID, new GroupMember(userID, groupID, mMap, database, adapter));
                 Log.d(TAG, "map :"+users.keySet());
-                adapter.add(userID);
-
             }
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) { }

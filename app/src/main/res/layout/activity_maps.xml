@@ -34,7 +34,9 @@ android:id="@+id/MapsActivity">
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:text="Manage Groups"
-            android:onClick="onClickBtn"/>
+            android:onClick="onClickBtn"
+            android:background="@drawable/rounded_button"
+            android:textColor="@drawable/button_text"/>
 
 
     </LinearLayout>
