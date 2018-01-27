@@ -112,11 +112,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-               try{
-                GroupMember temp = users.get(spinner.getSelectedItem().toString());
-                mMap.moveCamera(CameraUpdateFactory
-                        .newLatLngZoom(new LatLng(temp.userLocation.latitude, temp.userLocation.longitude), 15));
-               } catch (Exception e){ e.printStackTrace(); }
+                try{
+                    String userName = spinner.getSelectedItem().toString();
+                    GroupMember temp = users.get(userName);
+                    mMap.moveCamera(CameraUpdateFactory
+                            .newLatLngZoom(new LatLng(temp.userLocation.latitude, temp.userLocation.longitude), 15));
+               } catch (Exception e){
+                    e.printStackTrace(); 
+                }
             }
 
             @Override
