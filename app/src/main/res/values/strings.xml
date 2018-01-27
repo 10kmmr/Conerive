@@ -3,6 +3,8 @@
     <string name="title_activity_maps">Conerive</string>
     <string name="title_activity_groupselector">Groupselector</string>
 
+    <string name="facebook_app_id">262582554277700</string>
+    <string name="fb_login_protocol_scheme">fb262582554277700</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
