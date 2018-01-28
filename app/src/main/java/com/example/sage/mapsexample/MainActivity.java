@@ -344,11 +344,11 @@ public class MainActivity extends AppCompatActivity {
 
         login.setVisibility(View.INVISIBLE);
         signUp.setVisibility(View.INVISIBLE);
-
+        iv.setVisibility(View.INVISIBLE);
         Name.setVisibility(View.VISIBLE);
         PhoneNumber.setVisibility(View.VISIBLE);
         getStarted.setVisibility(View.VISIBLE);
-        iv.setVisibility(View.VISIBLE);
+
     }
 
 
