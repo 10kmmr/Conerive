@@ -1,12 +1,9 @@
 package com.example.sage.mapsexample;
 
-import android.*;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -14,7 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -127,10 +123,8 @@ public class MainActivity extends AppCompatActivity {
                     Matcher mat = pattern.matcher(temp);
                     if (mat.matches()) {
                         isEmailValid = true;
-                        Log.d(TAG, "onTextChanged: email is valid");
                     } else {
                         isEmailValid = false;
-                        Log.d(TAG, "onTextChanged: email is not valid");
                     }
                 }
             }
@@ -300,7 +294,6 @@ public class MainActivity extends AppCompatActivity {
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            Log.d(TAG, "onStart: logged in ");
             isLoggedin = true;
             NextActivity();
         }
@@ -310,7 +303,6 @@ public class MainActivity extends AppCompatActivity {
     // ALL THE PERMISSION CRAP ---------------------------------------------------------------------//
 
     private void getLocationPermission() {
-        Log.d(TAG, "getLocationPermission: ");
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
@@ -330,18 +322,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
-        Log.d(TAG, "onRequestPermissionsResult: requestcode" + requestCode);
-        Log.d(TAG, "onRequestPermissionsResult: permission" + permissions.toString());
-        Log.d(TAG, "onRequestPermissionsResult: grantResult" + grantResults.toString());
         if (requestCode == PERMISSION_ALL) {
             if (grantResults.length == 3) {
                 // We can now safely use the API we requested access to
-                Log.d(TAG, "onRequestPermissionsResult: if condition");
+//                Log.d(TAG, "onRequestPermissionsResult: if condition");
                 //startActivity(intent);
 
             } else {
                 // Permission was denied or request was cancelled
-                Log.d(TAG, "onRequestPermissionsResult: else");
+//                Log.d(TAG, "onRequestPermissionsResult: else");
             }
         }
     }
@@ -367,7 +356,6 @@ public class MainActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
                                 // Sign in success, update UI with the signed-in user's information
-                                Log.d(TAG, "createUserWithEmail:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
                                 database.getReference("Details/" + mAuth.getUid() + "/Name").setValue(nameString);
                                 database.getReference("Details/" + mAuth.getUid() + "/phonenumber").setValue(PhoneNumber);
@@ -396,7 +384,6 @@ public class MainActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithEmail:success");
                             //FirebaseUser user = mAuth.getCurrentUser();
                             NextActivity();
                         } else {
@@ -432,9 +419,5 @@ public class MainActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError databaseError) { }
         });
 
-    }
-
-    public void MakeLog(String mesaage) {
-        Log.d(TAG, " MakeLog  : MainActivity : " + mesaage);
     }
 }
