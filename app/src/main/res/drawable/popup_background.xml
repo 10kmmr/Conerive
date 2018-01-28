@@ -13,5 +13,5 @@
         android:color="@color/buttonAndTextYellowColor"
         android:width="5px"
         />
-    <corners android:radius="30dp" />
+    <corners android:radius="5dp" />
 </shape>
