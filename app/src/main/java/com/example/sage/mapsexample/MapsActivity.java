@@ -118,7 +118,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mMap.moveCamera(CameraUpdateFactory
                             .newLatLngZoom(new LatLng(temp.userLocation.latitude, temp.userLocation.longitude), 15));
                } catch (Exception e){
-                    e.printStackTrace(); 
+                    e.printStackTrace();
                 }
             }
 
@@ -140,7 +140,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Button Code
     public void onClickBtn(View v) {
-        Toast.makeText(this, "YENO", Toast.LENGTH_LONG).show();
         Intent intent = new Intent(this, Groupselector.class);
         intent.putExtra("UserID", userID);
         intent.putExtra("Name",Name );

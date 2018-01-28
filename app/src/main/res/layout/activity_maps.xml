@@ -15,13 +15,6 @@ android:id="@+id/MapsActivity">
         android:layout_below="@+id/groupMembers"
         tools:context="com.example.sage.mapsexample.MapsActivity" />
 
-    <Spinner
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/groupMembers"
-        android:layout_below="@+id/topButtonBar">
-    </Spinner>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -40,5 +33,14 @@ android:id="@+id/MapsActivity">
 
 
     </LinearLayout>
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/groupMembers"
+        android:layout_below="@+id/topButtonBar">
+    </Spinner>
+
+
 
 </RelativeLayout>
