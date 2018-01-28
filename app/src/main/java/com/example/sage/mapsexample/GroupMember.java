@@ -25,6 +25,7 @@ import java.util.HashMap;
 import static android.content.ContentValues.TAG;
 
 public class GroupMember extends User{
+
     String groupID;
     ValueEventListener listener;
     GeoLocation userLocation;
@@ -39,6 +40,7 @@ public class GroupMember extends User{
         database.getReference("Details/"+userID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+
                 name =  dataSnapshot.child("Name").getValue(String.class);
                 adapter.add(name);
                 mobileNumber = dataSnapshot.child("phonenumber").getValue(String.class);
@@ -68,7 +70,7 @@ public class GroupMember extends User{
                                     marker.setTitle(name);
                                     marker.setTag(userData);
                                 } catch (NullPointerException e){
-                                    Log.d(TAG, "onLocationResult: "+e);
+                                    e.printStackTrace();
                                     releaseListener();
                                 }
                             }
@@ -83,7 +85,6 @@ public class GroupMember extends User{
             @Override
             public void onCancelled(DatabaseError databaseError) { }
         });
-
     }
 
     @Override

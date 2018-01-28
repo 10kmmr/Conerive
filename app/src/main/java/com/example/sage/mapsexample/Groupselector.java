@@ -23,39 +23,18 @@ import java.util.List;
 
 public class Groupselector extends AppCompatActivity {
 
-    private static final String TAG = "Groupselector";
-
     private int switchView = 1;
-
     listfragment list = new listfragment();
     JoinRegGroupFragment joinReg = new JoinRegGroupFragment();
-
     public Button button2;
-    public void MakeLog(String mesaage){
-        Log.d(TAG, "MakeLog: " + mesaage);
-    }
-    public void MakeToast(String message){
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_groupselector);
-        MakeLog("OnCreate : GroupSelector");
         View frag = findViewById(R.id.fragment_container);
         if (frag != null) {
-            MakeLog("Started making Fragment");
-            // However, if we're being restored from a previous state,
-            // then we don't need to do anything and should return or else
-            // we could end up with overlapping fragments.
-            if (savedInstanceState != null) {
-                MakeLog("null saved instace state");
-                // return;
-            }
-
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, list).commit();
-
             button2 = (Button) findViewById(R.id.button2);
             button2.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -70,8 +49,6 @@ public class Groupselector extends AppCompatActivity {
                         button2.setText("ADD GROUP");
                         switchView = 1;
                     }
-
-
                 }
             });
         }

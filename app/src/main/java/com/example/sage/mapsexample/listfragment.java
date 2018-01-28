@@ -38,13 +38,10 @@ public class listfragment extends Fragment{
     private String name;
     private String Uid;
 
-
     public TextView listcontent;
-
 
     public FirebaseDatabase db;
     private FirebaseAuth mAuth;
-
 
     private static final String TAG = "ListFragment";
 
@@ -52,7 +49,6 @@ public class listfragment extends Fragment{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        MakeLog("Fragment working ");
         mAuth = FirebaseAuth.getInstance();
     }
 
@@ -60,18 +56,13 @@ public class listfragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-
-
         View view = inflater.inflate(R.layout.list_fragment,container,false);
         listGroups = view.findViewById(R.id.listView2);
-
 
         //styling
         listcontent = (TextView) view.findViewById(R.id.list_content);
         listGroups.setPadding(50,50,50,0);
-
         Uid = mAuth.getUid();
-
         db = FirebaseDatabase.getInstance();
         db.getReference("Details/"+Uid+"Name").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -110,8 +101,6 @@ public class listfragment extends Fragment{
                             @Override
                             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                                 TextView tv = view.findViewById(R.id.list_content);
-                                Log.d(TAG, "group name: "+tv.getText().toString());
-                                Log.d(TAG, "groupID: "+groupsMap.get(tv.getText().toString()));
                                 Intent maps = new Intent(getActivity(), MapsActivity.class);
                                 maps.putExtra("UserID", Uid);
                                 maps.putExtra("Name", name);
@@ -123,17 +112,10 @@ public class listfragment extends Fragment{
                     @Override
                     public void onCancelled(DatabaseError databaseError) { }
                 });
-
             }
             @Override
             public void onCancelled(DatabaseError databaseError) { }
         });
-
-
-
         return view;
-    }
-    public void MakeLog(String mesaage){
-        Log.d(TAG, "MakeLog: " +mesaage);
     }
 }
