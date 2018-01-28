@@ -23,10 +23,13 @@ android:id="@+id/MapsActivity">
         <Button
             android:id="@+id/button3"
             android:layout_marginTop="20dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
             android:layout_width="wrap_content"
+            android:layout_centerHorizontal="true"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:text="Manage Groups"
+            android:text="Groups"
             android:onClick="onClickBtn"
             android:background="@drawable/rounded_button"
             android:textColor="@drawable/button_text"/>

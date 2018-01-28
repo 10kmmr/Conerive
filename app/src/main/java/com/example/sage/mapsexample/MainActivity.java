@@ -351,32 +351,24 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    //    public void done() {
-//        String name=Name.getText().toString();
-//        String uniid = mAuth.getCurrentUser().getUid();
-//        dbref= database.getReference("Details/"+uniid);
-//        database.getReference("Details/"+uniid+"/Name").setValue(name);
-//        //database.getReference("Details/"+uniid+"/Group").push().setValue(grpName);
-//        Intent intent = new Intent(this, MapsActivity.class);
-//        intent.putExtra("Name",name );
-//        intent.putExtra("GroupID",grpName);
-//        intent.putExtra("UserID", uniid);
-//        startActivity(intent);
-//    }
     public void NextActivity() {
-        database.getReference("Details").child(mAuth.getUid()).child("Name").addValueEventListener(new ValueEventListener() {
+        database.getReference("Details").child(mAuth.getUid()).child("Name").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 loggedin.putExtra("UserID", mAuth.getUid());
                 loggedin.putExtra("Name", dataSnapshot.getValue().toString());
                 loggedin.putExtra("GroupID", "NULL");
+                Email.addTextChangedListener(null);
+                pass.addTextChangedListener(null);
+                Name.addTextChangedListener(null);
+                PhoneNumber.addTextChangedListener(null);
+                signUp.setOnClickListener(null);
+                login.setOnClickListener(null);
+                getStarted.setOnClickListener(null);
                 startActivity(loggedin);
             }
-
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
 
     }
