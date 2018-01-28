@@ -33,7 +33,6 @@ public class JoinRegGroupFragment extends Fragment{
 
     private static final String TAG = "JoinRegGroupFragment";
 
-
     //Views
     public Button newGroup;
     public EditText gName;
@@ -50,22 +49,12 @@ public class JoinRegGroupFragment extends Fragment{
     String groupID;
     String Name;
     String newGroupName;
-
-
-    //DONT TOUCH
     String passW;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db= FirebaseDatabase.getInstance();
-    }
-    public void MakeToast(String message){
-        Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
-    }
-
-    public void MakeLog(String mesaage){
-        Log.d(TAG, "MakeLog: " + mesaage);
     }
 
     @Override
@@ -77,17 +66,11 @@ public class JoinRegGroupFragment extends Fragment{
         groupID =getArguments().getString("GroupID");
         userID = getArguments().getString("UserID");
         Name = getArguments().getString("Name");
-        MakeLog("From fragment  Name :" +Name + " UserID : " + userID + " groupID : " + groupID);
-
 
         //View controllers
         newGroup = (Button)view.findViewById(R.id.newGroup);
-
-
-
         gName = (EditText)view.findViewById(R.id.Name);
         gPassword= (EditText)view.findViewById(R.id.gPassword);
-
         join = (Button)view.findViewById(R.id.join);
 
         join.setOnClickListener(new View.OnClickListener() {
@@ -106,8 +89,6 @@ public class JoinRegGroupFragment extends Fragment{
                 } else {
                     Toast.makeText(getActivity().getApplicationContext(), "invalid group name", Toast.LENGTH_SHORT).show();
                 }
-
-
             }
         });
 
@@ -141,9 +122,9 @@ public class JoinRegGroupFragment extends Fragment{
                                     db.getReference("GroupIDTable/"+newGroupName).setValue(GeneratedGroupID);
 
                                     //writing to the userID group
-
                                     groupID=GeneratedGroupID;
                                     NextActivity();
+
                                 } else {
                                     Toast.makeText(getActivity().getApplicationContext(), "choose different group name", Toast.LENGTH_SHORT).show();
                                 }
@@ -193,40 +174,8 @@ public class JoinRegGroupFragment extends Fragment{
             @Override
             public void afterTextChanged(Editable editable) {}
         });
-
-
-
-
         return view;
    }
-
-//        //listGroups.setVisibility(View.VISIBLE);
-
-//    public void updateUI(){
-//        newGroup.setVisibility(View.INVISIBLE);
-
-//        //listGroups.setVisibility(View.INVISIBLE);
-//    }
-
-//    public void methord1(){
-//        final String Group=gName.getText().toString();
-//        db.getReference("Groups").addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                for(DataSnapshot GroupIDs:dataSnapshot.getChildren())
-//                    for(DataSnapshot GroupIDelements:GroupIDs.getChildren()){
-//                        String keyValue=GroupIDelements.getKey();
-//                        if(keyValue.equals("Name"))
-//                            if(GroupIDelements.getValue().toString().equals(Group))
-//                                MakeLog("FOUND " + GroupIDelements.getValue().toString());
-//                    }
-//            }
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
-//    }
 
     public void  method2(final String gGroup, final String gPass){
         db.getReference("GroupIDTable").addValueEventListener(new ValueEventListener() {
@@ -235,46 +184,35 @@ public class JoinRegGroupFragment extends Fragment{
                 for(DataSnapshot names : dataSnapshot.getChildren()){
                     if(names.getKey().equals(gGroup)) {
                         groupID = names.getValue().toString();
-                        MakeLog("in getting groupID :" + groupID);
-                        //Set 2
                         Getpassword_handleAsyc(gPass);
-                        //Set 3 Security is handled inside that functions only
-                    }//fix error handling
+                    }
                 }
             }
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
     }
     public void Getpassword_handleAsyc(final String gPass){
-        MakeLog("before asyc"+groupID);
         db.getReference("Groups/"+groupID).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                MakeLog("insdie "+dataSnapshot.toString());
                 passW=dataSnapshot.child("Password").getValue().toString();
-                //Set 3 Security
                 GroupLogin(gPass);
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) {}
         });
     }
     public void GroupLogin(String pass){
-        if(!passW.isEmpty())
+        if(!passW.isEmpty()){
             if(passW.equals(pass)){
-                MakeLog("intent to" + groupID);
-                //db.getReference("Details/"+userID+"/Group/"+groupID).setValue(newGroup);
                 NextActivity();
             }else{
-                Toast.makeText(getActivity().getApplicationContext(), "invalid group  password", Toast.LENGTH_SHORT).show();
-            }else
-            MakeToast("no pass");
+                Toast.makeText(getActivity().getApplicationContext(), "invalid group password", Toast.LENGTH_SHORT).show();
+            }
+        }else
+            Toast.makeText(getActivity().getApplicationContext(), "no password", Toast.LENGTH_SHORT).show();
     }
     public void NextActivity(){
         if(groupID!=null) {

@@ -23,34 +23,17 @@ import java.util.List;
 
 public class Groupselector extends AppCompatActivity {
 
-    private static final String TAG = "Groupselector";
-
     private int switchView = 1;
-
     listfragment list = new listfragment();
     JoinRegGroupFragment joinReg = new JoinRegGroupFragment();
-
     public Button button2;
-    public void MakeLog(String mesaage){
-
-    }
-
-    public void MakeToast(String message){
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_groupselector);
-        MakeLog("OnCreate : GroupSelector");
         View frag = findViewById(R.id.fragment_container);
         if (frag != null) {
-            Log.d(TAG, "MakeLog: " + "Started making Fragment");
-            if (savedInstanceState != null) {
-                Log.d(TAG, "MakeLog: " + "null save instance state");
-            }
-
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, list).commit();
             button2 = (Button) findViewById(R.id.button2);
             button2.setOnClickListener(new View.OnClickListener() {
@@ -66,8 +49,6 @@ public class Groupselector extends AppCompatActivity {
                         button2.setText("ADD GROUP");
                         switchView = 1;
                     }
-
-
                 }
             });
         }

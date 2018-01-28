@@ -67,27 +67,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public String Name;
     ArrayAdapter<String> adapter;
     private PopupWindow mPopupWindow;
-
-    //location
     private FusedLocationProviderClient mFusedLocationClient;
     private Location mLastKnownLocation;
     LocationRequest mLocationRequest;
-
     FirebaseDatabase database;
     GeoFire ownerGeoFireObject;
-
     DatabaseReference groupReference;
     DatabaseReference ownerReference;
-
     Circle limitCircle;
     Circle inclusiveCircle;
-
     double limitRadius = 4000;
     double inclusiveRadius = 0;
-
-
     HashMap<String, GroupMember> users = new HashMap<>();
-
     private static final String TAG = "MyActivity";
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -128,7 +119,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(intent);
     }
 
-
     @Override
     public void onPause() {
         super.onPause();
@@ -138,17 +128,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-
-
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         mMap = googleMap;
-
         try {
             boolean success = googleMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             this, R.raw.style_json));
-
             if (!success) {
                 Log.e(TAG, "Style parsing failed.");
             }
@@ -226,9 +212,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return false;
             }
         });
-
         resetCircle();
-
     }
 
     public void getUsers() {
@@ -238,7 +222,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 String userID = dataSnapshot.getKey();
                 users.put(userID, new GroupMember(userID, groupID, mMap, database, adapter));
-                Log.d(TAG, "map :"+users.keySet());
             }
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) { }
@@ -277,7 +260,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Location midPoint = new Location(LocationManager.GPS_PROVIDER);
                     midPoint.setLatitude(latSum/users.size());
                     midPoint.setLongitude(lngSum/users.size());
-                    double inclusiveRadius = 0;
+                    inclusiveRadius = 0;
                     if (users != null && users.size() > 0) {
                         for (Map.Entry<String, GroupMember> u : users.entrySet()) {
                             Location temp = new Location(LocationManager.GPS_PROVIDER);
@@ -305,7 +288,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 .strokeColor(Color.BLUE));
                     } else {
                         inclusiveCircle.setCenter(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()));
-                        inclusiveCircle.setRadius(inclusiveRadius+ 100);
+                        inclusiveCircle.setRadius(inclusiveRadius + 100);
                         if(inclusiveRadius>limitRadius){
                             inclusiveCircle.setStrokeColor(Color.RED);
                         } else {
@@ -333,11 +316,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onLocationResult(LocationResult locationResult) {
             for (Location location : locationResult.getLocations()) {
-                Log.i("MapsActivity", "Location: " + location.getLatitude() + " " + location.getLongitude());
-                //Place current location marker
                 mLastKnownLocation=location;
                 ownerGeoFireObject.setLocation("Location", new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
-
             }
         }
     };
