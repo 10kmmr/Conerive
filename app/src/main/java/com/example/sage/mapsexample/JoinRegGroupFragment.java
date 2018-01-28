@@ -98,16 +98,6 @@ public class JoinRegGroupFragment extends Fragment{
                         newGroupName=gName.getText().toString();
                         final String gPass =gPassword.getText().toString();
                         String GroupID ;
-
-                        //METHORD 1 querry the inside the Structure (nested querrying)
-                        //methord1();
-
-
-                        //Method 2 querry the new Structure
-                        //First find the GroupID for that name
-                        //then get password
-                        //then pass to next activity
-                        //Set 1
                         groupID=null;
                         method2(newGroupName , gPass);
                     } else {

@@ -32,8 +32,9 @@ public class Groupselector extends AppCompatActivity {
 
     public Button button2;
     public void MakeLog(String mesaage){
-        Log.d(TAG, "MakeLog: " + mesaage);
+
     }
+
     public void MakeToast(String message){
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
@@ -45,17 +46,12 @@ public class Groupselector extends AppCompatActivity {
         MakeLog("OnCreate : GroupSelector");
         View frag = findViewById(R.id.fragment_container);
         if (frag != null) {
-            MakeLog("Started making Fragment");
-            // However, if we're being restored from a previous state,
-            // then we don't need to do anything and should return or else
-            // we could end up with overlapping fragments.
+            Log.d(TAG, "MakeLog: " + "Started making Fragment");
             if (savedInstanceState != null) {
-                MakeLog("null saved instace state");
-                // return;
+                Log.d(TAG, "MakeLog: " + "null save instance state");
             }
 
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, list).commit();
-
             button2 = (Button) findViewById(R.id.button2);
             button2.setOnClickListener(new View.OnClickListener() {
                 @Override
