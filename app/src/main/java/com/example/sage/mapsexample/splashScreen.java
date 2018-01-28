@@ -1,8 +1,12 @@
 package com.example.sage.mapsexample;
 
+import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -22,6 +26,12 @@ public class splashScreen extends AppCompatActivity {
     private TextView tv;
     private ImageView iv;
     private boolean isLoggedin =false;
+
+    LocationManager lm;
+    boolean gps_enabled = false;
+    boolean network_enabled = false;
+    TextView gpsText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,21 +43,45 @@ public class splashScreen extends AppCompatActivity {
         Animation myanim = AnimationUtils.loadAnimation(this, R.anim.splashscreen);
         tv.startAnimation(myanim);
         iv.startAnimation(myanim);
+        lm = (LocationManager)getApplication().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        gpsText = findViewById(R.id.gpsDisabledText);
 
     }
+
+    private void checkLocationAndInternetOnAndProceed(){
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                } catch(Exception ex) {}
+
+                if(!gps_enabled){
+                    gpsText.setVisibility(View.VISIBLE);
+                    handler.postDelayed(this, 100);
+                } else {
+                    gpsText.setVisibility(View.INVISIBLE);
+                    // Check if user is signed in (non-null) and update UI accordingly.
+                    FirebaseUser currentUser = mAuth.getCurrentUser();
+                    if (currentUser != null) {
+                        isLoggedin = true;
+                        NextActivity();
+                    } else{
+                        Intent notLoggedin = new Intent(getApplication().getApplicationContext(),MainActivity.class);
+                        startActivity(notLoggedin);
+                    }
+                }
+            }
+        });
+    }
+
 
     @Override
     public void onStart() {
         super.onStart();
-        // Check if user is signed in (non-null) and update UI accordingly.
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            isLoggedin = true;
-            NextActivity();
-        }else{
-            Intent notLoggedin = new Intent(this,MainActivity.class);
-            startActivity(notLoggedin);
-        }
+        checkLocationAndInternetOnAndProceed();
     }
 
     public void NextActivity() {

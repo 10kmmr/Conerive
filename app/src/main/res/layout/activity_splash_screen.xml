@@ -26,7 +26,7 @@
         app:layout_constraintVertical_bias="0.567" />
 
     <TextView
-        android:id="@+id/Example"
+        android:id="@+id/gpsDisabledText"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -37,9 +37,9 @@
         android:background="@drawable/warningtext"
         android:gravity="center"
         android:padding="10dp"
-        android:text="TextView"
+        android:text="Switch on location services!"
         android:textSize="20dp"
-        android:visibility="visible"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
