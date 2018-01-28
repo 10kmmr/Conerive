@@ -66,7 +66,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public String userID;
     public String Name;
     ArrayAdapter<String> adapter;
-
     private PopupWindow mPopupWindow;
 
     //location
@@ -224,7 +223,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
                 mPopupWindow.setOutsideTouchable(true);
                 */
-
                 return false;
             }
         });
