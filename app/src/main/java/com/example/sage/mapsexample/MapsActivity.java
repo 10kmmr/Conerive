@@ -15,6 +15,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.location.*;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -192,11 +193,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 email.setText(EmailCurrent);
                 TextView mobileNumber = customView.findViewById(R.id.MobileNumber);
                 mobileNumber.setText(NumberCurrent);
-                /*
                 mPopupWindow.showAtLocation(findViewById(R.id.MapsActivity), Gravity.CENTER,0,0);
                 mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
                 mPopupWindow.setOutsideTouchable(true);
-                */
                 return false;
             }
         });
