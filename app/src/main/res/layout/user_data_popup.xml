@@ -1,45 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/user"
-    android:background="@color/colorAccent">
+    android:background="#212121">
 
     <Button
+        android:id="@+id/Close"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/Close"
-        android:text="Close popup"/>
+        android:layout_marginTop="188dp"
+        android:background="@drawable/popupbutton"
+        android:text="Close popup"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="209dp" />
+
     <TextView
         android:id="@+id/Name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
+        android:layout_below="@id/Close"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:hint="Name"
-        android:layout_below="@id/Close" />
+        android:text=""
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.084"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.015" />
 
     <TextView
         android:id="@+id/Email"
-        android:hint="Email-ID"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/Name"/>
+        android:layout_below="@+id/Name"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:hint="Email-ID"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.11"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.199" />
 
     <TextView
         android:id="@+id/MobileNumber"
-        android:hint="Mobile-number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/Email"/>
+        android:layout_below="@+id/Email"
+        android:layout_marginBottom="292dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:hint="Mobile-number"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.029"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.213" />
 
     <Button
+        android:id="@+id/Call"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/Call"
+        android:layout_below="@id/MobileNumber"
         android:text="Call"
-        android:layout_below="@id/MobileNumber"/>
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="511dp" />
 
 
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>
