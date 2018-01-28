@@ -24,10 +24,10 @@
         android:id="@+id/Email"
         android:layout_width="252dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/PhoneNumber"
         android:layout_alignLeft="@+id/Name"
         android:layout_alignStart="@+id/Name"
-        android:layout_marginBottom="25dp"
+        android:layout_below="@+id/splashimg2"
+        android:layout_marginTop="21dp"
         android:ems="10"
         android:hint="Email"
         android:inputType="textPersonName"
@@ -37,8 +37,10 @@
         android:id="@+id/Password"
         android:layout_width="252dp"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
+        android:layout_above="@+id/signUp"
+        android:layout_alignLeft="@+id/PhoneNumber"
+        android:layout_alignStart="@+id/PhoneNumber"
+        android:layout_marginBottom="55dp"
         android:ems="10"
         android:hint="Password"
         android:inputType="textPassword"
@@ -48,10 +50,11 @@
         android:id="@+id/Name"
         android:layout_width="252dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
 
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="19dp"
+        android:layout_alignBottom="@+id/splashimg2"
+        android:layout_alignLeft="@+id/getStarted"
+        android:layout_alignStart="@+id/getStarted"
+        android:layout_marginBottom="12dp"
         android:ems="10"
         android:hint="Name"
         android:inputType="textPersonName"
@@ -64,9 +67,9 @@
         android:layout_above="@+id/Login"
         android:layout_alignLeft="@+id/Login"
         android:layout_alignStart="@+id/Login"
-        android:layout_marginBottom="40dp"
-        android:text="Signup"
+        android:layout_marginBottom="26dp"
         android:background="@drawable/rounded_button"
+        android:text="Signup"
         android:textColor="@drawable/button_text"
         android:visibility="visible" />
 
@@ -77,24 +80,42 @@
         android:layout_above="@+id/Password"
         android:layout_alignLeft="@+id/Email"
         android:layout_alignStart="@+id/Email"
-        android:layout_marginBottom="23dp"
+        android:layout_marginBottom="13dp"
         android:ems="10"
         android:hint="Phone Number"
         android:inputType="number"
         android:visibility="invisible" />
 
+    <ImageView
+        android:id="@+id/splashimg2"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+
+        android:layout_alignLeft="@+id/Name"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/Name"
+        android:layout_gravity="center"
+        android:layout_marginLeft="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="13dp"
+        app:layout_constraintBottom_toTopOf="@+id/splashtxt"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/conerive" />
+
     <Button
         android:id="@+id/getStarted"
         android:layout_width="252dp"
         android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/signUp"
-        android:layout_alignRight="@+id/signUp"
-        android:layout_alignTop="@+id/signUp"
-        android:layout_marginTop="18dp"
-        android:text="GET STARTED"
-        android:visibility="invisible"
+        android:layout_above="@+id/Name"
+        android:layout_alignLeft="@+id/signUp"
+        android:layout_alignStart="@+id/signUp"
+        android:layout_marginBottom="17dp"
         android:background="@drawable/rounded_button"
-        android:textColor="@drawable/button_text"/>
+        android:text="GET STARTED"
+        android:textColor="@drawable/button_text"
+        android:visibility="invisible" />
 
     <!--<com.facebook.login.widget.LoginButton-->
         <!--android:id="@+id/login_button"-->

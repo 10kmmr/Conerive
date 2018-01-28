@@ -14,6 +14,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -41,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     //random values
     private boolean isLoggedin = false;
+    private ImageView iv;
+
     int PERMISSION_ALL = 1;
     //View Declarations
     public Button login;
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        iv = (ImageView) findViewById(R.id.splashimg2);
         //facebook login crap
 //        mcallbackManager = CallbackManager.Factory.create();
 //        LoginButton loginButton = findViewById(R.id.login_button);
@@ -345,6 +348,7 @@ public class MainActivity extends AppCompatActivity {
         Name.setVisibility(View.VISIBLE);
         PhoneNumber.setVisibility(View.VISIBLE);
         getStarted.setVisibility(View.VISIBLE);
+        iv.setVisibility(View.VISIBLE);
     }
 
 
