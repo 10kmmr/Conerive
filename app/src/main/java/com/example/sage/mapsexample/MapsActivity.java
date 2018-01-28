@@ -15,6 +15,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.location.*;
+import android.support.v4.content.ContextCompat;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -169,7 +170,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 );
 
                 if(Build.VERSION.SDK_INT>=21){
-                    mPopupWindow.setElevation(5.0f);
+                    mPopupWindow.setElevation(50.0f);
                 }
 
                 Button close = customView.findViewById(R.id.Close);
