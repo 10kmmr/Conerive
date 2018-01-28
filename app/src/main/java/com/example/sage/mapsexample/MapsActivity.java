@@ -65,7 +65,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public String groupID;
     public String userID;
     public String Name;
-    Spinner spinner;
     ArrayAdapter<String> adapter;
 
     private PopupWindow mPopupWindow;
@@ -106,25 +105,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         groupReference = database.getReference("Root/"+groupID);
         ownerReference = database.getReference("Root/"+groupID+"/"+userID);
         ownerGeoFireObject = new GeoFire(ownerReference);
-        spinner = (Spinner)findViewById(R.id.groupMembers);
         adapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item, new ArrayList<String>());
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                try{
-                    String userName = spinner.getSelectedItem().toString();
-                    GroupMember temp = users.get(userName);
-                    mMap.moveCamera(CameraUpdateFactory
-                            .newLatLngZoom(new LatLng(temp.userLocation.latitude, temp.userLocation.longitude), 15));
-               } catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {}
-        });
 
         //Location
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);

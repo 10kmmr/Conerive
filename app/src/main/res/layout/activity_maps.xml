@@ -12,10 +12,9 @@ android:id="@+id/MapsActivity">
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/groupMembers"
         tools:context="com.example.sage.mapsexample.MapsActivity" />
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -23,7 +22,8 @@ android:id="@+id/MapsActivity">
 
         <Button
             android:id="@+id/button3"
-            android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:text="Manage Groups"
@@ -31,16 +31,6 @@ android:id="@+id/MapsActivity">
             android:background="@drawable/rounded_button"
             android:textColor="@drawable/button_text"/>
 
-
-    </LinearLayout>
-
-    <Spinner
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/groupMembers"
-        android:layout_below="@+id/topButtonBar">
-    </Spinner>
-
-
+    </RelativeLayout>
 
 </RelativeLayout>

@@ -91,18 +91,21 @@ public class listfragment extends Fragment{
                             groupsArray[i] = a.getKey();
                             i++;
                         }
-                        ArrayAdapter<String> listAdapter = new ArrayAdapter<String>(getActivity().getApplicationContext(), android.R.layout.simple_list_item_1, groupsArray){
-                            @Override
-                            public View getView(int position, View convertView, ViewGroup parent) {
-                                View view =super.getView(position, convertView, parent);
+                        try {
+                            ArrayAdapter<String> listAdapter = new ArrayAdapter<String>(getActivity().getApplicationContext(), android.R.layout.simple_list_item_1, groupsArray) {
+                                @Override
+                                public View getView(int position, View convertView, ViewGroup parent) {
+                                    View view = super.getView(position, convertView, parent);
 
-                                TextView textView=(TextView) view.findViewById(android.R.id.text1);
-                                textView.setTextColor(Color.BLUE);
-                                return view;
-                            }
-                        };
-                        listGroups.setAdapter(new ArrayAdapter<String>(getActivity().getApplicationContext(), R.layout.list_fragment_item, R.id.list_content, groupsArray));
-
+                                    TextView textView = (TextView) view.findViewById(android.R.id.text1);
+                                    textView.setTextColor(Color.BLUE);
+                                    return view;
+                                }
+                            };
+                            listGroups.setAdapter(new ArrayAdapter<String>(getActivity().getApplicationContext(), R.layout.list_fragment_item, R.id.list_content, groupsArray));
+                        } catch (Exception e){
+                            e.printStackTrace();
+                        }
                         listGroups.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             @Override
                             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
