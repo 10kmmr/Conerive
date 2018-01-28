@@ -70,7 +70,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DatabaseReference ownerReference;
     Circle limitCircle;
     Circle inclusiveCircle;
-    double limitRadius = 4000;
+    double limitRadius = 2500;
     double inclusiveRadius = 0;
     HashMap<String, GroupMember> users = new HashMap<>();
     private static final String TAG = "MyActivity";
