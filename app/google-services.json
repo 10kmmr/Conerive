@@ -15,6 +15,30 @@
       },
       "oauth_client": [
         {
+          "client_id": "505944589113-uib46hesduphbt58bkb1l0g678jpfmok.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sage.mapsexample",
+            "certificate_hash": "851a93a609825b48b38d6173d634689da1b7c87d"
+          }
+        },
+        {
+          "client_id": "505944589113-f5ht13rafme7ne4ajc1jielmnne9eejv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sage.mapsexample",
+            "certificate_hash": "33f89f65b8e72a11a951300ccf84660d7017169b"
+          }
+        },
+        {
+          "client_id": "505944589113-nv25adcor4j4kp5grjv1l3t8u3vdh85e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sage.mapsexample",
+            "certificate_hash": "841d5eae84f17e199af8921cc29a7b60fc1fe7fd"
+          }
+        },
+        {
           "client_id": "505944589113-il1kp84d2etp25i17nm4oa4kla7okhql.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,8 +53,13 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "505944589113-il1kp84d2etp25i17nm4oa4kla7okhql.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
           "status": 2

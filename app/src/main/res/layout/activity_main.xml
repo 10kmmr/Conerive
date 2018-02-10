@@ -1,90 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.example.sage.mapsexample.MainActivity"
-    android:background="@drawable/front_page_background">
+    android:layout_height="match_parent">
 
 
     <Button
         android:id="@+id/Login"
         android:layout_width="252dp"
-        android:layout_height="wrap_content"
+        android:layout_height="38dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="37dp"
-        android:text="Login"
+        android:layout_marginBottom="148dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:background="@drawable/rounded_button"
+        android:text="Login/SignUp"
         android:textColor="@drawable/button_text"
-        android:visibility="visible" />
-
-    <EditText
-        android:id="@+id/Email"
-        android:layout_width="252dp"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/Name"
-        android:layout_alignStart="@+id/Name"
-        android:layout_below="@+id/splashimg2"
-        android:layout_marginTop="21dp"
-        android:ems="10"
-        android:hint="Email"
-        android:inputType="textPersonName"
-        android:visibility="visible" />
-
-    <EditText
-        android:id="@+id/Password"
-        android:layout_width="252dp"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/signUp"
-        android:layout_alignLeft="@+id/PhoneNumber"
-        android:layout_alignStart="@+id/PhoneNumber"
-        android:layout_marginBottom="55dp"
-        android:ems="10"
-        android:hint="Password"
-        android:inputType="textPassword"
-        android:visibility="visible" />
-
-    <EditText
-        android:id="@+id/Name"
-        android:layout_width="252dp"
-        android:layout_height="wrap_content"
-
-        android:layout_alignBottom="@+id/splashimg2"
-        android:layout_alignLeft="@+id/getStarted"
-        android:layout_alignStart="@+id/getStarted"
-        android:layout_marginBottom="12dp"
-        android:ems="10"
-        android:hint="Name"
-        android:inputType="textPersonName"
-        android:visibility="invisible" />
-
-    <Button
-        android:id="@+id/signUp"
-        android:layout_width="252dp"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/Login"
-        android:layout_alignLeft="@+id/Login"
-        android:layout_alignStart="@+id/Login"
-        android:layout_marginBottom="26dp"
-        android:background="@drawable/rounded_button"
-        android:text="Signup"
-        android:textColor="@drawable/button_text"
-        android:visibility="visible" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <EditText
         android:id="@+id/PhoneNumber"
         android:layout_width="252dp"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/Name"
-        android:layout_alignLeft="@+id/Name"
-        android:layout_alignStart="@+id/Name"
-        android:layout_marginBottom="29dp"
+        android:layout_height="49dp"
+        android:layout_alignLeft="@+id/Email"
+        android:layout_alignStart="@+id/Email"
+        android:layout_below="@+id/Email"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:ems="10"
         android:hint="Phone Number"
         android:inputType="number"
-        android:visibility="invisible" />
+        android:text="+91"
+        android:visibility="visible"
+        app:layout_anchor="@+id/splashimg2"
+        app:layout_anchorGravity="bottom|center"
+        app:layout_constraintBottom_toTopOf="@+id/Login"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/splashimg2"
+        app:layout_constraintVertical_bias="0.032" />
+
+    <EditText
+        android:id="@+id/OTP"
+        android:layout_width="252dp"
+        android:layout_height="49dp"
+        android:layout_alignLeft="@+id/Email"
+        android:layout_alignStart="@+id/Email"
+        android:layout_below="@+id/Email"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:inputType="number"
+        android:visibility="visible"
+        app:layout_anchor="@+id/splashimg2"
+        app:layout_anchorGravity="bottom|center"
+        app:layout_constraintBottom_toTopOf="@+id/Login"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/splashimg2"
+        app:layout_constraintVertical_bias="0.443" />
 
     <ImageView
         android:id="@+id/splashimg2"
@@ -95,27 +77,41 @@
         android:layout_alignParentTop="true"
         android:layout_alignStart="@+id/Name"
         android:layout_gravity="center"
-        android:layout_marginLeft="12dp"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="13dp"
+        android:layout_marginTop="24dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/splashtxt"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.465"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/conerive" />
 
-    <Button
-        android:id="@+id/getStarted"
-        android:layout_width="252dp"
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/signUp"
-        android:layout_alignBottom="@+id/signUp"
-        android:layout_alignLeft="@+id/signUp"
-        android:layout_alignStart="@+id/signUp"
-        android:background="@drawable/rounded_button"
-        android:text="GET STARTED"
-        android:textColor="@drawable/button_text"
-        android:visibility="invisible" />
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Enter OTP"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/OTP" />
+
+    <Button
+        android:id="@+id/OTPlogin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="OTPlogin"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Login" />
 
     <!--<com.facebook.login.widget.LoginButton-->
         <!--android:id="@+id/login_button"-->
@@ -126,4 +122,5 @@
         <!--android:layout_gravity="center_horizontal"-->
         <!--android:layout_marginTop="12dp"-->
         <!--android:visibility="visible" />-->
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>
+
