@@ -300,7 +300,8 @@ private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             isLoggedin = true;
-            NextActivity();
+            Intent intent = new Intent(this,UserSetting.class);
+            startActivity(intent);
         }
     }
 
@@ -340,23 +341,23 @@ private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         }
     }
 // ALL THE PERMISSION CRAP ---------------------------------------------------------------------//
-
-
-
-
-    public void NextActivity() {
-        database.getReference("Details").child(mAuth.getUid()).child("Name").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                loggedin.putExtra("UserID", mAuth.getUid());
-                loggedin.putExtra("Name", dataSnapshot.getValue().toString());
-                loggedin.putExtra("GroupID", "NULL");
-                //getStarted.setOnClickListener(null);
-                startActivity(loggedin);
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) { }
-        });
-
-    }
+//
+//
+//
+//
+//    public void NextActivity() {
+//        database.getReference("Details").child(mAuth.getUid()).child("Name").addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                loggedin.putExtra("UserID", mAuth.getUid());
+//                loggedin.putExtra("Name", dataSnapshot.getValue().toString());
+//                loggedin.putExtra("GroupID", "NULL");
+//                //getStarted.setOnClickListener(null);
+//                startActivity(loggedin);
+//            }
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) { }
+//        });
+//
+//    }
 }

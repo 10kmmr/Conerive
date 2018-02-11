@@ -24,6 +24,7 @@ public class UserSetting extends AppCompatActivity {
 //                        .setAction("Action", null).show();
 //            }
 //        });
+
     }
 
 }
