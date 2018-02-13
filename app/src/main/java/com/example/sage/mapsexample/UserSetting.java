@@ -1,11 +1,18 @@
 package com.example.sage.mapsexample;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import com.android.volley.Request;
@@ -16,8 +23,15 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +41,10 @@ public class UserSetting extends AppCompatActivity {
     String baseUrl = "http://192.168.2.5:8080/";
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;
+    FirebaseStorage firebaseStorage;
+    StorageReference displayPictureReference;
     public RequestQueue requestQueue;
+
     String userId;
     String name;
     String email;
@@ -35,6 +52,8 @@ public class UserSetting extends AppCompatActivity {
     public EditText nameET;
     public EditText emailET;
     public Button done;
+    public Button chooseDisplayPicture;
+    public ImageView displayPicture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +66,13 @@ public class UserSetting extends AppCompatActivity {
         nameET = findViewById(R.id.name);
         emailET = findViewById(R.id.email);
         done = findViewById(R.id.done);
+        chooseDisplayPicture = findViewById(R.id.chooseDisplayPicture);
+        displayPicture = findViewById(R.id.displayPicture);
+
+        firebaseStorage = FirebaseStorage.getInstance();
+        displayPictureReference = firebaseStorage.getReference().child("user_display_picture");
+
+
         requestQueue = Volley.newRequestQueue(this);
 
         done.setOnClickListener(new View.OnClickListener() {
@@ -57,6 +83,15 @@ public class UserSetting extends AppCompatActivity {
                 email = emailET.getText().toString();
                 phone = currentUser.getPhoneNumber();
                 createUser();
+            }
+        });
+
+        chooseDisplayPicture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                userId = mAuth.getUid();
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, 0);
             }
         });
     }
@@ -134,5 +169,29 @@ public class UserSetting extends AppCompatActivity {
             }
         };
         requestQueue.add(postRequest);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Bitmap bitmap = (Bitmap)data.getExtras().get("data");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageByte = baos.toByteArray();
+        UploadTask uploadTask = displayPictureReference.child(userId+".jpg").putBytes(imageByte);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                Log.d(TAG, "onSuccess: " + downloadUrl);
+            }
+        });
+        displayPicture.setImageBitmap(bitmap);
     }
 }
