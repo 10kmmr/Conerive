@@ -22,11 +22,16 @@ import java.util.Map;
 public class UserSetting extends AppCompatActivity {
 
     private static final String TAG = "UserSetting";
+    String baseUrl = "http://192.168.2.5:8080/";
     private FirebaseAuth mAuth;
-
+    public FirebaseUser currentUser;
+    public RequestQueue requestQueue;
+    String userId;
+    String name;
+    String email;
+    String  phone;
     public EditText nameET;
     public EditText emailET;
-
     public Button done;
 
     @Override
@@ -35,59 +40,99 @@ public class UserSetting extends AppCompatActivity {
         setContentView(R.layout.activity_user_setting);
 
         mAuth = FirebaseAuth.getInstance();
-        final FirebaseUser currentUser = mAuth.getCurrentUser();
+        currentUser = mAuth.getCurrentUser();
 
         nameET = findViewById(R.id.name);
         emailET = findViewById(R.id.email);
         done = findViewById(R.id.done);
-
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        requestQueue = Volley.newRequestQueue(this);
 
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                RequestQueue requestQueue = Volley.newRequestQueue(UserSetting.this);
-                final String userId = mAuth.getUid();
-                final String name= nameET.getText().toString();
-                String email= emailET.getText().toString();
-                final String  phone = currentUser.getPhoneNumber();
-
-                String url = "http://192.168.2.5:8080/users";
-
-                StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                        new Response.Listener<String>()
-                        {
-                            @Override
-                            public void onResponse(String response) {
-                                try {
-                                    JSONObject jsonObject = new JSONObject(response);
-                                    Log.d(TAG, "onResponse: " + jsonObject);
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        },
-                        new Response.ErrorListener()
-                        {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                // error
-                                Log.d("Error.Response", error.toString());
-                            }
-                        }
-                ) {
-                    @Override
-                    protected Map<String, String> getParams()
-                    {
-                        Map<String, String>  params = new HashMap<>();
-                        params.put("userId", userId);
-                        params.put("name", name);
-                        params.put("phone",phone);
-                        return params;
-                    }
-                };
-                requestQueue.add(postRequest);
+                userId = mAuth.getUid();
+                name = nameET.getText().toString();
+                email = emailET.getText().toString();
+                phone = currentUser.getPhoneNumber();
+                createUser();
             }
         });
     }
+    
+    public void createUser(){
+        String url = baseUrl+"users";
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            Log.d(TAG, "onResponse - users: " + jsonObject);
+                            if(email.length()>0){
+                                createEmail();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<>();
+                params.put("userId", userId);
+                params.put("name", name);
+                params.put("phone",phone);
+                return params;
+            }
+        };
+        requestQueue.add(postRequest);
+    }
+
+    public void createEmail(){
+        Log.d(TAG, "createEmail: " + "accessed");
+        String url = baseUrl+"users/emails";
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            Log.d(TAG, "onResponse - emails: " + jsonObject);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<>();
+                params.put("userId", userId);
+                params.put("email", email);
+                return params;
+            }
+        };
+        requestQueue.add(postRequest);
+    }
+
+
 }
