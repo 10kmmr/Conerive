@@ -85,18 +85,21 @@ public class splashScreen extends AppCompatActivity {
     }
 
     public void NextActivity() {
-        final Intent loggedin = new Intent(this, Groupselector.class);
-        database.getReference("Details").child(mAuth.getUid()).child("Name").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                loggedin.putExtra("UserID", mAuth.getUid());
-                loggedin.putExtra("Name", dataSnapshot.getValue().toString());
-                loggedin.putExtra("GroupID", "NULL");
+        final Intent loggedin = new Intent(this, UserSetting.class);
                 startActivity(loggedin);
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) { }
-        });
+
+//        final Intent loggedin = new Intent(this, Groupselector.class);
+//        database.getReference("Details").child(mAuth.getUid()).child("Name").addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                loggedin.putExtra("UserID", mAuth.getUid());
+//                loggedin.putExtra("Name", dataSnapshot.getValue().toString());
+//                loggedin.putExtra("GroupID", "NULL");
+//                startActivity(loggedin);
+//            }
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) { }
+//        });
     }
 
 }
