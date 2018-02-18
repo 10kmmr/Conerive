@@ -37,7 +37,7 @@ import java.util.Map;
 public class UserCreate extends AppCompatActivity {
 
     private static final String TAG = "UserCreate";
-    public String baseUrl = "http://192.168.2.5:8080/";
+    public String baseUrl = "http://192.168.2.4:8080/";
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;
     FirebaseStorage firebaseStorage;
@@ -48,7 +48,7 @@ public class UserCreate extends AppCompatActivity {
     public String name;
     public String email;
     public String phone;
-    public String displayPictureURL = "";
+    public String displayPictureURL;
 
     public boolean waitingForEmailsDBUpdate = true;
     public boolean waitingForDisplayPicturesDBUpdate = true;
@@ -66,18 +66,20 @@ public class UserCreate extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
+        requestQueue = Volley.newRequestQueue(this);
 
         nameET = findViewById(R.id.name);
         emailET = findViewById(R.id.email);
         done = findViewById(R.id.done);
         chooseDisplayPicture = findViewById(R.id.chooseDisplayPicture);
         displayPicture = findViewById(R.id.displayPicture);
+        displayPictureURL = "";
 
         firebaseStorage = FirebaseStorage.getInstance();
         displayPictureReference = firebaseStorage.getReference().child("user_display_picture");
 
 
-        requestQueue = Volley.newRequestQueue(this);
+
 
         done.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,6 +122,7 @@ public class UserCreate extends AppCompatActivity {
                             } else {
                                 waitingForDisplayPicturesDBUpdate = false;
                             }
+                            goToUserProfile();
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -129,7 +132,7 @@ public class UserCreate extends AppCompatActivity {
                 {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
+                        Log.d("Error.Response - createuser", error.toString());
                     }
                 }
         ) {
@@ -226,7 +229,7 @@ public class UserCreate extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        Bitmap bitmap = (Bitmap)data.getExtras().get("data");
+        final Bitmap bitmap = (Bitmap)data.getExtras().get("data");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageByte = baos.toByteArray();
@@ -242,14 +245,26 @@ public class UserCreate extends AppCompatActivity {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 Log.d(TAG, "onSuccess: " + downloadUrl);
                 displayPictureURL = downloadUrl.toString();
+                displayPicture.setImageBitmap(bitmap);
             }
         });
-        displayPicture.setImageBitmap(bitmap);
+
     }
 
     public void goToUserProfile(){
-        Handler handler = new Handler();
-
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if(!waitingForEmailsDBUpdate && !waitingForDisplayPicturesDBUpdate){
+                Intent intent = new Intent(UserCreate.this, UserProfile.class);
+                startActivity(intent);
+                } else {
+                    Log.d(TAG, "run: " + "some stuff");
+                    handler.postDelayed(this, 500);
+                }
+            }
+        });
     }
 
 

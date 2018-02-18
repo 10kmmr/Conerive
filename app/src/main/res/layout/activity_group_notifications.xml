@@ -4,8 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.sage.mapsexample.UserProfile">
-
-    <include layout="@layout/content_user_profile" />
+    tools:context="com.example.sage.mapsexample.GroupNotifications">
 
 </android.support.constraint.ConstraintLayout>

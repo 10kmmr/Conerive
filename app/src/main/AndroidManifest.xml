@@ -65,7 +65,8 @@
             android:name=".UserCreate"
             android:label="@string/title_activity_user_setting"
             android:theme="@style/AppTheme" />
-        <activity android:name=".UserProfile"></activity>
+        <activity android:name=".UserProfile" />
+        <activity android:name=".GroupNotifications"></activity>
     </application>
 
 </manifest>

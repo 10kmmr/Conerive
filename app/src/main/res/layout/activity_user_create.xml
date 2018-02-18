@@ -7,6 +7,6 @@
     tools:context="com.example.sage.mapsexample.UserCreate">
 
 
-    <include layout="@layout/content_user_setting" />
+    <include layout="@layout/content_user_create" />
 
 </android.support.design.widget.CoordinatorLayout>
