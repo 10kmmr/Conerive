@@ -40,7 +40,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_maps"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".MapsActivity"
             android:screenOrientation="portrait" />
@@ -62,9 +62,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".UserSetting"
+            android:name=".UserCreate"
             android:label="@string/title_activity_user_setting"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme" />
+        <activity android:name=".UserProfile"></activity>
     </application>
 
 </manifest>

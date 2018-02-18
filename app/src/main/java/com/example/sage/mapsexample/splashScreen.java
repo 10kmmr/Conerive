@@ -14,10 +14,7 @@ import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 public class splashScreen extends AppCompatActivity {
 
@@ -85,7 +82,7 @@ public class splashScreen extends AppCompatActivity {
     }
 
     public void NextActivity() {
-        final Intent loggedin = new Intent(this, UserSetting.class);
+        final Intent loggedin = new Intent(this, UserCreate.class);
                 startActivity(loggedin);
 
 //        final Intent loggedin = new Intent(this, Groupselector.class);

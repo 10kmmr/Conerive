@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -21,8 +22,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -35,20 +34,25 @@ import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UserSetting extends AppCompatActivity {
+public class UserCreate extends AppCompatActivity {
 
-    private static final String TAG = "UserSetting";
-    String baseUrl = "http://192.168.2.5:8080/";
+    private static final String TAG = "UserCreate";
+    public String baseUrl = "http://192.168.2.5:8080/";
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;
     FirebaseStorage firebaseStorage;
     StorageReference displayPictureReference;
     public RequestQueue requestQueue;
 
-    String userId;
-    String name;
-    String email;
-    String  phone;
+    public String userId;
+    public String name;
+    public String email;
+    public String phone;
+    public String displayPictureURL = "";
+
+    public boolean waitingForEmailsDBUpdate = true;
+    public boolean waitingForDisplayPicturesDBUpdate = true;
+
     public EditText nameET;
     public EditText emailET;
     public Button done;
@@ -58,7 +62,7 @@ public class UserSetting extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_user_setting);
+        setContentView(R.layout.activity_user_create);
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
@@ -108,6 +112,13 @@ public class UserSetting extends AppCompatActivity {
                             Log.d(TAG, "onResponse - users: " + jsonObject);
                             if(email.length()>0){
                                 createEmail();
+                            } else {
+                                waitingForEmailsDBUpdate = false;
+                            }
+                            if(displayPictureURL.length()>0){
+                                createDisplayPicture();
+                            } else {
+                                waitingForDisplayPicturesDBUpdate = false;
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -146,6 +157,7 @@ public class UserSetting extends AppCompatActivity {
                         try {
                             JSONObject jsonObject = new JSONObject(response);
                             Log.d(TAG, "onResponse - emails: " + jsonObject);
+                            waitingForEmailsDBUpdate = false;
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -171,6 +183,45 @@ public class UserSetting extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
+    public void createDisplayPicture(){
+        Log.d(TAG, "createDisplayPicture: " + "accessed");
+        String url = baseUrl+"users/display-pictures";
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            Log.d(TAG, "onResponse - display-pictures : " + jsonObject);
+                            waitingForDisplayPicturesDBUpdate = false;
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<>();
+                params.put("userId", userId);
+                params.put("displayPictureURL", displayPictureURL);
+                return params;
+            }
+        };
+        requestQueue.add(postRequest);
+    }
+
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -190,8 +241,16 @@ public class UserSetting extends AppCompatActivity {
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 Log.d(TAG, "onSuccess: " + downloadUrl);
+                displayPictureURL = downloadUrl.toString();
             }
         });
         displayPicture.setImageBitmap(bitmap);
     }
+
+    public void goToUserProfile(){
+        Handler handler = new Handler();
+
+    }
+
+
 }
