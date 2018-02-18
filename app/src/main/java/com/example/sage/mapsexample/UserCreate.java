@@ -257,7 +257,7 @@ public class UserCreate extends AppCompatActivity {
             @Override
             public void run() {
                 if(!waitingForEmailsDBUpdate && !waitingForDisplayPicturesDBUpdate){
-                Intent intent = new Intent(UserCreate.this, UserProfile.class);
+                Intent intent = new Intent(UserCreate.this, GroupList.class);
                 startActivity(intent);
                 } else {
                     Log.d(TAG, "run: " + "some stuff");
