@@ -5,7 +5,6 @@
     android:orientation="horizontal"
     android:padding="5dip" >
 
-    <!--  ListRow Left sied Thumbnail image -->
     <LinearLayout android:id="@+id/thumbnail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -20,7 +19,6 @@
 
     </LinearLayout>
 
-    <!-- Title Of Song-->
     <TextView
         android:id="@+id/groupName"
         android:layout_width="wrap_content"
@@ -33,19 +31,37 @@
         android:textSize="15dip"
         android:textStyle="bold"/>
 
-    <!-- Artist Name -->
     <TextView
-        android:id="@+id/groupData"
-        android:layout_width="fill_parent"
+        android:id="@+id/memberCount"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/groupName"
         android:textColor="#040404"
         android:textSize="10dip"
         android:layout_marginTop="2dip"
-        android:layout_toRightOf="@+id/thumbnail"
-        android:text="group data" />
+        android:layout_toRightOf="@+id/groupName"
+        android:text="member count" />
+    <TextView
+        android:id="@+id/tripCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/groupName"
+        android:textColor="#040404"
+        android:textSize="10dip"
+        android:layout_marginTop="2dip"
+        android:layout_toRightOf="@+id/memberCount"
+        android:text="trip count" />
+    <TextView
+        android:id="@+id/imageCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/groupName"
+        android:textColor="#040404"
+        android:textSize="10dip"
+        android:layout_marginTop="2dip"
+        android:layout_toRightOf="@+id/tripCount"
+        android:text="imageCount" />
 
-    <!-- Rightend Duration -->
     <TextView
         android:id="@+id/lastTripDate"
         android:layout_width="wrap_content"
