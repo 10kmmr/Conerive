@@ -67,7 +67,8 @@
             android:theme="@style/AppTheme" />
         <activity android:name=".UserProfile" />
         <activity android:name=".GroupNotifications" />
-        <activity android:name=".GroupList"></activity>
+        <activity android:name=".GroupList" />
+        <activity android:name=".GroupCreate"></activity>
     </application>
 
 </manifest>
