@@ -1,6 +1,7 @@
 package com.example.sage.mapsexample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -8,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -20,17 +22,31 @@ import java.util.List;
 public class GroupList extends AppCompatActivity {
 
     ListView groupList;
+    Button createGroup;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_list);
+
+        //
         groupList = findViewById(R.id.groupList);
+        createGroup = (Button)findViewById(R.id.createGroup);
+
         ListView yourListView =findViewById(R.id.groupList);
+
+
+
 
         ArrayList<GroupListDataModel> list = new ArrayList<>();
 
         GroupListAdapter groupListAdapter = new GroupListAdapter(this, R.layout.group_list_item, list);
         yourListView.setAdapter(groupListAdapter);
+    }
+
+    public void NextGroupSelector(){
+        Intent mintent = new Intent();
+        startActivity(mintent);
     }
 
     class GroupListAdapter extends ArrayAdapter<GroupListDataModel> {
@@ -69,4 +85,7 @@ public class GroupList extends AppCompatActivity {
         }
 
     }
+
+
+
 }
