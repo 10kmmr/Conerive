@@ -37,68 +37,53 @@ public class MainActivity extends AppCompatActivity {
     //list of permission
     String[] PERMISSIONS = {android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.CALL_PHONE};
     private static final String TAG = "MainActivity";
-    Intent loggedin;
-    //fireBase Auth
-    private FirebaseAuth mAuth;
-    //random values
-    private boolean isLoggedin = false;
-    private ImageView iv;
 
-    int PERMISSION_ALL = 1;
+
+    //FireBase
+    private FirebaseAuth mAuth;
+    FirebaseDatabase database;
+
     //View Declarations
+    private ImageView iv;
     public Button login;
     public EditText Name;
-    public EditText pass;
-    public EditText Email;
     public EditText PhoneNumber;
     public EditText OTP;
-
     public Button OTPlogin;
 
-    boolean isEmailValid;
-    boolean isPassValid;
-    boolean isNameValid;
+    //Intents
+    Intent loggedin;
+
+    //random values
+    private boolean isLoggedin = false;
+    int PERMISSION_ALL = 1;
     boolean isPhoneNumberValid;
 
     String mVerificationId;
     int mResendToken ;
-
-
     PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
-    //Database
-    FirebaseDatabase database;
-    DatabaseReference dbref;
-
-//    CallbackManager mcallbackManager;
-private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
-    mAuth.signInWithCredential(credential)
-            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()) {
-                        // Sign in success, update UI with the signed-in user's information
-                        Log.d(TAG, "signInWithCredential:success");
-
-                        FirebaseUser user = task.getResult().getUser();
-                        // ...
-                    } else {
-                        // Sign in failed, display a message and update the UI
-                        Log.w(TAG, "signInWithCredential:failure", task.getException());
-                        if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
-                            // The verification code entered was invalid
-                        }
-                    }
-                }
-            });
-}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        loggedin = new Intent(this, Groupselector.class);
+
+        //firebase
+        database = FirebaseDatabase.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+
+        //view Declarations
         iv = (ImageView) findViewById(R.id.splashimg2);
         OTP = (EditText) findViewById(R.id.OTP);
         OTPlogin = (Button)findViewById(R.id.OTPlogin);
+        login = (Button) findViewById(R.id.Login);
+        Name = (EditText) findViewById(R.id.Name);
+        PhoneNumber = (EditText) findViewById(R.id.PhoneNumber);
+
+
+        //------------------------------------------OPT START------------------------------------------------//
         mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
 
             @Override
@@ -150,6 +135,8 @@ private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
                 // ...
             }
         };
+
+
         OTPlogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -159,50 +146,9 @@ private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
             }
         });
 
+        //------------------------------------------OPT  END------------------------------------------------//
 
-
-        //facebook login crap
-//        mcallbackManager = CallbackManager.Factory.create();
-//        LoginButton loginButton = findViewById(R.id.login_button);
-//        loginButton.setReadPermissions("email", "public_profile","pages_messaging_phone_number ");
-//        loginButton.registerCallback(mcallbackManager, new FacebookCallback<LoginResult>() {
-//            @Override
-//            public void onSuccess(LoginResult loginResult) {
-//                Log.d(TAG, "facebook:onSuccess:" + loginResult);
-//                handleFacebookAccessToken(loginResult.getAccessToken());
-//            }
-//
-//            @Override
-//            public void onCancel() {
-//                Log.d(TAG, "facebook:onCancel");
-//            }
-//
-//            @Override
-//            public void onError(FacebookException error) {
-//                Log.d(TAG, "facebook:onError", error);
-//            }
-//        });
-
-        isEmailValid = false;
-        isPassValid = false;
-        isNameValid = false;
-        isPhoneNumberValid = false;
-
-
-        getLocationPermission();
-        mAuth = FirebaseAuth.getInstance();
-        //view Declarations
-        login = (Button) findViewById(R.id.Login);
-        Name = (EditText) findViewById(R.id.Name);
-
-        PhoneNumber = (EditText) findViewById(R.id.PhoneNumber);
-
-
-        database = FirebaseDatabase.getInstance();
-
-        loggedin = new Intent(this, Groupselector.class);
-
-
+        //------------------------------------------Text-Watcher START------------------------------------------------//
         PhoneNumber.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -236,54 +182,10 @@ private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
                         mCallbacks);
             }
         });
+        //------------------------------------------Text-Watcher START------------------------------------------------//
+        getLocationPermission();
     }
-
-
-
-    /*------------------------------------------FACEBOOK --------------------------------------------------------------------*/
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        // Pass the activity result back to the Facebook SDK
-//        mcallbackManager.onActivityResult(requestCode, resultCode, data);
-//    }
-//
-//    private void handleFacebookAccessToken(AccessToken token) {
-//        Log.d(TAG, "handleFacebookAccessToken:" + token);
-//
-//        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-//
-//        //token.getSource()
-//        mAuth.signInWithCredential(credential)
-//                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<AuthResult> task) {
-//                        if (task.isSuccessful()) {
-//                            // Sign in success, update UI with the signed-in user's information
-//                            Log.d(TAG, "signInWithCredential:success");
-//                            FirebaseUser user = mAuth.getCurrentUser();
-//                            Log.d(TAG, "onComplete: " +mAuth.getCurrentUser().getPhoneNumber());
-//                            //SignupButton
-//                        } else {
-//                            // If sign in fails, display a message to the user.
-//                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-    //                            Toast.makeText(MainActivity.this, "Authentication failed.",
-//                                    Toast.LENGTH_SHORT).show();
-//                            //SignupButton
-//                        }
-//
-//                        // ...
-//                    }
-//                });
-//    }
-    /*------------------------------------------FACEBOOK --------------------------------------------------------------------*/
-
-
-
-
-    //firebase Auth methords
-    //----------------------------------------------------------------------------------------------//
+    //-----------------------------------------------Firebase Auth Methords START-----------------------------------------------//
     @Override
     public void onStart() {
         super.onStart();
@@ -296,6 +198,30 @@ private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         }
     }
 
+
+    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithCredential:success");
+
+                            FirebaseUser user = task.getResult().getUser();
+                            // ...
+                        } else {
+                            // Sign in failed, display a message and update the UI
+                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
+                                // The verification code entered was invalid
+                            }
+                        }
+                    }
+                });
+    }
+
+    //-----------------------------------------------Firebase Auth Methords END  -----------------------------------------------//
 
     // ALL THE PERMISSION CRAP ---------------------------------------------------------------------//
 
@@ -332,10 +258,8 @@ private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         }
     }
 // ALL THE PERMISSION CRAP ---------------------------------------------------------------------//
-//
-//
-//
-//
+
+
 //    public void NextActivity() {
 //        database.getReference("Details").child(mAuth.getUid()).child("Name").addListenerForSingleValueEvent(new ValueEventListener() {
 //            @Override
