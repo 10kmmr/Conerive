@@ -68,7 +68,7 @@
         <activity android:name=".UserProfile" />
         <activity android:name=".GroupNotifications" />
         <activity android:name=".GroupList" />
-        <activity android:name=".GroupCreate"></activity>
+        <activity android:name=".GroupCreateActivity"></activity>
     </application>
 
 </manifest>

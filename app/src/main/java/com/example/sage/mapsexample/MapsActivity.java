@@ -1,7 +1,6 @@
 
 package com.example.sage.mapsexample;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -15,7 +14,6 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.location.*;
-import android.support.v4.content.ContextCompat;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -188,7 +186,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
 
-                TextView name = customView.findViewById(R.id.Name);
+                TextView name = customView.findViewById(R.id.GName);
                 name.setText(NameCurrent);
                 TextView email = customView.findViewById(R.id.Email);
                 email.setText(EmailCurrent);

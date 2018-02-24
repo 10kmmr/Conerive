@@ -60,7 +60,7 @@ public class JoinRegGroupFragment extends Fragment{
 
         //View controllers
         newGroup = (Button)view.findViewById(R.id.newGroup);
-        gName = (EditText)view.findViewById(R.id.Name);
+        gName = (EditText)view.findViewById(R.id.GName);
         gPassword= (EditText)view.findViewById(R.id.gPassword);
         join = (Button)view.findViewById(R.id.join);
 
