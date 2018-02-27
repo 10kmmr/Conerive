@@ -66,9 +66,13 @@
             android:label="@string/title_activity_user_setting"
             android:theme="@style/AppTheme" />
         <activity android:name=".UserProfile" />
-        <activity android:name=".GroupNotifications" />
-        <activity android:name=".GroupList" />
-        <activity android:name=".GroupCreateActivity"></activity>
+        <activity android:name=".Notifications" />
+        <activity android:name=".Home_GroupListActivity" />
+        <activity android:name=".GroupCreateActivity" />
+        <activity
+            android:name=".delete_Test"
+            android:label="@string/title_activity_delete__test"
+            android:theme="@style/AppTheme"></activity>
     </application>
 
 </manifest>

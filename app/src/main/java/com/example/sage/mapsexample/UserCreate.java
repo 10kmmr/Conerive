@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,7 +38,7 @@ import java.util.Map;
 public class UserCreate extends AppCompatActivity {
 
     private static final String TAG = "UserCreate";
-    public String baseUrl = "http://192.168.2.4:8080/";
+    public String baseUrl = "http://192.168.48.1:8080/";
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;
     FirebaseStorage firebaseStorage;
@@ -88,6 +89,7 @@ public class UserCreate extends AppCompatActivity {
                 name = nameET.getText().toString();
                 email = emailET.getText().toString();
                 phone = currentUser.getPhoneNumber();
+                Toast.makeText(UserCreate.this, "api calling next", Toast.LENGTH_SHORT).show();
                 createUser();
             }
         });
@@ -100,6 +102,7 @@ public class UserCreate extends AppCompatActivity {
                 startActivityForResult(intent, 0);
             }
         });
+
     }
     
     public void createUser(){
@@ -223,8 +226,6 @@ public class UserCreate extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -257,7 +258,7 @@ public class UserCreate extends AppCompatActivity {
             @Override
             public void run() {
                 if(!waitingForEmailsDBUpdate && !waitingForDisplayPicturesDBUpdate){
-                Intent intent = new Intent(UserCreate.this, GroupList.class);
+                Intent intent = new Intent(UserCreate.this, Home_GroupListActivity.class);
                 startActivity(intent);
                 } else {
                     Log.d(TAG, "run: " + "some stuff");

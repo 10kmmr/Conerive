@@ -63,7 +63,7 @@
         app:layout_constraintVertical_bias="0.138" />
 
     <EditText
-        android:id="@+id/editText4"
+        android:id="@+id/GroupDescET"
         android:layout_width="245dp"
         android:layout_height="179dp"
         android:layout_marginBottom="8dp"

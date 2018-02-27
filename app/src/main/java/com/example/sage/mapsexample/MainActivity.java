@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
     Intent loggedin;
 
     //random values
-    private boolean isLoggedin = false;
     int PERMISSION_ALL = 1;
     boolean isPhoneNumberValid;
 
@@ -67,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        loggedin = new Intent(this, Groupselector.class);
+        loggedin = new Intent(this, UserCreate.class);
 
         //firebase
         database = FirebaseDatabase.getInstance();
@@ -191,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            isLoggedin = true;
+
             Intent intent = new Intent(this,UserCreate.class);
             startActivity(intent);
         }
@@ -208,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "signInWithCredential:success");
 
                             FirebaseUser user = task.getResult().getUser();
-                            // ...
+                            NextActivity();
                         } else {
                             // Sign in failed, display a message and update the UI
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -259,19 +258,7 @@ public class MainActivity extends AppCompatActivity {
 // ALL THE PERMISSION CRAP ---------------------------------------------------------------------//
 
 
-//    public void NextActivity() {
-//        database.getReference("Details").child(mAuth.getUid()).child("Name").addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                loggedin.putExtra("UserID", mAuth.getUid());
-//                loggedin.putExtra("Name", dataSnapshot.getValue().toString());
-//                loggedin.putExtra("GroupID", "NULL");
-//                //getStarted.setOnClickListener(null);
-//                startActivity(loggedin);
-//            }
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) { }
-//        });
-//
-//    }
+    public void NextActivity() {
+        startActivity(loggedin);
+    }
 }

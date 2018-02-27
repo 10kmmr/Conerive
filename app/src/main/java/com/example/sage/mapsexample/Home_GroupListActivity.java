@@ -8,18 +8,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 
-public class GroupList extends AppCompatActivity {
+public class Home_GroupListActivity extends AppCompatActivity {
 
     ListView groupList;
     Button createGroup;
@@ -27,9 +23,8 @@ public class GroupList extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_group_list);
+        setContentView(R.layout.activity_home_group_list);
 
-        //
         groupList = findViewById(R.id.groupList);
         createGroup = (Button)findViewById(R.id.createGroup);
 
