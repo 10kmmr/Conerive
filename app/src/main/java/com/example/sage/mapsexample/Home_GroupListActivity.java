@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class Home_GroupListActivity extends AppCompatActivity {
 
     ListView groupList;
-    Button createGroup;
+    Button CreateGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,11 +26,16 @@ public class Home_GroupListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home_group_list);
 
         groupList = findViewById(R.id.groupList);
-        createGroup = (Button)findViewById(R.id.createGroup);
+        CreateGroup = (Button)findViewById(R.id.CreateGroup);
 
         ListView yourListView =findViewById(R.id.groupList);
 
-
+        CreateGroup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                NextGroupSelector();
+            }
+        });
 
 
         ArrayList<GroupListDataModel> list = new ArrayList<>();
@@ -40,7 +45,7 @@ public class Home_GroupListActivity extends AppCompatActivity {
     }
 
     public void NextGroupSelector(){
-        Intent mintent = new Intent();
+        Intent mintent = new Intent(this,GroupCreateActivity.class);
         startActivity(mintent);
     }
 
@@ -80,7 +85,4 @@ public class Home_GroupListActivity extends AppCompatActivity {
         }
 
     }
-
-
-
 }

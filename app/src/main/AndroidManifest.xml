@@ -62,10 +62,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".UserCreate"
+            android:name=".UserCreateActivity"
             android:label="@string/title_activity_user_setting"
             android:theme="@style/AppTheme" />
-        <activity android:name=".UserProfile" />
+        <activity android:name=".UserProfile_ViewActivity" />
         <activity android:name=".Notifications" />
         <activity android:name=".Home_GroupListActivity" />
         <activity android:name=".GroupCreateActivity" />

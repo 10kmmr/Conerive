@@ -82,7 +82,7 @@ public class splashScreen extends AppCompatActivity {
     }
 
     public void NextActivity() {
-        final Intent loggedin = new Intent(this, UserCreate.class);
+        final Intent loggedin = new Intent(this, UserCreateActivity.class);
                 startActivity(loggedin);
 
 //        final Intent loggedin = new Intent(this, Groupselector.class);

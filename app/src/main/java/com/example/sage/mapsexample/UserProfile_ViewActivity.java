@@ -33,9 +33,9 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 
-public class UserProfile extends AppCompatActivity {
+public class UserProfile_ViewActivity extends AppCompatActivity {
 
-    private static final String TAG = "UserProfile";
+    private static final String TAG = "UserProfile_ViewActivity";
     public String baseUrl = "http://192.168.2.4:8080/";
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;

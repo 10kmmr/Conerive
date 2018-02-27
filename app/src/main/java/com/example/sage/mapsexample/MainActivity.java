@@ -17,6 +17,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
@@ -28,6 +35,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.FirebaseDatabase;
+
+import org.json.JSONArray;
 
 import java.util.concurrent.TimeUnit;
 
@@ -57,6 +66,10 @@ public class MainActivity extends AppCompatActivity {
     int PERMISSION_ALL = 1;
     boolean isPhoneNumberValid;
 
+    //volley stuff
+    public String baseUrl = "http://192.168.1.113:8080/";
+    public RequestQueue requestQueue;
+
     String mVerificationId;
     int mResendToken ;
     PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
@@ -66,7 +79,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        loggedin = new Intent(this, UserCreate.class);
+        loggedin = new Intent(this, UserCreateActivity.class);
+
+
+        requestQueue = Volley.newRequestQueue(this);
+
 
         //firebase
         database = FirebaseDatabase.getInstance();
@@ -187,12 +204,30 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-
-            Intent intent = new Intent(this,UserCreate.class);
-            startActivity(intent);
+            //Checking if user doesnt have any details in the Mysql db
+            String url = baseUrl+"users/" + currentUser.getUid();
+            JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                    new Response.Listener<JSONArray>()
+                    {
+                        @Override
+                        public void onResponse(JSONArray response) {
+                            Log.d("Response", response.toString());
+                            if(response.length()>0){
+                                NextActivity();
+                            }
+                        }
+                    },
+                    new Response.ErrorListener()
+                    {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.d("Error.Response", error.toString());
+                        }
+                    }
+            );
+            requestQueue.add(getRequest);
         }
     }
 

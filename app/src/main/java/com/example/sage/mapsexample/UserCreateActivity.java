@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,10 +34,10 @@ import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UserCreate extends AppCompatActivity {
+public class UserCreateActivity extends AppCompatActivity {
 
-    private static final String TAG = "UserCreate";
-    public String baseUrl = "http://192.168.48.1:8080/";
+    private static final String TAG = "UserCreateActivity";
+    public String baseUrl = "http://192.168.1.113:8080/";
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;
     FirebaseStorage firebaseStorage;
@@ -79,9 +78,6 @@ public class UserCreate extends AppCompatActivity {
         firebaseStorage = FirebaseStorage.getInstance();
         displayPictureReference = firebaseStorage.getReference().child("user_display_picture");
 
-
-
-
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -89,7 +85,6 @@ public class UserCreate extends AppCompatActivity {
                 name = nameET.getText().toString();
                 email = emailET.getText().toString();
                 phone = currentUser.getPhoneNumber();
-                Toast.makeText(UserCreate.this, "api calling next", Toast.LENGTH_SHORT).show();
                 createUser();
             }
         });
@@ -234,6 +229,7 @@ public class UserCreate extends AppCompatActivity {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageByte = baos.toByteArray();
+        //fireBase updating dp
         UploadTask uploadTask = displayPictureReference.child(userId+".jpg").putBytes(imageByte);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
@@ -258,14 +254,18 @@ public class UserCreate extends AppCompatActivity {
             @Override
             public void run() {
                 if(!waitingForEmailsDBUpdate && !waitingForDisplayPicturesDBUpdate){
-                Intent intent = new Intent(UserCreate.this, Home_GroupListActivity.class);
-                startActivity(intent);
+                    NextActivity();
                 } else {
                     Log.d(TAG, "run: " + "some stuff");
                     handler.postDelayed(this, 500);
                 }
             }
         });
+    }
+
+    public void NextActivity(){
+        Intent intent = new Intent(UserCreateActivity.this, Home_GroupListActivity.class);
+        startActivity(intent);
     }
 
 
