@@ -50,11 +50,9 @@ public class splashScreen extends AppCompatActivity {
         handler.post(new Runnable() {
             @Override
             public void run() {
-
                 try {
                     gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
                 } catch(Exception ex) {}
-
                 if(!gps_enabled){
                     gpsText.setVisibility(View.VISIBLE);
                     handler.postDelayed(this, 100);
@@ -82,7 +80,7 @@ public class splashScreen extends AppCompatActivity {
     }
 
     public void NextActivity() {
-        final Intent loggedin = new Intent(this, UserCreateActivity.class);
+        final Intent loggedin = new Intent(this,MainActivity.class);
                 startActivity(loggedin);
 
 //        final Intent loggedin = new Intent(this, Groupselector.class);

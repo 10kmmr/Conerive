@@ -216,6 +216,8 @@ public class MainActivity extends AppCompatActivity {
                             Log.d("Response", response.toString());
                             if(response.length()>0){
                                 NextActivity();
+                            }else{
+                                NextHome();
                             }
                         }
                     },
@@ -296,4 +298,5 @@ public class MainActivity extends AppCompatActivity {
     public void NextActivity() {
         startActivity(loggedin);
     }
+    public void NextHome(){startActivity(new Intent(this,Home_GroupListActivity.class));}
 }
