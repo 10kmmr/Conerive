@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="5dip" >
+    android:padding="5dip"
+    android:background="@drawable/card_yellow">
 
     <LinearLayout android:id="@+id/thumbnail"
         android:layout_width="wrap_content"
@@ -12,7 +15,7 @@
         android:layout_alignParentLeft="true"
         android:layout_marginRight="5dip">
 
-        <ImageView
+        <com.android.volley.toolbox.NetworkImageView
             android:id="@+id/groupImage"
             android:layout_width="50dip"
             android:layout_height="50dip" />
@@ -24,43 +27,78 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/thumbnail"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_toRightOf="@+id/thumbnail"
         android:text="GROUP NAME"
         android:textColor="#040404"
-        android:typeface="sans"
         android:textSize="15dip"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:typeface="sans"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
-        android:id="@+id/memberCount"
+        android:id="@+id/member_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/groupName"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_toRightOf="@+id/groupName"
+        android:text="member count"
         android:textColor="#040404"
         android:textSize="10dip"
-        android:layout_marginTop="2dip"
-        android:layout_toRightOf="@+id/groupName"
-        android:text="member count" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/imageCount"
+        app:layout_constraintHorizontal_bias="0.709"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/groupName"
+        app:layout_constraintVertical_bias="0.692" />
+
     <TextView
         android:id="@+id/tripCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/groupName"
+        android:layout_alignBaseline="@+id/member_count"
+        android:layout_alignBottom="@+id/member_count"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_toEndOf="@+id/member_count"
+        android:layout_toRightOf="@+id/member_count"
+        android:text="trip count"
         android:textColor="#040404"
         android:textSize="10dip"
-        android:layout_marginTop="2dip"
-        android:layout_toRightOf="@+id/memberCount"
-        android:text="trip count" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/groupName"
+        app:layout_constraintVertical_bias="0.692" />
+
     <TextView
         android:id="@+id/imageCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/groupName"
+        android:layout_alignBaseline="@+id/member_count"
+        android:layout_alignBottom="@+id/member_count"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_toLeftOf="@+id/member_count"
+        android:layout_toStartOf="@+id/member_count"
+        android:text="imageCount"
         android:textColor="#040404"
         android:textSize="10dip"
-        android:layout_marginTop="2dip"
-        android:layout_toRightOf="@+id/tripCount"
-        android:text="imageCount" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tripCount"
+        app:layout_constraintTop_toBottomOf="@+id/groupName"
+        app:layout_constraintVertical_bias="0.692" />
 
     <TextView
         android:id="@+id/lastTripDate"
@@ -68,12 +106,21 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignTop="@id/groupName"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:gravity="right"
         android:text="LTD"
-        android:layout_marginRight="5dip"
-        android:textSize="10dip"
         android:textColor="#10bcc9"
-        android:textStyle="bold"/>
+        android:textSize="10dip"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.977"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
 
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>

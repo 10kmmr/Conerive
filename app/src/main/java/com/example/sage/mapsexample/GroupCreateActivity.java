@@ -60,6 +60,8 @@ public class GroupCreateActivity extends AppCompatActivity {
     StorageReference displayPictureReference;
     FirebaseStorage firebaseStorage;
 
+    byte[] imageByte;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -176,7 +178,7 @@ public class GroupCreateActivity extends AppCompatActivity {
         final Bitmap bitmap = (Bitmap)data.getExtras().get("data");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] imageByte = baos.toByteArray();
+        imageByte = baos.toByteArray();
         //fireBase updating dp
         UploadTask uploadTask = displayPictureReference.child(groupId+".jpg").putBytes(imageByte);
         uploadTask.addOnFailureListener(new OnFailureListener() {

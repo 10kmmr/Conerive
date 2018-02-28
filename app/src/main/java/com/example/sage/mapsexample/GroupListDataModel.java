@@ -6,15 +6,15 @@ package com.example.sage.mapsexample;
 
 public class GroupListDataModel {
     String groupName;
-    String groupDisplayPicture;
+    String groupDisplayPictureURL;
     String lastTripDate;
     int memberCount;
     int tripCount;
     int imageCount;
 
-    public GroupListDataModel(String groupName, String groupDisplayPicture, String lastTripDate, int memberCount, int tripCount, int imageCount) {
+    public GroupListDataModel(String groupName, String groupDisplayPictureURL, String lastTripDate, int memberCount, int tripCount, int imageCount) {
         this.groupName = groupName;
-        this.groupDisplayPicture = groupDisplayPicture;
+        this.groupDisplayPictureURL = groupDisplayPictureURL;
         this.lastTripDate = lastTripDate;
         this.memberCount = memberCount;
         this.tripCount = tripCount;
@@ -25,8 +25,8 @@ public class GroupListDataModel {
         return groupName;
     }
 
-    public String getGroupDisplayPicture() {
-        return groupDisplayPicture;
+    public String getGroupDisplayPictureURL() {
+        return groupDisplayPictureURL;
     }
 
     public String getLastTripDate() {
