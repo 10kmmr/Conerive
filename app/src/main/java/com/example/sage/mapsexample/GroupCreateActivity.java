@@ -108,7 +108,7 @@ public class GroupCreateActivity extends AppCompatActivity {
                         try {
                             JSONObject jsonObject = new JSONObject(response);
                             groupId = jsonObject.get("insertId").toString();
-                            if(displayPictureURL.length()>0){
+                            if(imageByte!=null){
                                 dbCreateDisplayPicture();
                             } else {
                                 Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
@@ -140,46 +140,9 @@ public class GroupCreateActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
+
     public void dbCreateDisplayPicture(){
-        String url = baseUrl+"groups/display-pictures/";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
-                    @Override
-                    public void onResponse(String response) {
-                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                        startActivity(intent);
-                    }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - createuser", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
-                params.put("displayPictureURL",displayPictureURL);
-                params.put("groupId",groupId);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        final Bitmap bitmap = (Bitmap)data.getExtras().get("data");
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        imageByte = baos.toByteArray();
-        //fireBase updating dp
+        final String url = baseUrl+"groups/display-pictures/";
         UploadTask uploadTask = displayPictureReference.child(groupId+".jpg").putBytes(imageByte);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
@@ -191,9 +154,50 @@ public class GroupCreateActivity extends AppCompatActivity {
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 displayPictureURL = downloadUrl.toString();
-                GroupDp.setImageBitmap(bitmap);
+                StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                        new Response.Listener<String>()
+                        {
+                            @Override
+                            public void onResponse(String response) {
+                                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                startActivity(intent);
+                            }
+                        },
+                        new Response.ErrorListener()
+                        {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Log.d("Error.Response - createuser", error.toString());
+                            }
+                        }
+                ) {
+                    @Override
+                    protected Map<String, String> getParams()
+                    {
+                        Map<String, String>  params = new HashMap<>();
+                        params.put("displayPictureURL",displayPictureURL);
+                        params.put("groupId",groupId);
+                        return params;
+                    }
+                };
+                requestQueue.add(postRequest);
             }
         });
+
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        final Bitmap bitmap = (Bitmap)data.getExtras().get("data");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        GroupDp.setImageBitmap(bitmap);
+        imageByte = baos.toByteArray();
+        //fireBase updating dp
+
     }
 
 }
