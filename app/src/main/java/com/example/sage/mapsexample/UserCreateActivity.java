@@ -85,7 +85,7 @@ public class UserCreateActivity extends AppCompatActivity {
                 name = nameET.getText().toString();
                 email = emailET.getText().toString();
                 phone = currentUser.getPhoneNumber();
-                createUser();
+                dbCreateUser();
             }
         });
 
@@ -100,7 +100,7 @@ public class UserCreateActivity extends AppCompatActivity {
 
     }
     
-    public void createUser(){
+    public void dbCreateUser(){
         String url = baseUrl+"users";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
@@ -111,12 +111,12 @@ public class UserCreateActivity extends AppCompatActivity {
                             JSONObject jsonObject = new JSONObject(response);
                             Log.d(TAG, "onResponse - users: " + jsonObject);
                             if(email.length()>0){
-                                createEmail();
+                                dbCreateEmail();
                             } else {
                                 waitingForEmailsDBUpdate = false;
                             }
                             if(displayPictureURL.length()>0){
-                                createDisplayPicture();
+                                dbCreateDisplayPicture();
                             } else {
                                 waitingForDisplayPicturesDBUpdate = false;
                             }
@@ -147,8 +147,8 @@ public class UserCreateActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    public void createEmail(){
-        Log.d(TAG, "createEmail: " + "accessed");
+    public void dbCreateEmail(){
+        Log.d(TAG, "dbCreateEmail: " + "accessed");
         String url = baseUrl+"users/emails";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
@@ -184,8 +184,8 @@ public class UserCreateActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    public void createDisplayPicture(){
-        Log.d(TAG, "createDisplayPicture: " + "accessed");
+    public void dbCreateDisplayPicture(){
+        Log.d(TAG, "dbCreateDisplayPicture: " + "accessed");
         String url = baseUrl+"users/display-pictures";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
@@ -254,7 +254,8 @@ public class UserCreateActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if(!waitingForEmailsDBUpdate && !waitingForDisplayPicturesDBUpdate){
-                    NextActivity();
+                    Intent intent = new Intent(UserCreateActivity.this, HomeActivity.class);
+                    startActivity(intent);
                 } else {
                     Log.d(TAG, "run: " + "some stuff");
                     handler.postDelayed(this, 500);
@@ -262,11 +263,5 @@ public class UserCreateActivity extends AppCompatActivity {
             }
         });
     }
-
-    public void NextActivity(){
-        Intent intent = new Intent(UserCreateActivity.this, HomeActivity.class);
-        startActivity(intent);
-    }
-
 
 }

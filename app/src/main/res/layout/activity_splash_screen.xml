@@ -7,7 +7,7 @@
     tools:context="com.example.sage.mapsexample.SplashScreenActivity">
 
     <TextView
-        android:id="@+id/splashtxt"
+        android:id="@+id/splash_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -26,7 +26,7 @@
         app:layout_constraintVertical_bias="0.567" />
 
     <TextView
-        android:id="@+id/gpsDisabledText"
+        android:id="@+id/gps_disabled_text"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -43,11 +43,11 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/splashtxt"
+        app:layout_constraintTop_toBottomOf="@+id/splash_text"
         app:layout_constraintVertical_bias="0.591" />
 
     <ImageView
-        android:id="@+id/splashimg"
+        android:id="@+id/splash_image"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_gravity="center"
@@ -56,14 +56,14 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
 
-        app:layout_constraintBottom_toTopOf="@+id/splashtxt"
+        app:layout_constraintBottom_toTopOf="@+id/splash_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/conerive" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/team_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"

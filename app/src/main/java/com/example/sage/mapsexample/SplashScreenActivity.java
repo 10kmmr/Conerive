@@ -26,42 +26,55 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.json.JSONArray;
 
 public class SplashScreenActivity extends AppCompatActivity {
-
     private static final String TAG = "SplashScreenActivity";
+
+    // Volley Objects
+    private RequestQueue requestQueue;
     private String baseUrl = "http://192.168.2.2:8080/";
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private TextView tv;
-    private ImageView iv;
+
+    // GPS Objects
     private LocationManager lm;
     private boolean gps_enabled = false;
-    private TextView gpsText;
-    private RequestQueue requestQueue;
 
+    // Firebase objects
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+
+    // View objects
+    private TextView tv;
+    private ImageView iv;
+    private TextView gpsText;
+
+
+
+    //----------------------------------------------------------------------------------------------
+    //      ACTIVITY LIFECYCLE METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
+
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-        tv = findViewById(R.id.splashtxt);
-        iv = findViewById(R.id.splashimg);
+        tv = findViewById(R.id.splash_text);
+        iv = findViewById(R.id.splash_image);
         Animation animation = AnimationUtils.loadAnimation(this, R.anim.splashscreen);
         requestQueue = Volley.newRequestQueue(this);
         tv.startAnimation(animation);
         iv.startAnimation(animation);
-        lm = (LocationManager)getApplication().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        gpsText = findViewById(R.id.gpsDisabledText);
+        lm = (LocationManager)getApplication().
+                getApplicationContext().
+                getSystemService(Context.LOCATION_SERVICE);
+        gpsText = findViewById(R.id.gps_disabled_text);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        checkLocationAndInternetOnAndProceed();
-    }
 
-    private void checkLocationAndInternetOnAndProceed(){
+        // Check if location service is on and proceed once turned on
         final Handler handler = new Handler();
         handler.post(new Runnable() {
             @Override
@@ -82,6 +95,10 @@ public class SplashScreenActivity extends AppCompatActivity {
         });
     }
 
+    //----------------------------------------------------------------------------------------------
+    //      MEMBER METHODS
+    //----------------------------------------------------------------------------------------------
+
     void checkIsLoggedIn() {
         if (currentUser == null) {
             Intent intent = new Intent(this,PhoneAuthenticationActivity.class);
@@ -94,22 +111,20 @@ public class SplashScreenActivity extends AppCompatActivity {
     void checkUserProfileExists() {
         String url = baseUrl+"users/" + currentUser.getUid();
         JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>()
-                {
+                new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
                         Log.d("Response", response.toString());
-                        if(response.length()>0){
-                            Intent intent = new Intent(getApplicationContext(),HomeActivity.class);
+                        if(response.length()>0) {
+                            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
                             startActivity(intent);
-                        }else{
-                            Intent intent = new Intent(getApplicationContext(),UserCreateActivity.class);
+                        } else {
+                            Intent intent = new Intent(getApplicationContext(), UserCreateActivity.class);
                             startActivity(intent);
                         }
                     }
                 },
-                new Response.ErrorListener()
-                {
+                new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("Error.Response", error.toString());
@@ -118,5 +133,4 @@ public class SplashScreenActivity extends AppCompatActivity {
         );
         requestQueue.add(getRequest);
     }
-
 }

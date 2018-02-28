@@ -114,9 +114,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     class GroupListAdapter extends ArrayAdapter<GroupListDataModel> {
-        public GroupListAdapter(Context context, int textViewResourceId) {
-            super(context, textViewResourceId);
-        }
 
         public GroupListAdapter(Context context, int resource, ArrayList<GroupListDataModel> items) {
             super(context, resource, items);

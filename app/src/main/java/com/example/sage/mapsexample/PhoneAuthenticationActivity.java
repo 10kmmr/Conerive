@@ -34,12 +34,12 @@ import org.json.JSONArray;
 import java.util.concurrent.TimeUnit;
 
 public class PhoneAuthenticationActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     String[] PERMISSIONS = { android.Manifest.permission.ACCESS_FINE_LOCATION,
                              android.Manifest.permission.ACCESS_COARSE_LOCATION,
                              android.Manifest.permission.CALL_PHONE };
 
-    private static final String TAG = "MainActivity";
     private String baseUrl = "http://192.168.2.2:8080/";
     private int PERMISSION_ALL = 1;
     private EditText phoneNumberEditText;
