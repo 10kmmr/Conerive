@@ -298,5 +298,5 @@ public class MainActivity extends AppCompatActivity {
     public void NextActivity() {
         startActivity(loggedin);
     }
-    public void NextHome(){startActivity(new Intent(this,Home_GroupListActivity.class));}
+    public void NextHome(){startActivity(new Intent(this,HomeActivity.class));}
 }

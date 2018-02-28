@@ -3,7 +3,7 @@ package com.example.sage.mapsexample;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class Notifications extends AppCompatActivity {
+public class NotificationsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -1,6 +1,5 @@
 package com.example.sage.mapsexample;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -20,6 +19,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,8 +31,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,26 +47,18 @@ public class GroupCreateActivity extends AppCompatActivity {
     String groupId ;
     String GroupDesc;
     String GroupName;
-    Uri downloadUrl;
     public String displayPictureURL;
 
     int GET_FROM_GALLERY = 3;
 
     //volley stuff
-    public String baseUrl = "http://192.168.1.113:8080/";
+    public String baseUrl = "http://192.168.2.2:8080/";
     public RequestQueue requestQueue;
 
     //firebase
     FirebaseAuth mAuth;
     StorageReference displayPictureReference;
     FirebaseStorage firebaseStorage;
-
-    //delete this later
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Toast.makeText(this,"die da",Toast.LENGTH_LONG);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,16 +70,17 @@ public class GroupCreateActivity extends AppCompatActivity {
         GroupNameET = (EditText) findViewById(R.id.GName);
         GroupDescET = (EditText)findViewById(R.id.GroupDescET);
         GroupDp = (ImageView)findViewById(R.id.GroupDp);
+        requestQueue = Volley.newRequestQueue(this);
+        mAuth = FirebaseAuth.getInstance();
+        displayPictureURL = "";
 
-        //firebase stuff
         firebaseStorage = FirebaseStorage.getInstance();
         displayPictureReference = firebaseStorage.getReference().child("Group_display_picture");
 
-        //Event listener
         OpenGalley.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), GET_FROM_GALLERY;
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 startActivityForResult(intent, 0);
             }
         });
@@ -117,6 +108,9 @@ public class GroupCreateActivity extends AppCompatActivity {
                             groupId = jsonObject.get("insertId").toString();
                             if(displayPictureURL.length()>0){
                                 dbCreateDisplayPicture();
+                            } else {
+                                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                startActivity(intent);
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -136,20 +130,23 @@ public class GroupCreateActivity extends AppCompatActivity {
             {
                 Map<String, String>  params = new HashMap<>();
                 params.put("groupName",GroupName);
+                params.put("groupDescription", GroupDesc);
                 params.put("adminId",mAuth.getCurrentUser().getUid());
                 return params;
             }
         };
         requestQueue.add(postRequest);
     }
+
     public void dbCreateDisplayPicture(){
-        String url = baseUrl+"/groups/display-pictures/";
+        String url = baseUrl+"groups/display-pictures/";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>()
                 {
                     @Override
                     public void onResponse(String response) {
-                        NextActivity();
+                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                        startActivity(intent);
                     }
                 },
                 new Response.ErrorListener()
@@ -165,10 +162,11 @@ public class GroupCreateActivity extends AppCompatActivity {
             {
                 Map<String, String>  params = new HashMap<>();
                 params.put("displayPictureURL",displayPictureURL);
-                params.put("adminId",mAuth.getCurrentUser().getUid());
+                params.put("groupId",groupId);
                 return params;
             }
         };
+        requestQueue.add(postRequest);
     }
 
     @Override
@@ -196,9 +194,4 @@ public class GroupCreateActivity extends AppCompatActivity {
         });
     }
 
-    public void NextActivity(){
-        //write intent to go to the Group's Home page
-        Intent intent = new Intent(this, Home_GroupListActivity.class);
-        startActivity(intent);
-    }
 }

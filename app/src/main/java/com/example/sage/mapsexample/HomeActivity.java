@@ -15,38 +15,34 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class Home_GroupListActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity {
 
     ListView groupList;
-    Button CreateGroup;
+    Button createGroupButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home_group_list);
+        setContentView(R.layout.activity_home);
 
         groupList = findViewById(R.id.groupList);
-        CreateGroup = (Button)findViewById(R.id.CreateGroup);
-
-        ListView yourListView =findViewById(R.id.groupList);
-
-        CreateGroup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                NextGroupSelector();
-            }
-        });
-
-
+        createGroupButton = findViewById(R.id.createGroup);
         ArrayList<GroupListDataModel> list = new ArrayList<>();
-
         GroupListAdapter groupListAdapter = new GroupListAdapter(this, R.layout.group_list_item, list);
-        yourListView.setAdapter(groupListAdapter);
+        groupList.setAdapter(groupListAdapter);
     }
 
-    public void NextGroupSelector(){
-        Intent mintent = new Intent(this,GroupCreateActivity.class);
-        startActivity(mintent);
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        createGroupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), GroupCreateActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     class GroupListAdapter extends ArrayAdapter<GroupListDataModel> {
