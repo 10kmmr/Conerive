@@ -30,7 +30,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     // Volley Objects
     private RequestQueue requestQueue;
-    private String baseUrl = "http://192.168.1.112:8080/";
+    private String baseUrl;
 
     // GPS Objects
     private LocationManager lm;
@@ -55,7 +55,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
-
+        baseUrl = getString(R.string.api_url);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         tv = findViewById(R.id.splash_text);

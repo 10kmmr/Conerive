@@ -52,7 +52,7 @@ public class GroupCreateActivity extends AppCompatActivity {
     int GET_FROM_GALLERY = 3;
 
     //volley stuff
-    public String baseUrl = "http://192.168.1.112:8080/";
+    public String baseUrl;
     public RequestQueue requestQueue;
 
     //firebase
@@ -67,6 +67,7 @@ public class GroupCreateActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_create);
 
+        baseUrl = getString(R.string.api_url);
         GroupButton = (Button)findViewById(R.id.newGroup);
         OpenGalley = (Button)findViewById(R.id.OpenGalley);
         GroupNameET = (EditText) findViewById(R.id.GName);

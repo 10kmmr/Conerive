@@ -40,7 +40,7 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
                              android.Manifest.permission.ACCESS_COARSE_LOCATION,
                              android.Manifest.permission.CALL_PHONE };
 
-    private String baseUrl = "http://192.168.1.112:8080/";
+    private String baseUrl;
     private int PERMISSION_ALL = 1;
     private EditText phoneNumberEditText;
     private EditText otpEditText;
@@ -61,6 +61,7 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_phone_authentication);
 
+        baseUrl = getString(R.string.api_url);
         phoneNumberEditText = findViewById(R.id.phone_number);
         otpEditText = findViewById(R.id.otp);
         sendOtpButton = findViewById(R.id.send_otp);

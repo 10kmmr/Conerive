@@ -10,9 +10,9 @@ import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -38,7 +38,7 @@ public class HomeActivity extends AppCompatActivity {
     ListView groupsListView;
     Button createGroupButton;
     ArrayList<GroupListDataModel> groupsList;
-    public String baseUrl = "http://192.168.1.112:8080/";
+    public String baseUrl;
     private FirebaseAuth mAuth;
     public RequestQueue requestQueue;
 
@@ -48,6 +48,7 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        baseUrl = getString(R.string.api_url);
         groupsListView = findViewById(R.id.groupList);
         createGroupButton = findViewById(R.id.createGroup);
         requestQueue = Volley.newRequestQueue(this);
@@ -59,6 +60,7 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
         createGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -66,29 +68,45 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        groupsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Intent intent = new Intent(getApplicationContext(), GroupHomeActivity.class);
+                intent.putExtra("groupId", groupsList.get(position).groupId);
+                intent.putExtra("groupName", groupsList.get(position).groupName);
+                intent.putExtra("groupDisplayPictureURL", groupsList.get(position).groupDisplayPictureURL);
+                intent.putExtra("lastTripDate", groupsList.get(position).lastTripDate);
+                startActivity(intent);
+            }
+        });
     }
 
-    void dbGetGroupList(){
-        String url = baseUrl +"groups/groupList/"+mAuth.getUid();
+    void dbGetGroupList() {
+        String url = baseUrl + "groups/groupList/" + mAuth.getUid();
         JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>()
-                {
+                new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        Log.d(TAG, response.toString());
-                        for (int i=0; i < response.length(); i++) {
+                        for (int i = 0; i < response.length(); i++) {
                             try {
                                 JSONObject jsonObject = response.getJSONObject(i);
+                                String groupId = jsonObject.getString("Group_id");
                                 String groupName = jsonObject.getString("Group_name");
-                                String groupDisplayPictureURL = jsonObject.getString("Group_Display_picture");
+                                String groupDisplayPictureURL = null;
+                                if (!jsonObject.getString("Group_Display_picture").equalsIgnoreCase("null")) {
+                                    groupDisplayPictureURL = jsonObject.getString("Group_Display_picture");
+                                }
                                 int memberCount = jsonObject.getInt("Member_count");
                                 int tripCount = jsonObject.getInt("Trip_count");
                                 int imageCount = jsonObject.getInt("Image_count");
                                 groupsList.add(
                                         new GroupListDataModel(
+                                                groupId,
                                                 groupName,
                                                 groupDisplayPictureURL,
-                                                "69",
+                                                "69/69/69",                 //get actual trip date after db query fix
                                                 memberCount,
                                                 tripCount,
                                                 imageCount
@@ -102,8 +120,7 @@ public class HomeActivity extends AppCompatActivity {
                         groupsListView.setAdapter(groupListAdapter);
                     }
                 },
-                new Response.ErrorListener()
-                {
+                new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("Error.Response", error.toString());
@@ -123,9 +140,8 @@ public class HomeActivity extends AppCompatActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
 
             View view = convertView;
-
+            Log.d(TAG, "accessed getView" + "position : " + position);
             if (view == null) {
-                Log.d(TAG, "getView: ");
                 LayoutInflater vi;
                 vi = LayoutInflater.from(getContext());
                 view = vi.inflate(R.layout.group_list_item, null);
@@ -134,29 +150,85 @@ public class HomeActivity extends AppCompatActivity {
             GroupListDataModel groupListDataModelItem = getItem(position);
 
             if (groupListDataModelItem != null) {
-                NetworkImageView groupImageNIV = view.findViewById(R.id.groupImage);
+
                 TextView groupNameTV = view.findViewById(R.id.groupName);
                 TextView memberCountTV = view.findViewById(R.id.member_count);
                 TextView tripCountTV = view.findViewById(R.id.tripCount);
                 TextView imageCountTV = view.findViewById(R.id.imageCount);
+                TextView lastTripDateTV = view.findViewById(R.id.lastTripDate);
+                NetworkImageView groupImageNIV = view.findViewById(R.id.groupImage);
+
+                groupNameTV.setText(groupListDataModelItem.getGroupName());
+                memberCountTV.setText("member count : " + Integer.toString(groupListDataModelItem.getMemberCount()));
+                tripCountTV.setText("trip count : " + Integer.toString(groupListDataModelItem.getTripCount()));
+                imageCountTV.setText("image count : " + Integer.toString(groupListDataModelItem.getImageCount()));
+                lastTripDateTV.setText(groupListDataModelItem.getLastTripDate());
+
 
                 ImageLoader imageLoader;
                 imageLoader = new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
                     private final LruCache<String, Bitmap> mCache = new LruCache<>(10);
+
                     public void putBitmap(String url, Bitmap bitmap) {
                         mCache.put(url, bitmap);
                     }
+
                     public Bitmap getBitmap(String url) {
                         return mCache.get(url);
                     }
                 });
                 groupImageNIV.setImageUrl(groupListDataModelItem.getGroupDisplayPictureURL(), imageLoader);
-                groupNameTV.setText(groupListDataModelItem.getGroupName());
-                memberCountTV.setText("member count : "+Integer.toString(groupListDataModelItem.getMemberCount()));
-                tripCountTV.setText("trip count : "+Integer.toString(groupListDataModelItem.getTripCount()));
-                imageCountTV.setText("image count : "+Integer.toString(groupListDataModelItem.getImageCount()));
+
             }
             return view;
+        }
+    }
+
+    public class GroupListDataModel {
+        String groupId;
+        String groupName;
+        String groupDisplayPictureURL;
+        String lastTripDate;
+        int memberCount;
+        int tripCount;
+        int imageCount;
+
+        public GroupListDataModel(String groupId, String groupName, String groupDisplayPictureURL, String lastTripDate, int memberCount, int tripCount, int imageCount) {
+            this.groupId = groupId;
+            this.groupName = groupName;
+            this.groupDisplayPictureURL = groupDisplayPictureURL;
+            this.lastTripDate = lastTripDate;
+            this.memberCount = memberCount;
+            this.tripCount = tripCount;
+            this.imageCount = imageCount;
+        }
+
+        public String getGroupId() {
+            return groupId;
+        }
+
+        public String getGroupName() {
+            return groupName;
+        }
+
+        public String getGroupDisplayPictureURL() {
+            return groupDisplayPictureURL;
+        }
+
+        public String getLastTripDate() {
+            return lastTripDate;
+        }
+
+        public int getMemberCount() {
+            return memberCount;
+        }
+
+        public int getTripCount() {
+            return tripCount;
+        }
+
+        public int getImageCount() {
+            return imageCount;
         }
     }
 }

@@ -36,7 +36,7 @@ import java.io.IOException;
 public class UserProfileActivity extends AppCompatActivity {
 
     private static final String TAG = "UserProfileActivity";
-    public String baseUrl = "http://192.168.1.112:8080/";
+    public String baseUrl;
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;
     FirebaseStorage firebaseStorage;
@@ -58,6 +58,7 @@ public class UserProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_profile);
 
+        baseUrl = getString(R.string.api_url);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         requestQueue = Volley.newRequestQueue(this);
