@@ -70,6 +70,17 @@
         <activity android:name=".HomeActivity" />
         <activity android:name=".GroupCreateActivity" />
         <activity android:name=".PhoneAuthenticationActivity" />
+
+        <service android:name=".MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name=".TripHomeActivity"
+            android:label="@string/title_activity_trip_home"
+            android:theme="@style/AppTheme"></activity>
     </application>
 
 </manifest>
