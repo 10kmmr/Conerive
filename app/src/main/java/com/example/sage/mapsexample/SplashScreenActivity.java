@@ -22,6 +22,7 @@ import com.android.volley.toolbox.Volley;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONArray;
 
@@ -73,6 +74,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
+        Log.d(TAG, "onStart: " + FirebaseInstanceId.getInstance().getToken());
 
         // Check if location service is on and proceed once turned on
         final Handler handler = new Handler();

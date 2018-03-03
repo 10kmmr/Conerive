@@ -12,4 +12,5 @@
     <string name="title_activity_trip_home">TripHomeActivity</string>
     <string name="api_url">http://192.168.1.112:8080/</string>
     <string name="title_activity_group_setting">GroupSettingActivity</string>
+    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
 </resources>
