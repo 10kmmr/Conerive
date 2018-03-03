@@ -30,7 +30,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     // Volley Objects
     private RequestQueue requestQueue;
-    private String baseUrl = "http://192.168.2.2:8080/";
+    private String baseUrl = "http://192.168.1.112:8080/";
 
     // GPS Objects
     private LocationManager lm;

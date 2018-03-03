@@ -37,7 +37,7 @@ import java.util.Map;
 public class UserCreateActivity extends AppCompatActivity {
 
     private static final String TAG = "UserCreateActivity";
-    public String baseUrl = "http://192.168.2.2:8080/";
+    public String baseUrl = "http://192.168.1.112:8080/";
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;
     FirebaseStorage firebaseStorage;

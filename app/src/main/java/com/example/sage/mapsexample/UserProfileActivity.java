@@ -36,7 +36,7 @@ import java.io.IOException;
 public class UserProfileActivity extends AppCompatActivity {
 
     private static final String TAG = "UserProfileActivity";
-    public String baseUrl = "http://192.168.2.4:8080/";
+    public String baseUrl = "http://192.168.1.112:8080/";
     private FirebaseAuth mAuth;
     public FirebaseUser currentUser;
     FirebaseStorage firebaseStorage;

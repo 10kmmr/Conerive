@@ -40,7 +40,7 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
                              android.Manifest.permission.ACCESS_COARSE_LOCATION,
                              android.Manifest.permission.CALL_PHONE };
 
-    private String baseUrl = "http://192.168.2.2:8080/";
+    private String baseUrl = "http://192.168.1.112:8080/";
     private int PERMISSION_ALL = 1;
     private EditText phoneNumberEditText;
     private EditText otpEditText;

@@ -38,7 +38,7 @@ public class HomeActivity extends AppCompatActivity {
     ListView groupsListView;
     Button createGroupButton;
     ArrayList<GroupListDataModel> groupsList;
-    public String baseUrl = "http://192.168.2.2:8080/";
+    public String baseUrl = "http://192.168.1.112:8080/";
     private FirebaseAuth mAuth;
     public RequestQueue requestQueue;
 

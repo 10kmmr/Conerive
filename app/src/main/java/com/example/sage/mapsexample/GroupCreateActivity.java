@@ -52,7 +52,7 @@ public class GroupCreateActivity extends AppCompatActivity {
     int GET_FROM_GALLERY = 3;
 
     //volley stuff
-    public String baseUrl = "http://192.168.2.2:8080/";
+    public String baseUrl = "http://192.168.1.112:8080/";
     public RequestQueue requestQueue;
 
     //firebase
