@@ -78,7 +78,8 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
             mAuth = FirebaseAuth.getInstance();
             requestQueue = Volley.newRequestQueue(context);
             if(mAuth.getCurrentUser()!= null){
-                String url = "http://192.168.1.112:8080/fcm/newtoken";
+                Log.d(TAG, "sendRegistrationToServer: ");
+                String url = getString(R.string.fcm_url) +"fcm/newtoken";
                 StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                         new Response.Listener<String>()
                         {

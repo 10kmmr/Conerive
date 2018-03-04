@@ -1,6 +1,7 @@
 package com.example.sage.mapsexample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -94,8 +95,10 @@ public class GroupSettingsActivity extends AppCompatActivity {
         addUserFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "make something to add users to group", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent intent = new Intent(getApplicationContext(), GroupInviteActivity.class);
+                intent.putExtra("groupId", groupId);
+                intent.putExtra("groupName", groupName);
+                startActivity(intent);
             }
         });
     }

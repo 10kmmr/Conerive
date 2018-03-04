@@ -23,6 +23,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -32,6 +33,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -63,6 +66,9 @@ public class HomeActivity extends AppCompatActivity {
         super.onStart();
         MyFirebaseInstanceIDService mtokern = new MyFirebaseInstanceIDService();
         mtokern.sendRegistrationToServer(FirebaseInstanceId.getInstance().getToken(),this);
+
+
+
         createGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -83,6 +89,43 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    public void sendRegistrationToServer(final String token , Context context) {
+
+            mAuth = FirebaseAuth.getInstance();
+            requestQueue = Volley.newRequestQueue(context);
+            if(mAuth.getCurrentUser()!= null){
+                Log.d(TAG, "sendRegistrationToServer: ");
+                String url = getString(R.string.fcm_url) +"fcm/newtoken";
+                StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                        new Response.Listener<String>()
+                        {
+                            @Override
+                            public void onResponse(String response) {
+                                Log.d(" newtoken written", TAG);
+                            }
+                        },
+                        new Response.ErrorListener()
+                        {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Log.d("Error.Response - token insertion FIREBASE INSTANCEIDSERVICE", error.toString());
+                            }
+                        }
+                ) {
+                    @Override
+                    protected Map<String, String> getParams()
+                    {
+                        Map<String, String>  params = new HashMap<>();
+                        params.put("userId",mAuth.getCurrentUser().getUid());
+                        params.put("token", token);
+                        return params;
+                    }
+                };
+                requestQueue.add(postRequest);
+            }
+
     }
 
     void dbGetGroupList() {
