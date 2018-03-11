@@ -116,7 +116,7 @@ public class GroupSettingsActivity extends AppCompatActivity {
                                 String Phone = jsonObject.getString("Phone");
                                 String userDisplayPictureURL = null;
                                 if (!jsonObject.getString("Image_url").equalsIgnoreCase("null")) {
-                                    groupDisplayPictureURL = jsonObject.getString("Image_url");
+                                    userDisplayPictureURL = jsonObject.getString("Image_url");
                                 }
                                 usersList.add(
                                         new UserListDataModel(
@@ -184,6 +184,7 @@ public class GroupSettingsActivity extends AppCompatActivity {
                         return mCache.get(url);
                     }
                 });
+                Log.d(TAG, "getView: " + userListDataModelItem.getUserDisplayPictureURL());
                 userImageNIV.setImageUrl(userListDataModelItem.getUserDisplayPictureURL(), imageLoader);
 
             }
