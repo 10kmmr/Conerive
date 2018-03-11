@@ -34,7 +34,7 @@ import org.json.JSONArray;
 import java.util.concurrent.TimeUnit;
 
 public class PhoneAuthenticationActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "PhoneAuthActivity";
 
     String[] PERMISSIONS = { android.Manifest.permission.ACCESS_FINE_LOCATION,
                              android.Manifest.permission.ACCESS_COARSE_LOCATION,

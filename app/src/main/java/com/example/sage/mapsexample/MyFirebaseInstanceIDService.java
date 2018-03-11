@@ -39,7 +39,7 @@ import java.util.Map;
 
 public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
 
-    private static final String TAG = "MyFirebaseIIDService";
+    private static final String TAG = "MyFirebaseIDService";
     Context context;
     FirebaseAuth mAuth;
 

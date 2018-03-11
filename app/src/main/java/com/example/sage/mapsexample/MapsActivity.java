@@ -104,7 +104,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Button Code
     public void onClickBtn(View v) {
-        Intent intent = new Intent(this, Groupselector.class);
+        Intent intent = new Intent(this, HomeActivity.class);
         intent.putExtra("UserID", userID);
         intent.putExtra("Name",Name );
         intent.putExtra("GroupID",groupID);

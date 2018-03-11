@@ -41,6 +41,7 @@ public class HomeActivity extends AppCompatActivity {
     private static final String TAG = "HomeActivity";
     ListView groupsListView;
     Button createGroupButton;
+    Button notificationsButton;
     ArrayList<GroupListDataModel> groupsList;
     public String baseUrl;
     private FirebaseAuth mAuth;
@@ -55,6 +56,7 @@ public class HomeActivity extends AppCompatActivity {
         baseUrl = getString(R.string.api_url);
         groupsListView = findViewById(R.id.groupList);
         createGroupButton = findViewById(R.id.createGroup);
+        notificationsButton = findViewById(R.id.notifications);
         requestQueue = Volley.newRequestQueue(this);
         mAuth = FirebaseAuth.getInstance();
         groupsList = new ArrayList<>();
@@ -64,15 +66,20 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        MyFirebaseInstanceIDService mtokern = new MyFirebaseInstanceIDService();
-        mtokern.sendRegistrationToServer(FirebaseInstanceId.getInstance().getToken(),this);
-
-
+        sendRegistrationToServer(this);
 
         createGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), GroupCreateActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        notificationsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), NotificationsActivity.class);
                 startActivity(intent);
             }
         });
@@ -89,13 +96,12 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+
     }
 
-    public void sendRegistrationToServer(final String token , Context context) {
-
-            mAuth = FirebaseAuth.getInstance();
-            requestQueue = Volley.newRequestQueue(context);
-            if(mAuth.getCurrentUser()!= null){
+    public void sendRegistrationToServer( Context context) {
+        final String token = FirebaseInstanceId.getInstance().getToken();
                 Log.d(TAG, "sendRegistrationToServer: ");
                 String url = getString(R.string.fcm_url) +"fcm/newtoken";
                 StringRequest postRequest = new StringRequest(Request.Method.POST, url,
@@ -124,7 +130,7 @@ public class HomeActivity extends AppCompatActivity {
                     }
                 };
                 requestQueue.add(postRequest);
-            }
+
 
     }
 
