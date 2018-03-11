@@ -87,7 +87,8 @@
             android:name=".GroupSettingsActivity"
             android:label="@string/title_activity_group_setting"
             android:theme="@style/AppTheme" />
-        <activity android:name=".GroupInviteActivity"></activity>
+        <activity android:name=".GroupInviteActivity" />
+        <activity android:name=".TripCreateActivity"></activity>
     </application>
 
 </manifest>
