@@ -1,6 +1,7 @@
 package com.example.sage.mapsexample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -38,7 +39,7 @@ public class NotificationsActivity extends AppCompatActivity {
     private static final String TAG = "HomeActivity";
     ListView notificationsListView;
     ArrayList<NotificationsListDataModel> notificationsList;
-
+    NotificationsListAdapter notificationsListAdapter;
     public RequestQueue requestQueue;
     public String baseUrl;
     private FirebaseAuth mAuth;
@@ -110,13 +111,18 @@ public class NotificationsActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         dbCreateGroupMember(notificationsListDataModelItem.getGroupId(), mAuth.getCurrentUser().getUid());
+                        dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
+                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                        startActivity(intent);
                     }
                 });
 
                 rejectBTN.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
+                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                        startActivity(intent);
                     }
                 });
             }
@@ -157,7 +163,7 @@ public class NotificationsActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                         }
-                        NotificationsListAdapter notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
+                        notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
                         notificationsListView.setAdapter(notificationsListAdapter);
                     }
                 },

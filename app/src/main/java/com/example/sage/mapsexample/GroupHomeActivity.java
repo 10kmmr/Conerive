@@ -16,6 +16,8 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.Volley;
+import com.example.sage.mapsexample.GroupSettingsActivity;
+import com.example.sage.mapsexample.R;
 
 public class GroupHomeActivity extends AppCompatActivity {
 
