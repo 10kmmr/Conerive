@@ -220,6 +220,8 @@ public class GroupSettingsActivity extends AppCompatActivity {
         public String getUserDisplayPictureURL() {
             return userDisplayPictureURL;
         }
+
+
     }
 
 }

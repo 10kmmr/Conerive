@@ -1,11 +1,18 @@
 package com.example.sage.mapsexample;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.LruCache;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -14,12 +21,15 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -155,11 +165,59 @@ public class TripCreateActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
+    class UserListAdapter extends ArrayAdapter<UserListDataModel> {
+
+        public UserListAdapter(Context context, int resource, ArrayList<UserListDataModel> items) {
+            super(context, resource, items);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            View view = convertView;
+            Log.d(TAG, "accessed getView" + "position : " + position);
+            if (view == null) {
+                LayoutInflater vi;
+                vi = LayoutInflater.from(getContext());
+                view = vi.inflate(R.layout.trip_create_user_list_item, null);
+            }
+
+            UserListDataModel userListDataModelItem = getItem(position);
+
+            if (userListDataModelItem != null) {
+
+                TextView userNameTV = view.findViewById(R.id.userName);
+                NetworkImageView userImageNIV = view.findViewById(R.id.userImage);
+                CheckBox tripMemberCB = view.findViewById(R.id.tripMemberCheckBox);
+                
+                userNameTV.setText(userListDataModelItem.getUserName());
+
+                ImageLoader imageLoader;
+                imageLoader = new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
+                    private final LruCache<String, Bitmap> mCache = new LruCache<>(10);
+
+                    public void putBitmap(String url, Bitmap bitmap) {
+                        mCache.put(url, bitmap);
+                    }
+
+                    public Bitmap getBitmap(String url) {
+                        return mCache.get(url);
+                    }
+                });
+                Log.d(TAG, "getView: " + userListDataModelItem.getUserDisplayPictureURL());
+                userImageNIV.setImageUrl(userListDataModelItem.getUserDisplayPictureURL(), imageLoader);
+
+            }
+            return view;
+        }
+    }
+
     public class UserListDataModel {
         String userId;
         String userName;
         String phoneNumber;
         String userDisplayPictureURL;
+        boolean selected = true;
 
         public UserListDataModel(String userId, String userName, String phoneNumber, String userDisplayPictureURL) {
             this.userId = userId;
@@ -182,6 +240,10 @@ public class TripCreateActivity extends AppCompatActivity {
 
         public String getUserDisplayPictureURL() {
             return userDisplayPictureURL;
+        }
+
+        public boolean getSelected() {
+            return selected;
         }
     }
 }
