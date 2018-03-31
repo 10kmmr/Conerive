@@ -64,10 +64,8 @@ public class TripCreateActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 notificationRadiusTV.setText(String.valueOf(progress/10) + " Km");
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) { }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) { }
         });
@@ -155,5 +153,35 @@ public class TripCreateActivity extends AppCompatActivity {
             }
         };
         requestQueue.add(postRequest);
+    }
+
+    public class UserListDataModel {
+        String userId;
+        String userName;
+        String phoneNumber;
+        String userDisplayPictureURL;
+
+        public UserListDataModel(String userId, String userName, String phoneNumber, String userDisplayPictureURL) {
+            this.userId = userId;
+            this.userName = userName;
+            this.phoneNumber = phoneNumber;
+            this.userDisplayPictureURL = userDisplayPictureURL;
+        }
+
+        public String getUserId() {
+            return userId;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public String getPhoneNumber() {
+            return phoneNumber;
+        }
+
+        public String getUserDisplayPictureURL() {
+            return userDisplayPictureURL;
+        }
     }
 }
