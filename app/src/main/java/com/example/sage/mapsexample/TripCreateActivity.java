@@ -13,7 +13,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -22,10 +24,12 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,6 +44,7 @@ public class TripCreateActivity extends AppCompatActivity {
     TextView notificationRadiusTV;
     EditText tripNameET;
     Button startTrip;
+    ListView userListView;
 
     //volley stuff
     public String baseUrl;
@@ -49,6 +54,8 @@ public class TripCreateActivity extends AppCompatActivity {
     public String tripName;
     public int notificationRadius;
     public String tripId;
+
+    ArrayList<UserListDataModel> usersList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,9 +67,14 @@ public class TripCreateActivity extends AppCompatActivity {
         notificationRadiusTV = findViewById(R.id.notification_radius_display);
         tripNameET = findViewById(R.id.trip_name);
         startTrip = findViewById(R.id.start_trip);
+        userListView = findViewById(R.id.user_list);
+
+        usersList = new ArrayList<>();
 
         baseUrl = getString(R.string.api_url);
         requestQueue = Volley.newRequestQueue(this);
+
+        dbGetUsersList();
     }
 
     @Override
@@ -102,6 +114,7 @@ public class TripCreateActivity extends AppCompatActivity {
                             tripId = jsonObject.get("insertId").toString();
                             if(notificationRadius>0){
                                 dbCreateNotificationRadius();
+                                dbCreateTripMembers();
                             } else {
                                 Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
                                 intent.putExtra("tripId", tripId);
@@ -165,6 +178,48 @@ public class TripCreateActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
+    void dbGetUsersList() {
+        String url = baseUrl + "users/userList/" + groupId;
+        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                JSONObject jsonObject = response.getJSONObject(i);
+                                String userId = jsonObject.getString("User_id");
+                                String Name = jsonObject.getString("Name");
+                                String Phone = jsonObject.getString("Phone");
+                                String userDisplayPictureURL = null;
+                                if (!jsonObject.getString("Image_url").equalsIgnoreCase("null")) {
+                                    userDisplayPictureURL = jsonObject.getString("Image_url");
+                                }
+                                usersList.add(
+                                        new UserListDataModel(
+                                                userId,
+                                                Name,
+                                                Phone,
+                                                userDisplayPictureURL
+                                        )
+                                );
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        UserListAdapter userListAdapter = new UserListAdapter(getApplicationContext(), R.layout.user_list_item, usersList);
+                        userListView.setAdapter(userListAdapter);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        );
+        requestQueue.add(getRequest);
+    }
+
     class UserListAdapter extends ArrayAdapter<UserListDataModel> {
 
         public UserListAdapter(Context context, int resource, ArrayList<UserListDataModel> items) {
@@ -182,14 +237,21 @@ public class TripCreateActivity extends AppCompatActivity {
                 view = vi.inflate(R.layout.trip_create_user_list_item, null);
             }
 
-            UserListDataModel userListDataModelItem = getItem(position);
+            final UserListDataModel userListDataModelItem = getItem(position);
 
             if (userListDataModelItem != null) {
 
                 TextView userNameTV = view.findViewById(R.id.userName);
                 NetworkImageView userImageNIV = view.findViewById(R.id.userImage);
                 CheckBox tripMemberCB = view.findViewById(R.id.tripMemberCheckBox);
-                
+
+                tripMemberCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        userListDataModelItem.selected = isChecked;
+                    }
+                });
+
                 userNameTV.setText(userListDataModelItem.getUserName());
 
                 ImageLoader imageLoader;
