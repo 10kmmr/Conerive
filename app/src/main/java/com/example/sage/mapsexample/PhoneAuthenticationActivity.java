@@ -28,6 +28,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 
@@ -36,38 +38,47 @@ import java.util.concurrent.TimeUnit;
 public class PhoneAuthenticationActivity extends AppCompatActivity {
     private static final String TAG = "PhoneAuthActivity";
 
-    String[] PERMISSIONS = { android.Manifest.permission.ACCESS_FINE_LOCATION,
-                             android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                             android.Manifest.permission.CALL_PHONE };
-
-    private String baseUrl;
+    // Permission Objects
+    String[] PERMISSIONS = {android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.CALL_PHONE};
     private int PERMISSION_ALL = 1;
+
+    // Firebase Objects
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+    private FirebaseFirestore firestoreDB;
+
+    // Phone authentication objects
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
+    private String mVerificationId;
+
+    // View Objects
     private EditText phoneNumberEditText;
     private EditText otpEditText;
     private Button sendOtpButton;
     private Button verifyOtpButton;
+
+    // Member variables
     private String phoneNumber;
-    private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
-    private String mVerificationId;
-    private int mResendToken ;
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private RequestQueue requestQueue;
 
-
+    //----------------------------------------------------------------------------------------------
+    //      ACTIVITY LIFECYCLE METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_phone_authentication);
 
-        baseUrl = getString(R.string.api_url);
         phoneNumberEditText = findViewById(R.id.phone_number);
         otpEditText = findViewById(R.id.otp);
         sendOtpButton = findViewById(R.id.send_otp);
         verifyOtpButton = findViewById(R.id.verify_otp);
         mAuth = FirebaseAuth.getInstance();
-        requestQueue = Volley.newRequestQueue(this);
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        firestoreDB = FirebaseFirestore.getInstance();
         getPermissions();
 
     }
@@ -94,7 +105,6 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
                                    PhoneAuthProvider.ForceResendingToken token) {
                 Log.d(TAG, "onCodeSent:" + verificationId);
                 mVerificationId = verificationId;
-                mResendToken = token.describeContents();
                 phoneNumberEditText.setVisibility(View.INVISIBLE);
                 sendOtpButton.setVisibility(View.INVISIBLE);
                 otpEditText.setVisibility(View.VISIBLE);
@@ -107,9 +117,9 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
             public void onClick(View v) {
                 phoneNumber = phoneNumberEditText.getText().toString();
                 PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                        phoneNumber ,
-                        60 ,                                                                       // Timeout duration
-                        TimeUnit.SECONDS ,                                                           // Unit of timeout
+                        phoneNumber,
+                        60,                                                                       // Timeout duration
+                        TimeUnit.SECONDS,                                                           // Unit of timeout
                         PhoneAuthenticationActivity.this,                                     // Activity (for callback binding)
                         mCallbacks);
             }
@@ -124,6 +134,10 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
         });
     }
 
+    //----------------------------------------------------------------------------------------------
+    //      PHONE AUTHENTICATION METHODS
+    //----------------------------------------------------------------------------------------------
+
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -132,13 +146,17 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             Log.d(TAG, "signInWithCredential:success");
                             currentUser = task.getResult().getUser();
-                            checkUserProfileExists();
+                            dbCheckUserProfileExists();
                         } else {
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
                         }
                     }
                 });
     }
+
+    //----------------------------------------------------------------------------------------------
+    //      PERMISSION METHODS
+    //----------------------------------------------------------------------------------------------
 
     private void getPermissions() {
         if (!hasPermissions(this, PERMISSIONS)) {
@@ -169,31 +187,32 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
         }
     }
 
-    void checkUserProfileExists() {
-        String url = baseUrl+"users/" + currentUser.getUid();
-        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>()
-                {
+    //----------------------------------------------------------------------------------------------
+    //      MEMBER METHODS
+    //----------------------------------------------------------------------------------------------
+
+    void dbCheckUserProfileExists() {
+        firestoreDB.collection("USERS")
+                .document(currentUser.getUid())
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
-                    public void onResponse(JSONArray response) {
-                        Log.d("Response", response.toString());
-                        if(response.length()>0){
-                            Intent intent = new Intent(getApplicationContext(),HomeActivity.class);
-                            startActivity(intent);
-                        }else{
-                            Intent intent = new Intent(getApplicationContext(),UserCreateActivity.class);
-                            startActivity(intent);
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document != null && document.exists()) {
+                                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                startActivity(intent);
+                                Log.d(TAG, "onComplete: " + "user exists");
+                            } else {
+                                Intent intent = new Intent(getApplicationContext(), UserCreateActivity.class);
+                                startActivity(intent);
+                            }
+                        } else {
+                            Log.d(TAG, "get failed with ", task.getException());
                         }
                     }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        );
-        requestQueue.add(getRequest);
+                });
     }
+
 }

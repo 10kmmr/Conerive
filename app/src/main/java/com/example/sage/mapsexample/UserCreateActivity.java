@@ -16,6 +16,7 @@ import android.widget.ImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -26,6 +27,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -37,44 +39,47 @@ import java.util.Map;
 public class UserCreateActivity extends AppCompatActivity {
 
     private static final String TAG = "UserCreateActivity";
-    public String baseUrl;
+
+    // Firebase objects
+    private FirebaseFirestore firestoreDB;
     private FirebaseAuth mAuth;
-    public FirebaseUser currentUser;
-    FirebaseStorage firebaseStorage;
-    StorageReference displayPictureReference;
-    public RequestQueue requestQueue;
+    private FirebaseUser currentUser;
+    private FirebaseStorage firebaseStorage;
+    private StorageReference displayPictureReference;
 
-    public String userId;
-    public String name;
-    public String email;
-    public String phone;
-    public String displayPictureURL;
+    // Member variables
+    private String userId;
+    private String name;
+    private String email;
+    private String phone;
+    private String imageURL;
 
-    public boolean waitingForEmailsDBUpdate = true;
-    public boolean waitingForDisplayPicturesDBUpdate = true;
 
-    public EditText nameET;
-    public EditText emailET;
-    public Button done;
-    public Button chooseDisplayPicture;
-    public ImageView displayPicture;
+    // View objects
+    private EditText nameET;
+    private EditText emailET;
+    private Button done;
+    private Button chooseDisplayPicture;
+    private ImageView displayPicture;
+
+    //----------------------------------------------------------------------------------------------
+    //      ACTIVITY LIFECYCLE METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_create);
 
-        baseUrl = getString(R.string.api_url);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-        requestQueue = Volley.newRequestQueue(this);
+        firestoreDB = FirebaseFirestore.getInstance();
 
         nameET = findViewById(R.id.name);
         emailET = findViewById(R.id.email);
         done = findViewById(R.id.done);
         chooseDisplayPicture = findViewById(R.id.chooseDisplayPicture);
         displayPicture = findViewById(R.id.displayPicture);
-        displayPictureURL = "";
 
         firebaseStorage = FirebaseStorage.getInstance();
         displayPictureReference = firebaseStorage.getReference().child("user_display_picture");
@@ -82,7 +87,7 @@ public class UserCreateActivity extends AppCompatActivity {
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                userId = mAuth.getUid();
+                userId = currentUser.getUid();
                 name = nameET.getText().toString();
                 email = emailET.getText().toString();
                 phone = currentUser.getPhoneNumber();
@@ -93,145 +98,59 @@ public class UserCreateActivity extends AppCompatActivity {
         chooseDisplayPicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                userId = mAuth.getUid();
+                userId = currentUser.getUid();
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 startActivityForResult(intent, 0);
             }
         });
 
     }
-    
-    public void dbCreateUser(){
-        String url = baseUrl+"users";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
+
+    //----------------------------------------------------------------------------------------------
+    //      MEMBER METHODS
+    //----------------------------------------------------------------------------------------------
+
+    public void dbCreateUser() {
+        Map<String, String> user = new HashMap<>();
+        user.put("Name", name);
+        user.put("Phone", phone);
+        if (email != null && email.length() > 0)
+            user.put("Email", email);
+        if (imageURL != null && imageURL.length() > 0)
+            user.put("ImageURL", imageURL);
+
+        firestoreDB.collection("USERS").document(currentUser.getUid())
+                .set(user)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            Log.d(TAG, "onResponse - users: " + jsonObject);
-                            if(email.length()>0){
-                                dbCreateEmail();
-                            } else {
-                                waitingForEmailsDBUpdate = false;
-                            }
-                            if(displayPictureURL.length()>0){
-                                dbCreateDisplayPicture();
-                            } else {
-                                waitingForDisplayPicturesDBUpdate = false;
-                            }
-                            goToUserProfile();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully written!");
+                        Intent intent = new Intent(UserCreateActivity.this, HomeActivity.class);
+                        startActivity(intent);
                     }
-                },
-                new Response.ErrorListener()
-                {
+                })
+                .addOnFailureListener(new OnFailureListener() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - createuser", error.toString());
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error writing document", e);
                     }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
-                params.put("userId", userId);
-                params.put("name", name);
-                params.put("phone",phone);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
+                });
     }
 
-    public void dbCreateEmail(){
-        Log.d(TAG, "dbCreateEmail: " + "accessed");
-        String url = baseUrl+"users/emails";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            Log.d(TAG, "onResponse - emails: " + jsonObject);
-                            waitingForEmailsDBUpdate = false;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
-                params.put("userId", userId);
-                params.put("email", email);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
-    }
-
-    public void dbCreateDisplayPicture(){
-        Log.d(TAG, "dbCreateDisplayPicture: " + "accessed");
-        String url = baseUrl+"users/display-pictures";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            Log.d(TAG, "onResponse - display-pictures : " + jsonObject);
-                            waitingForDisplayPicturesDBUpdate = false;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
-                params.put("userId", userId);
-                params.put("displayPictureURL", displayPictureURL);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
-    }
+    //----------------------------------------------------------------------------------------------
+    //      PHOTO METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        final Bitmap bitmap = (Bitmap)data.getExtras().get("data");
+        final Bitmap bitmap = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageByte = baos.toByteArray();
         //fireBase updating dp
-        UploadTask uploadTask = displayPictureReference.child(userId+".jpg").putBytes(imageByte);
+        UploadTask uploadTask = displayPictureReference.child(userId + ".jpg").putBytes(imageByte);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
@@ -242,27 +161,11 @@ public class UserCreateActivity extends AppCompatActivity {
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 Log.d(TAG, "onSuccess: " + downloadUrl);
-                displayPictureURL = downloadUrl.toString();
+                imageURL = downloadUrl.toString();
                 displayPicture.setImageBitmap(bitmap);
             }
         });
 
-    }
-
-    public void goToUserProfile(){
-        final Handler handler = new Handler();
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if(!waitingForEmailsDBUpdate && !waitingForDisplayPicturesDBUpdate){
-                    Intent intent = new Intent(UserCreateActivity.this, HomeActivity.class);
-                    startActivity(intent);
-                } else {
-                    Log.d(TAG, "run: " + "some stuff");
-                    handler.postDelayed(this, 500);
-                }
-            }
-        });
     }
 
 }

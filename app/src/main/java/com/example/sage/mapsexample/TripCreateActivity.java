@@ -114,7 +114,7 @@ public class TripCreateActivity extends AppCompatActivity {
                             tripId = jsonObject.get("insertId").toString();
                             if(notificationRadius>0){
                                 dbCreateNotificationRadius();
-                                dbCreateTripMembers();
+//                                dbCreateTripMembers();
                             } else {
                                 Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
                                 intent.putExtra("tripId", tripId);
