@@ -54,7 +54,6 @@ public class UserCreateActivity extends AppCompatActivity {
     private String phone;
     private String imageURL;
 
-
     // View objects
     private EditText nameET;
     private EditText emailET;
@@ -83,6 +82,12 @@ public class UserCreateActivity extends AppCompatActivity {
 
         firebaseStorage = FirebaseStorage.getInstance();
         displayPictureReference = firebaseStorage.getReference().child("user_display_picture");
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
 
         done.setOnClickListener(new View.OnClickListener() {
             @Override
