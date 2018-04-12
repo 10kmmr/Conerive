@@ -25,6 +25,9 @@ import com.example.sage.mapsexample.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -37,50 +40,56 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GroupCreateActivity extends AppCompatActivity {
+    private static final String TAG = "GroupCreateActivity";
 
-    //Views
-    Button GroupButton;
-    Button OpenGalley;
-    EditText GroupNameET;
-    EditText GroupDescET;
-    ImageView GroupDp;
+    // Firebase objects
+    private FirebaseFirestore firestoreDB;
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+    private FirebaseStorage firebaseStorage;
+    private StorageReference displayPictureReference;
 
-    //data
-    String groupId ;
-    String GroupDesc;
-    String GroupName;
-    public String displayPictureURL;
+    // Member variables
+    private String groupId ;
+    private String GroupDesc;
+    private String GroupName;
+    private String displayPictureURL;
+    private byte[] imageByte;
 
-    int GET_FROM_GALLERY = 3;
+    // View objects
+    private Button GroupButton;
+    private Button OpenGalley;
+    private EditText GroupNameET;
+    private EditText GroupDescET;
+    private ImageView GroupDp;
 
-    //volley stuff
-    public String baseUrl;
-    public RequestQueue requestQueue;
-
-    //firebase
-    FirebaseAuth mAuth;
-    StorageReference displayPictureReference;
-    FirebaseStorage firebaseStorage;
-
-    byte[] imageByte;
+    //----------------------------------------------------------------------------------------------
+    //      ACTIVITY LIFECYCLE METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_create);
 
-        baseUrl = getString(R.string.api_url);
-        GroupButton = (Button)findViewById(R.id.newGroup);
-        OpenGalley = (Button)findViewById(R.id.OpenGalley);
-        GroupNameET = (EditText) findViewById(R.id.GName);
-        GroupDescET = (EditText)findViewById(R.id.GroupDescET);
-        GroupDp = (ImageView)findViewById(R.id.GroupDp);
-        requestQueue = Volley.newRequestQueue(this);
-        mAuth = FirebaseAuth.getInstance();
+        GroupButton = findViewById(R.id.newGroup);
+        OpenGalley = findViewById(R.id.OpenGalley);
+        GroupNameET = findViewById(R.id.GName);
+        GroupDescET = findViewById(R.id.GroupDescET);
+        GroupDp = findViewById(R.id.GroupDp);
+
         displayPictureURL = "";
 
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        firestoreDB = FirebaseFirestore.getInstance();
         firebaseStorage = FirebaseStorage.getInstance();
         displayPictureReference = firebaseStorage.getReference().child("Group_display_picture");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
 
         OpenGalley.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,100 +104,81 @@ public class GroupCreateActivity extends AppCompatActivity {
             public void onClick(View view) {
                 GroupName = GroupNameET.getText().toString();
                 GroupDesc = GroupDescET.getText().toString();
-                //write code for getting image here
                 dbCreategroup();
             }
         });
     }
 
+    //----------------------------------------------------------------------------------------------
+    //      MEMBER METHODS
+    //----------------------------------------------------------------------------------------------
+
     public void  dbCreategroup(){
-        String url = baseUrl+"groups";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
+
+        Map<String, String>  group = new HashMap<>();
+        group.put("groupName",GroupName);
+        group.put("groupDescription", GroupDesc);
+        group.put("adminId",currentUser.getUid());
+
+        firestoreDB.collection("GROUPS")
+                .add(group)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            groupId = jsonObject.get("insertId").toString();
-                            if(imageByte!=null){
-                                dbCreateDisplayPicture();
-                            } else {
-                                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                                startActivity(intent);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                    public void onSuccess(DocumentReference documentReference) {
+                        groupId = documentReference.getId();
+                        if(imageByte!=null){
+                            dbCreateDisplayPicture();
+                        } else {
+                            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                            startActivity(intent);
                         }
                     }
-                },
-                new Response.ErrorListener()
-                {
+                })
+                .addOnFailureListener(new OnFailureListener() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - createuser", error.toString());
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error adding document", e);
                     }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
-                params.put("groupName",GroupName);
-                params.put("groupDescription", GroupDesc);
-                params.put("adminId",mAuth.getCurrentUser().getUid());
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
+                });
+
     }
 
-
     public void dbCreateDisplayPicture(){
-        final String url = baseUrl+"groups/display-pictures/";
         UploadTask uploadTask = displayPictureReference.child(groupId+".jpg").putBytes(imageByte);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
+                Log.w(TAG, "Error adding image", exception);
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 displayPictureURL = downloadUrl.toString();
-                StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                        new Response.Listener<String>()
-                        {
+
+                firestoreDB.collection("GROUPS").document(groupId)
+                        .update("ImageURL", displayPictureURL)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
-                            public void onResponse(String response) {
+                            public void onSuccess(Void aVoid) {
                                 Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
                                 startActivity(intent);
                             }
-                        },
-                        new Response.ErrorListener()
-                        {
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
                             @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("Error.Response - createuser", error.toString());
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w(TAG, "Error updating document", e);
                             }
-                        }
-                ) {
-                    @Override
-                    protected Map<String, String> getParams()
-                    {
-                        Map<String, String>  params = new HashMap<>();
-                        params.put("displayPictureURL",displayPictureURL);
-                        params.put("groupId",groupId);
-                        return params;
-                    }
-                };
-                requestQueue.add(postRequest);
+                        });
             }
         });
 
-
     }
+
+    //----------------------------------------------------------------------------------------------
+    //      PHOTO METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -199,8 +189,6 @@ public class GroupCreateActivity extends AppCompatActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         GroupDp.setImageBitmap(bitmap);
         imageByte = baos.toByteArray();
-        //fireBase updating dp
-
     }
 
 }
