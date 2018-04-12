@@ -60,6 +60,7 @@ public class HomeActivity extends AppCompatActivity {
 
     // Member variables
     private ArrayList<GroupListDataModel> groupsList;
+    GroupListAdapter groupListAdapter;
 
     // Volley objects
     public RequestQueue requestQueue;
@@ -70,7 +71,12 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        groupsList = new ArrayList<>();
         groupsListView = findViewById(R.id.groupList);
+
+        groupListAdapter = new GroupListAdapter(getApplicationContext(), R.layout.group_list_item, groupsList);
+        groupsListView.setAdapter(groupListAdapter);
+
         createGroupButton = findViewById(R.id.createGroup);
         notificationsButton = findViewById(R.id.notifications);
         userProfileButton = findViewById(R.id.user_profile);
@@ -78,7 +84,6 @@ public class HomeActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         firestoreDB = FirebaseFirestore.getInstance();
-        groupsList = new ArrayList<>();
         dbGetGroupList();
     }
 
@@ -130,19 +135,53 @@ public class HomeActivity extends AppCompatActivity {
     void dbGetGroupList() {
 
         firestoreDB.collection("USERS").document(currentUser.getUid())
-            .get()
-            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                @Override
-                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                    ArrayList<String> groupIds = (ArrayList<String>)documentSnapshot.get("Groups");
-                    for(String groupId : groupIds){
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        if (documentSnapshot.contains("Groups")) {
+                            ArrayList<String> groupIds = (ArrayList<String>) documentSnapshot.get("Groups");
+                            for (String groupId : groupIds) {
 
-                        firestoreDB.collection("GROUPS").document(groupId)
-                                .get()
+                                firestoreDB.collection("GROUPS").document(groupId)
+                                        .get()
+                                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                                String groupId = documentSnapshot.getId();
+                                                String groupName = documentSnapshot.getString("groupName");
+                                                String groupDisplayPictureURL = null;
+                                                if (documentSnapshot.contains("ImageURL")) {
+                                                    groupDisplayPictureURL = documentSnapshot.getString("ImageURL");
+                                                }
+                                                int memberCount = ((ArrayList<String>) documentSnapshot.get("Users")).size();
+                                                // TODO - get trip and image count
+                                                int tripCount = 0;
+                                                int imageCount = 0;
 
+                                                groupsList.add(
+                                                        new GroupListDataModel(
+                                                                groupId,
+                                                                groupName,
+                                                                groupDisplayPictureURL,
+                                                                "69/69/69",                 //get actual trip date after db query fix
+                                                                memberCount,
+                                                                tripCount,
+                                                                imageCount
+                                                        )
+                                                );
+                                                groupListAdapter.notifyDataSetChanged();
+                                            }
+                                        }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.d(TAG, "onFailure: " + e);
+                                    }
+                                });
+                            }
+                        }
                     }
-                }
-            }).addOnFailureListener(new OnFailureListener() {
+                }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Log.d(TAG, "onFailure: " + e);
@@ -156,12 +195,6 @@ public class HomeActivity extends AppCompatActivity {
 //                        for (int i = 0; i < response.length(); i++) {
 //                            try {
 //                                JSONObject jsonObject = response.getJSONObject(i);
-//                                String groupId = jsonObject.getString("Group_id");
-//                                String groupName = jsonObject.getString("Group_name");
-//                                String groupDisplayPictureURL = null;
-//                                if (!jsonObject.getString("Group_Display_picture").equalsIgnoreCase("null")) {
-//                                    groupDisplayPictureURL = jsonObject.getString("Group_Display_picture");
-//                                }
 //                                int memberCount = jsonObject.getInt("Member_count");
 //                                int tripCount = jsonObject.getInt("Trip_count");
 //                                int imageCount = jsonObject.getInt("Image_count");
@@ -176,12 +209,11 @@ public class HomeActivity extends AppCompatActivity {
 //                                                imageCount
 //                                        )
 //                                );
-//                            } catch (JSONException e) {
+////                            } catch (JSONException e) {
 //                                e.printStackTrace();
 //                            }
 //                        }
-//                        GroupListAdapter groupListAdapter = new GroupListAdapter(getApplicationContext(), R.layout.group_list_item, groupsList);
-//                        groupsListView.setAdapter(groupListAdapter);
+//
 //                    }
 //                },
 //                new Response.ErrorListener() {

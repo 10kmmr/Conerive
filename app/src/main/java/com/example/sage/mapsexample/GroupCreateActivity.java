@@ -129,12 +129,7 @@ public class GroupCreateActivity extends AppCompatActivity {
                     public void onSuccess(DocumentReference documentReference) {
                         groupId = documentReference.getId();
                         addId();
-                        if (imageByte != null) {
-                            dbCreateDisplayPicture();
-                        } else {
-                            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                            startActivity(intent);
-                        }
+                        // TODO - put next() code here after cloud firestore shift
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -145,33 +140,80 @@ public class GroupCreateActivity extends AppCompatActivity {
                 });
 
 
-
     }
 
     //to shift to cloud firestore function
-    void addId(){
+    void addId() {
 
         ArrayList<String> users = new ArrayList<>();
         users.add(currentUser.getUid());
         firestoreDB.collection("GROUPS").document(groupId)
-                .update("Users", users);
-
-        firestoreDB.collection("USERS").document(currentUser.getUid())
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                .update("Users", users)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        ArrayList<String> groupIds = (ArrayList<String>)documentSnapshot.get("Groups");
-                        groupIds.add(groupId);
+                    public void onSuccess(Void aVoid) {
                         firestoreDB.collection("USERS").document(currentUser.getUid())
-                                .update("Groups", groupIds);
+                                .get()
+                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                        if (documentSnapshot.contains("Groups")) {
+                                            ArrayList<String> groupIds = (ArrayList<String>) documentSnapshot.get("Groups");
+                                            groupIds.add(groupId);
+                                            firestoreDB.collection("USERS").document(currentUser.getUid())
+                                                    .update("Groups", groupIds)
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            next();
+                                                        }
+                                                    }).addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Log.d(TAG, "onFailure: " + e);
+                                                }
+                                            });
+                                        } else {
+                                            ArrayList<String> groupIds = new ArrayList<>();
+                                            groupIds.add(groupId);
+                                            firestoreDB.collection("USERS").document(currentUser.getUid())
+                                                    .update("Groups", groupIds)
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            next();
+                                                        }
+                                                    }).addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Log.d(TAG, "onFailure: " + e);
+                                                }
+                                            });
+                                        }
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d(TAG, "onFailure: " + e);
+                            }
+                        });
                     }
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.d(TAG, "onFailure: " + e);
+
             }
         });
+
+    }
+
+    void next(){
+        if (imageByte != null) {
+            dbCreateDisplayPicture();
+        } else {
+            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+            startActivity(intent);
+        }
     }
 
     public void dbCreateDisplayPicture() {
