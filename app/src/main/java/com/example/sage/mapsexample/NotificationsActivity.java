@@ -58,16 +58,21 @@ public class NotificationsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_notifications);
         requestQueue = Volley.newRequestQueue(this);
+
         notificationsListView = findViewById(R.id.notifications_list);
+        notificationsList = new ArrayList<>();
+        notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
+        notificationsListView.setAdapter(notificationsListAdapter);
+
+
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         firestoreDB = FirebaseFirestore.getInstance();
-        notificationsList = new ArrayList<>();
         dbGetNotifications();
     }
-
 
 
     void dbGetNotifications() {
@@ -117,7 +122,7 @@ public class NotificationsActivity extends AppCompatActivity {
                                                                                         finalGroupDisplayPictureURL
                                                                                 )
                                                                         );
-
+                                                                        notificationsListAdapter.notifyDataSetChanged();
 
                                                                     } else {
                                                                         Log.d(TAG, "get failed with ", task.getException());
@@ -138,85 +143,57 @@ public class NotificationsActivity extends AppCompatActivity {
                     }
                 });
 
-
-        String url = baseUrl + "group-members/notifications/" + mAuth.getUid();
-        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                JSONObject jsonObject = response.getJSONObject(i);
-                                String senderName = jsonObject.getString("Sender_name");
-
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
-                        notificationsListView.setAdapter(notificationsListAdapter);
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        );
-        requestQueue.add(getRequest);
     }
 
     void dbDeleteNotification(String notificationId) {
-        String url = baseUrl + "group-members/notifications/" + notificationId;
-        JsonArrayRequest deleteRequest = new JsonArrayRequest(Request.Method.DELETE, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        Log.d(TAG, "onResponse: " + response.toString());
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        );
-        requestQueue.add(deleteRequest);
+//        String url = baseUrl + "group-members/notifications/" + notificationId;
+//        JsonArrayRequest deleteRequest = new JsonArrayRequest(Request.Method.DELETE, url, null,
+//                new Response.Listener<JSONArray>() {
+//                    @Override
+//                    public void onResponse(JSONArray response) {
+//                        Log.d(TAG, "onResponse: " + response.toString());
+//                    }
+//                },
+//                new Response.ErrorListener() {
+//                    @Override
+//                    public void onErrorResponse(VolleyError error) {
+//                        Log.d("Error.Response", error.toString());
+//                    }
+//                }
+//        );
+//        requestQueue.add(deleteRequest);
     }
 
     public void dbCreateGroupMember(final String groupId, final String userId) {
-        String url = baseUrl + "group-members";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            Log.d(TAG, "onResponse - group-members: " + jsonObject);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - createuser", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("userId", userId);
-                params.put("groupId", groupId);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
+//        String url = baseUrl + "group-members";
+//        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+//                new Response.Listener<String>() {
+//                    @Override
+//                    public void onResponse(String response) {
+//                        try {
+//                            JSONObject jsonObject = new JSONObject(response);
+//                            Log.d(TAG, "onResponse - group-members: " + jsonObject);
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                },
+//                new Response.ErrorListener() {
+//                    @Override
+//                    public void onErrorResponse(VolleyError error) {
+//                        Log.d("Error.Response - createuser", error.toString());
+//                    }
+//                }
+//        ) {
+//            @Override
+//            protected Map<String, String> getParams() {
+//                Map<String, String> params = new HashMap<>();
+//                params.put("userId", userId);
+//                params.put("groupId", groupId);
+//                return params;
+//            }
+//        };
+//        requestQueue.add(postRequest);
     }
 
 
