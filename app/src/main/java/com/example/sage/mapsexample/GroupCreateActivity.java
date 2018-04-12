@@ -27,6 +27,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -36,6 +37,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -126,6 +128,7 @@ public class GroupCreateActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
                         groupId = documentReference.getId();
+                        addId();
                         if (imageByte != null) {
                             dbCreateDisplayPicture();
                         } else {
@@ -141,6 +144,34 @@ public class GroupCreateActivity extends AppCompatActivity {
                     }
                 });
 
+
+
+    }
+
+    //to shift to cloud firestore function
+    void addId(){
+
+        ArrayList<String> users = new ArrayList<>();
+        users.add(currentUser.getUid());
+        firestoreDB.collection("GROUPS").document(groupId)
+                .update("Users", users);
+
+        firestoreDB.collection("USERS").document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        ArrayList<String> groupIds = (ArrayList<String>)documentSnapshot.get("Groups");
+                        groupIds.add(groupId);
+                        firestoreDB.collection("USERS").document(currentUser.getUid())
+                                .update("Groups", groupIds);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
+        });
     }
 
     public void dbCreateDisplayPicture() {

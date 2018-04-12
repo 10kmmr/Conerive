@@ -51,7 +51,6 @@ public class UserProfileActivity extends AppCompatActivity {
     private String name;
     private String email;
     private String phone;
-    private String displayPictureURL;
 
     // View objects
     private TextView nameTV;
@@ -73,8 +72,6 @@ public class UserProfileActivity extends AppCompatActivity {
         firestoreDB = FirebaseFirestore.getInstance();
         firebaseStorage = FirebaseStorage.getInstance();
         displayPictureReference = firebaseStorage.getReference().child("user_display_picture");
-
-        displayPictureURL = "";
 
         nameTV = findViewById(R.id.name);
         emailTV = findViewById(R.id.email);
@@ -111,7 +108,6 @@ public class UserProfileActivity extends AppCompatActivity {
 
                                 }
                                 if (document.contains("ImageURL")) {
-                                    displayPictureURL = document.getString("ImageURL");
                                     downloadDisplayPicture();
                                 }
                             } else {

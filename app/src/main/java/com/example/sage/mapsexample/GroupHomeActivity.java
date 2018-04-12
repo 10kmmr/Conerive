@@ -20,17 +20,16 @@ import com.example.sage.mapsexample.GroupSettingsActivity;
 import com.example.sage.mapsexample.R;
 
 public class GroupHomeActivity extends AppCompatActivity {
-
     private static final String TAG = "GroupHomeActivity";
 
-    String groupId;
-    String groupName;
-    String groupDisplayPictureURL;
+    private String groupId;
+    private String groupName;
+    private String groupDisplayPictureURL;
 
-    Toolbar toolbar;
-    FloatingActionButton createTripFAB;
-    TextView groupNameTV;
-    NetworkImageView groupDisplayPictureNIV;
+    private Toolbar toolbar;
+    private FloatingActionButton createTripFAB;
+    private TextView groupNameTV;
+    private NetworkImageView groupDisplayPictureNIV;
 
     public RequestQueue requestQueue;
 

@@ -3,6 +3,7 @@ package com.example.sage.mapsexample;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,7 +26,12 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONArray;
@@ -36,16 +42,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HomeActivity extends AppCompatActivity {
+// TODO - restructure push notifications
 
+public class HomeActivity extends AppCompatActivity {
     private static final String TAG = "HomeActivity";
-    ListView groupsListView;
-    Button createGroupButton;
-    Button notificationsButton;
-    Button userProfileButton;
-    ArrayList<GroupListDataModel> groupsList;
-    public String baseUrl;
+
+    // View objects
+    private ListView groupsListView;
+    private Button createGroupButton;
+    private Button notificationsButton;
+    private Button userProfileButton;
+
+    // Firebase objects
     private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+    private FirebaseFirestore firestoreDB;
+
+    // Member variables
+    private ArrayList<GroupListDataModel> groupsList;
+
+    // Volley objects
     public RequestQueue requestQueue;
 
 
@@ -54,13 +70,14 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        baseUrl = getString(R.string.api_url);
         groupsListView = findViewById(R.id.groupList);
         createGroupButton = findViewById(R.id.createGroup);
         notificationsButton = findViewById(R.id.notifications);
         userProfileButton = findViewById(R.id.user_profile);
         requestQueue = Volley.newRequestQueue(this);
         mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        firestoreDB = FirebaseFirestore.getInstance();
         groupsList = new ArrayList<>();
         dbGetGroupList();
     }
@@ -68,7 +85,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        sendRegistrationToServer(this);
 
         createGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,82 +126,72 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
-    public void sendRegistrationToServer(Context context) {
-        final String token = FirebaseInstanceId.getInstance().getToken();
-        Log.d(TAG, "sendRegistrationToServer: ");
-        String url = getString(R.string.fcm_url) + "fcm/newtoken";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Log.d(" newtoken written", TAG);
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - token insertion FIREBASE INSTANCEIDSERVICE", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("userId", mAuth.getCurrentUser().getUid());
-                params.put("token", token);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
-
-
-    }
 
     void dbGetGroupList() {
-        String url = baseUrl + "groups/groupList/" + mAuth.getUid();
-        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                JSONObject jsonObject = response.getJSONObject(i);
-                                String groupId = jsonObject.getString("Group_id");
-                                String groupName = jsonObject.getString("Group_name");
-                                String groupDisplayPictureURL = null;
-                                if (!jsonObject.getString("Group_Display_picture").equalsIgnoreCase("null")) {
-                                    groupDisplayPictureURL = jsonObject.getString("Group_Display_picture");
-                                }
-                                int memberCount = jsonObject.getInt("Member_count");
-                                int tripCount = jsonObject.getInt("Trip_count");
-                                int imageCount = jsonObject.getInt("Image_count");
-                                groupsList.add(
-                                        new GroupListDataModel(
-                                                groupId,
-                                                groupName,
-                                                groupDisplayPictureURL,
-                                                "69/69/69",                 //get actual trip date after db query fix
-                                                memberCount,
-                                                tripCount,
-                                                imageCount
-                                        )
-                                );
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        GroupListAdapter groupListAdapter = new GroupListAdapter(getApplicationContext(), R.layout.group_list_item, groupsList);
-                        groupsListView.setAdapter(groupListAdapter);
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
+
+        firestoreDB.collection("USERS").document(currentUser.getUid())
+            .get()
+            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                @Override
+                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                    ArrayList<String> groupIds = (ArrayList<String>)documentSnapshot.get("Groups");
+                    for(String groupId : groupIds){
+
+                        firestoreDB.collection("GROUPS").document(groupId)
+                                .get()
+
                     }
                 }
-        );
-        requestQueue.add(getRequest);
+            }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
+        });
+
+//        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+//                new Response.Listener<JSONArray>() {
+//                    @Override
+//                    public void onResponse(JSONArray response) {
+//                        for (int i = 0; i < response.length(); i++) {
+//                            try {
+//                                JSONObject jsonObject = response.getJSONObject(i);
+//                                String groupId = jsonObject.getString("Group_id");
+//                                String groupName = jsonObject.getString("Group_name");
+//                                String groupDisplayPictureURL = null;
+//                                if (!jsonObject.getString("Group_Display_picture").equalsIgnoreCase("null")) {
+//                                    groupDisplayPictureURL = jsonObject.getString("Group_Display_picture");
+//                                }
+//                                int memberCount = jsonObject.getInt("Member_count");
+//                                int tripCount = jsonObject.getInt("Trip_count");
+//                                int imageCount = jsonObject.getInt("Image_count");
+//                                groupsList.add(
+//                                        new GroupListDataModel(
+//                                                groupId,
+//                                                groupName,
+//                                                groupDisplayPictureURL,
+//                                                "69/69/69",                 //get actual trip date after db query fix
+//                                                memberCount,
+//                                                tripCount,
+//                                                imageCount
+//                                        )
+//                                );
+//                            } catch (JSONException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                        GroupListAdapter groupListAdapter = new GroupListAdapter(getApplicationContext(), R.layout.group_list_item, groupsList);
+//                        groupsListView.setAdapter(groupListAdapter);
+//                    }
+//                },
+//                new Response.ErrorListener() {
+//                    @Override
+//                    public void onErrorResponse(VolleyError error) {
+//                        Log.d("Error.Response", error.toString());
+//                    }
+//                }
+//        );
+//        requestQueue.add(getRequest);
     }
 
     class GroupListAdapter extends ArrayAdapter<GroupListDataModel> {
