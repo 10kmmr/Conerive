@@ -42,6 +42,7 @@ public class HomeActivity extends AppCompatActivity {
     ListView groupsListView;
     Button createGroupButton;
     Button notificationsButton;
+    Button userProfileButton;
     ArrayList<GroupListDataModel> groupsList;
     public String baseUrl;
     private FirebaseAuth mAuth;
@@ -57,6 +58,7 @@ public class HomeActivity extends AppCompatActivity {
         groupsListView = findViewById(R.id.groupList);
         createGroupButton = findViewById(R.id.createGroup);
         notificationsButton = findViewById(R.id.notifications);
+        userProfileButton = findViewById(R.id.user_profile);
         requestQueue = Volley.newRequestQueue(this);
         mAuth = FirebaseAuth.getInstance();
         groupsList = new ArrayList<>();
@@ -80,6 +82,14 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), NotificationsActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        userProfileButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), UserProfileActivity.class);
                 startActivity(intent);
             }
         });

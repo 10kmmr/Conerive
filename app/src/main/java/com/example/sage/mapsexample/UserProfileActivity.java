@@ -18,10 +18,14 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -34,97 +38,105 @@ import java.io.File;
 import java.io.IOException;
 
 public class UserProfileActivity extends AppCompatActivity {
-
     private static final String TAG = "UserProfileActivity";
-    public String baseUrl;
+
+    // Firebase objects
     private FirebaseAuth mAuth;
-    public FirebaseUser currentUser;
-    FirebaseStorage firebaseStorage;
-    StorageReference displayPictureReference;
-    public RequestQueue requestQueue;
+    private FirebaseUser currentUser;
+    private FirebaseStorage firebaseStorage;
+    private StorageReference displayPictureReference;
+    private FirebaseFirestore firestoreDB;
 
-    public String userId;
-    public String name;
-    public String email;
-    public String phone;
-    public String displayPictureURL;
+    // Member variables
+    private String name;
+    private String email;
+    private String phone;
+    private String displayPictureURL;
 
-    public TextView nameTV;
-    public TextView emailTV;
-    public TextView phoneTV;
-    public ImageView displayPicture;
+    // View objects
+    private TextView nameTV;
+    private TextView emailTV;
+    private TextView phoneTV;
+    private ImageView displayPicture;
+
+    //----------------------------------------------------------------------------------------------
+    //      ACTIVITY LIFECYCLE METHODS
+    //----------------------------------------------------------------------------------------------
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_profile);
 
-        baseUrl = getString(R.string.api_url);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-        requestQueue = Volley.newRequestQueue(this);
+        firestoreDB = FirebaseFirestore.getInstance();
         firebaseStorage = FirebaseStorage.getInstance();
         displayPictureReference = firebaseStorage.getReference().child("user_display_picture");
+
         displayPictureURL = "";
 
         nameTV = findViewById(R.id.name);
         emailTV = findViewById(R.id.email);
         phoneTV = findViewById(R.id.phone);
         displayPicture = findViewById(R.id.displayPicture);
+
         getUserDetails();
     }
 
-    void getUserDetails(){
-        userId = mAuth.getUid();
-        String url = baseUrl+"users/"+userId;
-        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>()
-                {
+    //----------------------------------------------------------------------------------------------
+    //      MEMBER METHODS
+    //----------------------------------------------------------------------------------------------
+
+    void getUserDetails() {
+
+        firestoreDB.collection("USERS").document(currentUser.getUid())
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
-                    public void onResponse(JSONArray response) {
-                        Log.d("Response", response.toString());
-                        try {
-                            JSONObject jsonObject = response.getJSONObject(0);
-                            name = jsonObject.getString("Name");
-                            nameTV.setText(name);
-                            phone = jsonObject.getString("Phone");
-                            phoneTV.setText(phone);
-                            if(!jsonObject.isNull("Email_id")){
-                                email = jsonObject.getString("Email_id");
-                                emailTV.setText(email);
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document != null && document.exists()) {
+                                Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                                name = document.getString("Name"); nameTV.setText(name);
+                                phone = document.getString("Phone"); phoneTV.setText(phone);
+                                if(document.contains("Email")){
+                                    email = document.getString("Email");
+                                    emailTV.setText(email);
+                                } else {
+                                    emailTV.setText("----------");
+
+                                }
+                                if(document.contains("ImageURL")){
+                                    displayPictureURL = document.getString("ImageURL");
+                                    downloadDisplayPicture();
+                                }
                             } else {
-                                emailTV.setText("no email");
+                                Log.d(TAG, "No such document");
                             }
-                            if(!jsonObject.isNull("Image_url")){
-                                displayPictureURL = jsonObject.getString("Image_url");
-                                downloadDisplayPicture();
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                        } else {
+                            Log.d(TAG, "get failed with ", task.getException());
                         }
                     }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        );
-        requestQueue.add(getRequest);
+                });
     }
 
-    void downloadDisplayPicture(){
+    //----------------------------------------------------------------------------------------------
+    //      PHOTO METHODS
+    //----------------------------------------------------------------------------------------------
 
-        StorageReference ref = displayPictureReference.child(userId+".jpg");
+    void downloadDisplayPicture() {
+
+        StorageReference ref = displayPictureReference.child(currentUser.getUid() + ".jpg");
         try {
             final File localFile = File.createTempFile("Images", "jpg");
-            ref.getFile(localFile).addOnSuccessListener(new OnSuccessListener< FileDownloadTask.TaskSnapshot >() {
+            ref.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    Log.d(TAG, "onSuccess: "+"some stuff");
+                    Log.d(TAG, "onSuccess: " + "some stuff");
                     Bitmap image;
-                    image= BitmapFactory.decodeFile(localFile.getAbsolutePath());
+                    image = BitmapFactory.decodeFile(localFile.getAbsolutePath());
                     displayPicture.setImageBitmap(image);
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -138,4 +150,4 @@ public class UserProfileActivity extends AppCompatActivity {
         }
     }
 
-    }
+}

@@ -1,40 +1,44 @@
 package com.example.sage.mapsexample;
 
+import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-import com.example.sage.mapsexample.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 import java.util.HashMap;
 import java.util.Map;
 
 public class GroupInviteActivity extends AppCompatActivity {
-
     private static final String TAG = "GroupInviteActivity";
-    String receiverPhoneNumber;
-    String userId;
-    String groupId;
-    String groupName;
 
-    Button inviteButton;
-    EditText receiverPhoneNumberET;
+    // Member variables
+    private String receiverPhoneNumber;
+    private String groupId;
+
+    // View objects
+    private Button inviteButton;
+    private EditText receiverPhoneNumberET;
 
     private FirebaseAuth mAuth;
-    public RequestQueue requestQueue;
+    private FirebaseUser currentUser;
+    private FirebaseFirestore firestoreDB;
+
+    //----------------------------------------------------------------------------------------------
+    //      ACTIVITY LIFECYCLE METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,13 +46,13 @@ public class GroupInviteActivity extends AppCompatActivity {
         setContentView(R.layout.activity_group_invite);
 
         groupId = getIntent().getStringExtra("groupId");
-        groupName = getIntent().getStringExtra("groupName");
 
         inviteButton = findViewById(R.id.invite);
         receiverPhoneNumberET = findViewById(R.id.phone_number);
+
         mAuth = FirebaseAuth.getInstance();
-        userId = mAuth.getUid();
-        requestQueue = Volley.newRequestQueue(this);
+        currentUser = mAuth.getCurrentUser();
+        firestoreDB = FirebaseFirestore.getInstance();
     }
 
     @Override
@@ -66,36 +70,49 @@ public class GroupInviteActivity extends AppCompatActivity {
         });
     }
 
+    //----------------------------------------------------------------------------------------------
+    //      MEMBER METHODS
+    //----------------------------------------------------------------------------------------------
+
     void dbCreateNotification() {
-        String url = getString(R.string.fcm_url)+"fcm/notification/GroupInvitation/";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
+
+        final Map<String, String> notification = new HashMap<>();
+        notification.put("Sender_id", currentUser.getUid());
+        notification.put("Group_id", groupId);
+        notification.put("Type", "GROUP_INVITE");
+
+        firestoreDB.collection("USERS")
+                .whereEqualTo("Phone", receiverPhoneNumber)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
-                    public void onResponse(String response) {
-                        Log.d(TAG, "onResponse: " + response);
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+
+                            DocumentSnapshot document = task.getResult().getDocuments().get(0);
+                                firestoreDB.collection("USERS")
+                                        .document(document.getId())
+                                        .collection("NOTIFICATIONS")
+                                        .add(notification)
+                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                            @Override
+                                            public void onSuccess(DocumentReference documentReference) {
+                                                Intent intent = new Intent(GroupInviteActivity.this, HomeActivity.class);
+                                                startActivity(intent);
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Log.w(TAG, "Error adding document", e);
+                                            }
+                                        });
+
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
                     }
-                },
-                new Response.ErrorListener()
-                {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - createnotification", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
-                params.put("senderId", userId);
-                params.put("receiverPhoneNumber", receiverPhoneNumber);
-                params.put("groupId", groupId);
-                params.put("groupName", groupName);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
+                });
     }
 
 }
