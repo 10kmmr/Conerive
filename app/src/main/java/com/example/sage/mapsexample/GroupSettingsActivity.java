@@ -77,13 +77,15 @@ public class GroupSettingsActivity extends AppCompatActivity {
         super.onStart();
 
         groupNameTV.setText(groupName);
-        if(groupDisplayPictureURL != null){
+        if (groupDisplayPictureURL != null) {
             ImageLoader imageLoader;
             imageLoader = new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
                 private final LruCache<String, Bitmap> mCache = new LruCache<>(10);
+
                 public void putBitmap(String url, Bitmap bitmap) {
                     mCache.put(url, bitmap);
                 }
+
                 public Bitmap getBitmap(String url) {
                     return mCache.get(url);
                 }

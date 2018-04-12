@@ -110,36 +110,33 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
-    public void sendRegistrationToServer( Context context) {
+    public void sendRegistrationToServer(Context context) {
         final String token = FirebaseInstanceId.getInstance().getToken();
-                Log.d(TAG, "sendRegistrationToServer: ");
-                String url = getString(R.string.fcm_url) +"fcm/newtoken";
-                StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                        new Response.Listener<String>()
-                        {
-                            @Override
-                            public void onResponse(String response) {
-                                Log.d(" newtoken written", TAG);
-                            }
-                        },
-                        new Response.ErrorListener()
-                        {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("Error.Response - token insertion FIREBASE INSTANCEIDSERVICE", error.toString());
-                            }
-                        }
-                ) {
+        Log.d(TAG, "sendRegistrationToServer: ");
+        String url = getString(R.string.fcm_url) + "fcm/newtoken";
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
                     @Override
-                    protected Map<String, String> getParams()
-                    {
-                        Map<String, String>  params = new HashMap<>();
-                        params.put("userId",mAuth.getCurrentUser().getUid());
-                        params.put("token", token);
-                        return params;
+                    public void onResponse(String response) {
+                        Log.d(" newtoken written", TAG);
                     }
-                };
-                requestQueue.add(postRequest);
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response - token insertion FIREBASE INSTANCEIDSERVICE", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("userId", mAuth.getCurrentUser().getUid());
+                params.put("token", token);
+                return params;
+            }
+        };
+        requestQueue.add(postRequest);
 
 
     }

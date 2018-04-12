@@ -84,35 +84,38 @@ public class TripCreateActivity extends AppCompatActivity {
         notificationRadiusSB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                notificationRadiusTV.setText(String.valueOf(progress/10) + " Km");
+                notificationRadiusTV.setText(String.valueOf(progress / 10) + " Km");
             }
+
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
         });
 
         startTrip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 tripName = tripNameET.getText().toString();
-                notificationRadius = notificationRadiusSB.getProgress()/10;
+                notificationRadius = notificationRadiusSB.getProgress() / 10;
                 dbCreateTrip();
             }
         });
     }
 
-    public void dbCreateTrip(){
-        String url = baseUrl+"trips";
+    public void dbCreateTrip() {
+        String url = baseUrl + "trips";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
+                new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         try {
                             JSONObject jsonObject = new JSONObject(response);
                             tripId = jsonObject.get("insertId").toString();
-                            if(notificationRadius>0){
+                            if (notificationRadius > 0) {
                                 dbCreateNotificationRadius();
 //                                dbCreateTripMembers();
                             } else {
@@ -125,8 +128,7 @@ public class TripCreateActivity extends AppCompatActivity {
                         }
                     }
                 },
-                new Response.ErrorListener()
-                {
+                new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("Error.Response - createuser", error.toString());
@@ -134,32 +136,29 @@ public class TripCreateActivity extends AppCompatActivity {
                 }
         ) {
             @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
-                params.put("tripName",tripName);
-                params.put("groupId",groupId);
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("tripName", tripName);
+                params.put("groupId", groupId);
                 return params;
             }
         };
         requestQueue.add(postRequest);
     }
 
-    public void dbCreateNotificationRadius(){
-        String url = baseUrl+"trips/notification-radius";
+    public void dbCreateNotificationRadius() {
+        String url = baseUrl + "trips/notification-radius";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
+                new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Log.d(TAG, "onResponse: " +response);
+                        Log.d(TAG, "onResponse: " + response);
                         Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
                         intent.putExtra("tripId", tripId);
                         startActivity(intent);
                     }
                 },
-                new Response.ErrorListener()
-                {
+                new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("Error.Response - createuser", error.toString());
@@ -167,10 +166,9 @@ public class TripCreateActivity extends AppCompatActivity {
                 }
         ) {
             @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
-                params.put("tripId",tripId);
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("tripId", tripId);
                 params.put("notificationRadius", String.valueOf(notificationRadius));
                 return params;
             }

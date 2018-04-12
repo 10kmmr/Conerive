@@ -177,7 +177,7 @@ public class NotificationsActivity extends AppCompatActivity {
         requestQueue.add(getRequest);
     }
 
-    void dbDeleteNotification(String notificationId){
+    void dbDeleteNotification(String notificationId) {
         String url = baseUrl + "group-members/notifications/" + notificationId;
         JsonArrayRequest deleteRequest = new JsonArrayRequest(Request.Method.DELETE, url, null,
                 new Response.Listener<JSONArray>() {
@@ -196,11 +196,10 @@ public class NotificationsActivity extends AppCompatActivity {
         requestQueue.add(deleteRequest);
     }
 
-    public void dbCreateGroupMember(final String groupId, final String userId){
-        String url = baseUrl+"group-members";
+    public void dbCreateGroupMember(final String groupId, final String userId) {
+        String url = baseUrl + "group-members";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>()
-                {
+                new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         try {
@@ -211,8 +210,7 @@ public class NotificationsActivity extends AppCompatActivity {
                         }
                     }
                 },
-                new Response.ErrorListener()
-                {
+                new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("Error.Response - createuser", error.toString());
@@ -220,9 +218,8 @@ public class NotificationsActivity extends AppCompatActivity {
                 }
         ) {
             @Override
-            protected Map<String, String> getParams()
-            {
-                Map<String, String>  params = new HashMap<>();
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
                 params.put("userId", userId);
                 params.put("groupId", groupId);
                 return params;
@@ -231,7 +228,7 @@ public class NotificationsActivity extends AppCompatActivity {
         requestQueue.add(postRequest);
     }
 
-    public class NotificationsListDataModel{
+    public class NotificationsListDataModel {
         String notificationId;
         String groupId;
         String groupName;

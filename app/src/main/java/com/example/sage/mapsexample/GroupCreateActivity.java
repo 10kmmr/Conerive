@@ -50,7 +50,7 @@ public class GroupCreateActivity extends AppCompatActivity {
     private StorageReference displayPictureReference;
 
     // Member variables
-    private String groupId ;
+    private String groupId;
     private String GroupDesc;
     private String GroupName;
     private String displayPictureURL;
@@ -113,12 +113,12 @@ public class GroupCreateActivity extends AppCompatActivity {
     //      MEMBER METHODS
     //----------------------------------------------------------------------------------------------
 
-    public void  dbCreategroup(){
+    public void dbCreategroup() {
 
-        Map<String, String>  group = new HashMap<>();
-        group.put("groupName",GroupName);
+        Map<String, String> group = new HashMap<>();
+        group.put("groupName", GroupName);
         group.put("groupDescription", GroupDesc);
-        group.put("adminId",currentUser.getUid());
+        group.put("adminId", currentUser.getUid());
 
         firestoreDB.collection("GROUPS")
                 .add(group)
@@ -126,7 +126,7 @@ public class GroupCreateActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
                         groupId = documentReference.getId();
-                        if(imageByte!=null){
+                        if (imageByte != null) {
                             dbCreateDisplayPicture();
                         } else {
                             Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
@@ -143,8 +143,8 @@ public class GroupCreateActivity extends AppCompatActivity {
 
     }
 
-    public void dbCreateDisplayPicture(){
-        UploadTask uploadTask = displayPictureReference.child(groupId+".jpg").putBytes(imageByte);
+    public void dbCreateDisplayPicture() {
+        UploadTask uploadTask = displayPictureReference.child(groupId + ".jpg").putBytes(imageByte);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
@@ -184,7 +184,7 @@ public class GroupCreateActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        final Bitmap bitmap = (Bitmap)data.getExtras().get("data");
+        final Bitmap bitmap = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         GroupDp.setImageBitmap(bitmap);

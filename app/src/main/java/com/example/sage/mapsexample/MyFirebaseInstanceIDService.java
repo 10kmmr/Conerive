@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Google Inc. All Rights Reserved.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +60,7 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
         // If you want to send messages to this application instance or
         // manage this apps subscriptions on the server side, send the
         // Instance ID token to your app server.
-        sendRegistrationToServer(refreshedToken , this.context);
+        sendRegistrationToServer(refreshedToken, this.context);
     }
     // [END refresh_token]
 
@@ -72,24 +72,22 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
      *
      * @param token The new token.
      */
-    public void sendRegistrationToServer(final String token , Context context) {
+    public void sendRegistrationToServer(final String token, Context context) {
         this.context = context;
         try {
             mAuth = FirebaseAuth.getInstance();
             requestQueue = Volley.newRequestQueue(context);
-            if(mAuth.getCurrentUser()!= null){
+            if (mAuth.getCurrentUser() != null) {
                 Log.d(TAG, "sendRegistrationToServer: ");
-                String url = getString(R.string.fcm_url) +"fcm/newtoken";
+                String url = getString(R.string.fcm_url) + "fcm/newtoken";
                 StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                        new Response.Listener<String>()
-                        {
+                        new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
                                 Log.d(" newtoken written", TAG);
                             }
                         },
-                        new Response.ErrorListener()
-                        {
+                        new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
                                 Log.d("Error.Response - token insertion FIREBASE INSTANCEIDSERVICE", error.toString());
@@ -97,10 +95,9 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
                         }
                 ) {
                     @Override
-                    protected Map<String, String> getParams()
-                    {
-                        Map<String, String>  params = new HashMap<>();
-                        params.put("userId",mAuth.getCurrentUser().getUid());
+                    protected Map<String, String> getParams() {
+                        Map<String, String> params = new HashMap<>();
+                        params.put("userId", mAuth.getCurrentUser().getUid());
                         params.put("token", token);
                         return params;
                     }

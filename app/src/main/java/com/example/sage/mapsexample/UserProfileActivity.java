@@ -99,16 +99,18 @@ public class UserProfileActivity extends AppCompatActivity {
                             DocumentSnapshot document = task.getResult();
                             if (document != null && document.exists()) {
                                 Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                                name = document.getString("Name"); nameTV.setText(name);
-                                phone = document.getString("Phone"); phoneTV.setText(phone);
-                                if(document.contains("Email")){
+                                name = document.getString("Name");
+                                nameTV.setText(name);
+                                phone = document.getString("Phone");
+                                phoneTV.setText(phone);
+                                if (document.contains("Email")) {
                                     email = document.getString("Email");
                                     emailTV.setText(email);
                                 } else {
                                     emailTV.setText("----------");
 
                                 }
-                                if(document.contains("ImageURL")){
+                                if (document.contains("ImageURL")) {
                                     displayPictureURL = document.getString("ImageURL");
                                     downloadDisplayPicture();
                                 }

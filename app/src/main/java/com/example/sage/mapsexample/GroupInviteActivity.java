@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -18,6 +19,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,23 +92,23 @@ public class GroupInviteActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
 
                             DocumentSnapshot document = task.getResult().getDocuments().get(0);
-                                firestoreDB.collection("USERS")
-                                        .document(document.getId())
-                                        .collection("NOTIFICATIONS")
-                                        .add(notification)
-                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                            @Override
-                                            public void onSuccess(DocumentReference documentReference) {
-                                                Intent intent = new Intent(GroupInviteActivity.this, HomeActivity.class);
-                                                startActivity(intent);
-                                            }
-                                        })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                Log.w(TAG, "Error adding document", e);
-                                            }
-                                        });
+                            firestoreDB.collection("USERS")
+                                    .document(document.getId())
+                                    .collection("NOTIFICATIONS")
+                                    .add(notification)
+                                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                        @Override
+                                        public void onSuccess(DocumentReference documentReference) {
+                                            Intent intent = new Intent(GroupInviteActivity.this, HomeActivity.class);
+                                            startActivity(intent);
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.w(TAG, "Error adding document", e);
+                                        }
+                                    });
 
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());

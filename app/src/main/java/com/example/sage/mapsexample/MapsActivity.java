@@ -1,5 +1,6 @@
 
 package com.example.sage.mapsexample;
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -23,6 +24,7 @@ import android.widget.Button;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -84,8 +86,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         userID = getIntent().getStringExtra("UserID");
         Name = getIntent().getStringExtra("Name");
         database = FirebaseDatabase.getInstance();
-        groupReference = database.getReference("Root/"+groupID);
-        ownerReference = database.getReference("Root/"+groupID+"/"+userID);
+        groupReference = database.getReference("Root/" + groupID);
+        ownerReference = database.getReference("Root/" + groupID + "/" + userID);
         ownerGeoFireObject = new GeoFire(ownerReference);
         adapter = new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item, new ArrayList<String>());
 
@@ -106,8 +108,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onClickBtn(View v) {
         Intent intent = new Intent(this, HomeActivity.class);
         intent.putExtra("UserID", userID);
-        intent.putExtra("Name",Name );
-        intent.putExtra("GroupID",groupID);
+        intent.putExtra("Name", Name);
+        intent.putExtra("GroupID", groupID);
         startActivity(intent);
     }
 
@@ -144,14 +146,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             .newLatLngZoom(new LatLng(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()), 15));
                     //retrieve all users in group
                     getUsers();
-                } else { ErrorT(); }
+                } else {
+                    ErrorT();
+                }
             }
         });
 
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                HashMap<String, String> tag = (HashMap<String, String>)marker.getTag();
+                HashMap<String, String> tag = (HashMap<String, String>) marker.getTag();
 
                 String NameCurrent = tag.get("Name");
                 final String NumberCurrent = tag.get("MobileNumber");
@@ -159,15 +163,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 Toast.makeText(MapsActivity.this, marker.getTitle(), Toast.LENGTH_SHORT).show();
 
-                LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
-                View customView = inflater.inflate(R.layout.user_data_popup,null);
+                LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+                View customView = inflater.inflate(R.layout.user_data_popup, null);
                 mPopupWindow = new PopupWindow(
                         customView,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
                 );
 
-                if(Build.VERSION.SDK_INT>=21){
+                if (Build.VERSION.SDK_INT >= 21) {
                     mPopupWindow.setElevation(50.0f);
                 }
 
@@ -192,7 +196,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 email.setText(EmailCurrent);
                 TextView mobileNumber = customView.findViewById(R.id.MobileNumber);
                 mobileNumber.setText(NumberCurrent);
-                mPopupWindow.showAtLocation(findViewById(R.id.MapsActivity), Gravity.CENTER,0,0);
+                mPopupWindow.showAtLocation(findViewById(R.id.MapsActivity), Gravity.CENTER, 0, 0);
                 mPopupWindow.setBackgroundDrawable(new BitmapDrawable());
                 mPopupWindow.setOutsideTouchable(true);
                 return false;
@@ -209,17 +213,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 String userID = dataSnapshot.getKey();
                 users.put(userID, new GroupMember(userID, groupID, mMap, database, adapter));
             }
+
             @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) { }
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            }
+
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
                 users.get(dataSnapshot.getKey()).releaseListener();
                 users.remove(dataSnapshot.getKey());
             }
+
             @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) { }
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            }
+
             @Override
-            public void onCancelled(DatabaseError databaseError) { }
+            public void onCancelled(DatabaseError databaseError) {
+            }
         });
     }
 
@@ -244,8 +255,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     }
                     Location midPoint = new Location(LocationManager.GPS_PROVIDER);
-                    midPoint.setLatitude(latSum/users.size());
-                    midPoint.setLongitude(lngSum/users.size());
+                    midPoint.setLatitude(latSum / users.size());
+                    midPoint.setLongitude(lngSum / users.size());
                     inclusiveRadius = 0;
                     if (users != null && users.size() > 0) {
                         for (Map.Entry<String, GroupMember> u : users.entrySet()) {
@@ -253,12 +264,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             temp.setLongitude(u.getValue().userLocation.longitude);
                             temp.setLatitude(u.getValue().userLocation.latitude);
                             double distanceFromMid = midPoint.distanceTo(temp);
-                            if(distanceFromMid>inclusiveRadius)
+                            if (distanceFromMid > inclusiveRadius)
                                 inclusiveRadius = distanceFromMid;
                         }
                     }
 
-                    if(limitCircle == null) {
+                    if (limitCircle == null) {
                         limitCircle = mMap.addCircle(new CircleOptions()
                                 .center(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()))
                                 .radius(limitRadius)
@@ -267,7 +278,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         limitCircle.setCenter(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()));
                     }
 
-                    if(inclusiveCircle == null) {
+                    if (inclusiveCircle == null) {
                         inclusiveCircle = mMap.addCircle(new CircleOptions()
                                 .center(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()))
                                 .radius(inclusiveRadius)
@@ -275,14 +286,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     } else {
                         inclusiveCircle.setCenter(new LatLng(midPoint.getLatitude(), midPoint.getLongitude()));
                         inclusiveCircle.setRadius(inclusiveRadius + 100);
-                        if(inclusiveRadius>limitRadius){
+                        if (inclusiveRadius > limitRadius) {
                             inclusiveCircle.setStrokeColor(Color.RED);
                         } else {
                             inclusiveCircle.setStrokeColor(Color.BLUE);
                         }
                     }
 
-                } catch (Exception e){
+                } catch (Exception e) {
                     handler.postDelayed(this, 80);
                 } finally {
                     handler.postDelayed(this, 160);
@@ -292,23 +303,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
-    
-    public void ErrorT(){
+
+    public void ErrorT() {
         Toast.makeText(this, "Error ", Toast.LENGTH_LONG).show();
     }
 
 
-    LocationCallback mLocationCallback = new LocationCallback(){
+    LocationCallback mLocationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             for (Location location : locationResult.getLocations()) {
-                mLastKnownLocation=location;
+                mLastKnownLocation = location;
                 ownerGeoFireObject.setLocation("Location", new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
             }
         }
     };
+
     @SuppressLint("MissingPermission") //check if this throws an error later
-    public void NextDialer(String number){
+    public void NextDialer(String number) {
         Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + number));
         startActivity(intent);
     }
