@@ -34,6 +34,7 @@ public class GroupInviteActivity extends AppCompatActivity {
     private Button inviteButton;
     private EditText receiverPhoneNumberET;
 
+    // Firebase objects
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private FirebaseFirestore firestoreDB;

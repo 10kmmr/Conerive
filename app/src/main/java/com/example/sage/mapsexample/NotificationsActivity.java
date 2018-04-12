@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.LruCache;
@@ -24,7 +25,16 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,31 +45,178 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NotificationsActivity extends AppCompatActivity {
+    private static final String TAG = "NotificationsActivity";
 
-    private static final String TAG = "HomeActivity";
-    ListView notificationsListView;
-    ArrayList<NotificationsListDataModel> notificationsList;
-    NotificationsListAdapter notificationsListAdapter;
-    public RequestQueue requestQueue;
-    public String baseUrl;
+    private ListView notificationsListView;
+    private ArrayList<NotificationsListDataModel> notificationsList;
+    private NotificationsListAdapter notificationsListAdapter;
+    private RequestQueue requestQueue;
     private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+    private FirebaseFirestore firestoreDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications);
         requestQueue = Volley.newRequestQueue(this);
-        baseUrl = getString(R.string.api_url);
         notificationsListView = findViewById(R.id.notifications_list);
         mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        firestoreDB = FirebaseFirestore.getInstance();
         notificationsList = new ArrayList<>();
-
+        dbGetNotifications();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        dbGetNotifications();
+
+
+    void dbGetNotifications() {
+
+        firestoreDB.collection("USERS").document(currentUser.getUid())
+                .collection("NOTIFICATIONS")
+                .whereEqualTo("Type", "GROUP_INVITE")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d(TAG, document.getId() + " => " + document.getData());
+                                final String notificationId = document.getId();
+                                final String groupId = document.getString("Group_id");
+                                final String senderId = document.getString("Sender_id");
+
+                                firestoreDB.collection("GROUPS").document(groupId)
+                                        .get()
+                                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    DocumentSnapshot document = task.getResult();
+                                                    final String groupName = document.getString("groupName");
+                                                    String groupDisplayPictureURL = null;
+                                                    if (document.contains("ImageURL")) {
+                                                        groupDisplayPictureURL = document.getString("ImageURL");
+                                                    }
+                                                    final String finalGroupDisplayPictureURL = groupDisplayPictureURL;
+                                                    firestoreDB.collection("USERS").document(senderId)
+                                                            .get()
+                                                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                                                @Override
+                                                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                                    if (task.isSuccessful()) {
+                                                                        DocumentSnapshot document = task.getResult();
+                                                                        String senderName = document.getString("Name");
+                                                                        notificationsList.add(
+                                                                                new NotificationsListDataModel(
+                                                                                        notificationId,
+                                                                                        groupId,
+                                                                                        groupName,
+                                                                                        senderId,
+                                                                                        senderName,
+                                                                                        finalGroupDisplayPictureURL
+                                                                                )
+                                                                        );
+
+
+                                                                    } else {
+                                                                        Log.d(TAG, "get failed with ", task.getException());
+                                                                    }
+                                                                }
+                                                            });
+
+                                                } else {
+                                                    Log.d(TAG, "get failed with ", task.getException());
+                                                }
+                                            }
+                                        });
+
+                            }
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
+
+
+        String url = baseUrl + "group-members/notifications/" + mAuth.getUid();
+        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                JSONObject jsonObject = response.getJSONObject(i);
+                                String senderName = jsonObject.getString("Sender_name");
+
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
+                        notificationsListView.setAdapter(notificationsListAdapter);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        );
+        requestQueue.add(getRequest);
+    }
+
+    void dbDeleteNotification(String notificationId) {
+        String url = baseUrl + "group-members/notifications/" + notificationId;
+        JsonArrayRequest deleteRequest = new JsonArrayRequest(Request.Method.DELETE, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Log.d(TAG, "onResponse: " + response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        );
+        requestQueue.add(deleteRequest);
+    }
+
+    public void dbCreateGroupMember(final String groupId, final String userId) {
+        String url = baseUrl + "group-members";
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            Log.d(TAG, "onResponse - group-members: " + jsonObject);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response - createuser", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("userId", userId);
+                params.put("groupId", groupId);
+                return params;
+            }
+        };
+        requestQueue.add(postRequest);
     }
 
 
@@ -128,104 +285,6 @@ public class NotificationsActivity extends AppCompatActivity {
             }
             return view;
         }
-    }
-
-    void dbGetNotifications() {
-        String url = baseUrl + "group-members/notifications/" + mAuth.getUid();
-        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                JSONObject jsonObject = response.getJSONObject(i);
-                                String groupId = jsonObject.getString("Group_id");
-                                String groupName = jsonObject.getString("Group_name");
-                                String groupDisplayPictureURL = null;
-                                if (!jsonObject.getString("Image_url").equalsIgnoreCase("null")) {
-                                    groupDisplayPictureURL = jsonObject.getString("Image_url");
-                                }
-                                String notificationId = jsonObject.getString("Notification_id");
-                                String senderId = jsonObject.getString("Sender_id");
-                                String senderName = jsonObject.getString("Sender_name");
-
-                                notificationsList.add(
-                                        new NotificationsListDataModel(
-                                                notificationId,
-                                                groupId,
-                                                groupName,
-                                                senderId,
-                                                senderName,
-                                                groupDisplayPictureURL
-                                        )
-                                );
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
-                        notificationsListView.setAdapter(notificationsListAdapter);
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        );
-        requestQueue.add(getRequest);
-    }
-
-    void dbDeleteNotification(String notificationId) {
-        String url = baseUrl + "group-members/notifications/" + notificationId;
-        JsonArrayRequest deleteRequest = new JsonArrayRequest(Request.Method.DELETE, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        Log.d(TAG, "onResponse: " + response.toString());
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        );
-        requestQueue.add(deleteRequest);
-    }
-
-    public void dbCreateGroupMember(final String groupId, final String userId) {
-        String url = baseUrl + "group-members";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            Log.d(TAG, "onResponse - group-members: " + jsonObject);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - createuser", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("userId", userId);
-                params.put("groupId", groupId);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
     }
 
     public class NotificationsListDataModel {

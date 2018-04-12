@@ -207,7 +207,7 @@ public class GroupCreateActivity extends AppCompatActivity {
 
     }
 
-    void next(){
+    void next() {
         if (imageByte != null) {
             dbCreateDisplayPicture();
         } else {
