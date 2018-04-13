@@ -47,13 +47,22 @@ import java.util.Map;
 public class NotificationsActivity extends AppCompatActivity {
     private static final String TAG = "NotificationsActivity";
 
-    private ListView notificationsListView;
-    private ArrayList<NotificationsListDataModel> notificationsList;
-    private NotificationsListAdapter notificationsListAdapter;
-    private RequestQueue requestQueue;
+    // Firebase objects
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private FirebaseFirestore firestoreDB;
+
+    // View objects
+    private ListView notificationsListView;
+
+    // Member variables
+    private ArrayList<NotificationsListDataModel> notificationsList;
+    private NotificationsListAdapter notificationsListAdapter;
+    private RequestQueue requestQueue;
+
+    //----------------------------------------------------------------------------------------------
+    //      ACTIVITY LIFECYCLE METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,14 +75,16 @@ public class NotificationsActivity extends AppCompatActivity {
         notificationsList = new ArrayList<>();
         notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
         notificationsListView.setAdapter(notificationsListAdapter);
-
-
+        
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         firestoreDB = FirebaseFirestore.getInstance();
         dbGetNotifications();
     }
 
+    //----------------------------------------------------------------------------------------------
+    //      MEMBER METHODS
+    //----------------------------------------------------------------------------------------------
 
     void dbGetNotifications() {
 
@@ -146,56 +157,105 @@ public class NotificationsActivity extends AppCompatActivity {
     }
 
     void dbDeleteNotification(String notificationId) {
-//        String url = baseUrl + "group-members/notifications/" + notificationId;
-//        JsonArrayRequest deleteRequest = new JsonArrayRequest(Request.Method.DELETE, url, null,
-//                new Response.Listener<JSONArray>() {
-//                    @Override
-//                    public void onResponse(JSONArray response) {
-//                        Log.d(TAG, "onResponse: " + response.toString());
-//                    }
-//                },
-//                new Response.ErrorListener() {
-//                    @Override
-//                    public void onErrorResponse(VolleyError error) {
-//                        Log.d("Error.Response", error.toString());
-//                    }
-//                }
-//        );
-//        requestQueue.add(deleteRequest);
+
+        firestoreDB.collection("USERS").document(currentUser.getUid())
+                .collection("NOTIFICATIONS")
+                .document(notificationId)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully deleted!");
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.w(TAG, "Error deleting document", e);
+            }
+        });
     }
 
+    //TODO - figure out way to shift outside front end if possible OR use transactions / batch writing
     public void dbCreateGroupMember(final String groupId, final String userId) {
-//        String url = baseUrl + "group-members";
-//        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-//                new Response.Listener<String>() {
-//                    @Override
-//                    public void onResponse(String response) {
-//                        try {
-//                            JSONObject jsonObject = new JSONObject(response);
-//                            Log.d(TAG, "onResponse - group-members: " + jsonObject);
-//                        } catch (JSONException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                },
-//                new Response.ErrorListener() {
-//                    @Override
-//                    public void onErrorResponse(VolleyError error) {
-//                        Log.d("Error.Response - createuser", error.toString());
-//                    }
-//                }
-//        ) {
-//            @Override
-//            protected Map<String, String> getParams() {
-//                Map<String, String> params = new HashMap<>();
-//                params.put("userId", userId);
-//                params.put("groupId", groupId);
-//                return params;
-//            }
-//        };
-//        requestQueue.add(postRequest);
+
+        // Add groupid to Groups array inside user
+        firestoreDB.collection("USERS").document(userId)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        ArrayList<String> groupIds;
+                        if (documentSnapshot.contains("Groups"))
+                            groupIds = (ArrayList<String>) documentSnapshot.get("Groups");
+                        else
+                            groupIds = new ArrayList<>();
+
+                        groupIds.add(groupId);
+
+                        firestoreDB.collection("USERS").document(userId)
+                                .update("Groups", groupIds)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+
+                                        // Add userid to users array in group
+                                        firestoreDB.collection("GROUPS").document(groupId)
+                                                .get()
+                                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                                    @Override
+                                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                                        ArrayList<String> userIds;
+                                                        if (documentSnapshot.contains("Users"))
+                                                            userIds = (ArrayList<String>) documentSnapshot.get("Users");
+                                                        else
+                                                            userIds = new ArrayList<>();
+
+                                                        userIds.add(userId);
+
+                                                        firestoreDB.collection("GROUPS").document(groupId)
+                                                                .update("Users", userIds)
+                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                    @Override
+                                                                    public void onSuccess(Void aVoid) {
+
+                                                                        Log.d(TAG, "onSuccess: " + "created group member");
+                                                                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                                                        startActivity(intent);
+
+                                                                    }
+                                                                }).addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                Log.d(TAG, "onFailure: " + e);
+                                                            }
+                                                        });
+                                                    }
+                                                }).addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+
+                                            }
+                                        });
+
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d(TAG, "onFailure: " + e);
+                            }
+                        });
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
     }
 
+    //----------------------------------------------------------------------------------------------
+    //      NOTIFICATIONS LIST VIEW OBJECTS AND METHODS
+    //----------------------------------------------------------------------------------------------
 
     class NotificationsListAdapter extends ArrayAdapter<NotificationsListDataModel> {
 
@@ -246,8 +306,7 @@ public class NotificationsActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         dbCreateGroupMember(notificationsListDataModelItem.getGroupId(), mAuth.getCurrentUser().getUid());
                         dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
-                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                        startActivity(intent);
+
                     }
                 });
 

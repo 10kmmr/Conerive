@@ -111,6 +111,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     }
 
     void dbCheckUserProfileExists() {
+        Log.d(TAG, "dbCheckUserProfileExists: ");
         firestoreDB.collection("USERS")
                 .document(currentUser.getUid())
                 .get()
