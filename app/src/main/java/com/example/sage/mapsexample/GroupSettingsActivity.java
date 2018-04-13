@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -24,6 +25,12 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,32 +39,41 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class GroupSettingsActivity extends AppCompatActivity {
-
     private static final String TAG = "GroupSettingsActivity";
-    String groupId;
-    String groupName;
-    String groupDisplayPictureURL;
 
-    Toolbar toolbar;
-    FloatingActionButton addUserFAB;
-    TextView groupNameTV;
-    NetworkImageView groupDisplayPictureNIV;
-    ListView userListView;
+    // Firebase objects
+    private FirebaseFirestore firestoreDB;
 
-    ArrayList<UserListDataModel> usersList;
-    public String baseUrl;
-    public RequestQueue requestQueue;
+    // Member variables
+    private String groupId;
+    private String groupName;
+    private String groupDisplayPictureURL;
+    private ArrayList<UserListDataModel> usersList;
+    private UserListAdapter userListAdapter;
+
+    // View objects
+    private Toolbar toolbar;
+    private FloatingActionButton addUserFAB;
+    private TextView groupNameTV;
+    private NetworkImageView groupDisplayPictureNIV;
+    private ListView userListView;
+
+    // Volley objects
+    private RequestQueue requestQueue;
+
+    //----------------------------------------------------------------------------------------------
+    //      ACTIVITY LIFECYCLE METHODS
+    //----------------------------------------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        baseUrl = getString(R.string.api_url);
         setContentView(R.layout.activity_group_setting);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        addUserFAB = (FloatingActionButton) findViewById(R.id.fab);
+        addUserFAB = findViewById(R.id.fab);
         groupNameTV = findViewById(R.id.groupName);
         groupDisplayPictureNIV = findViewById(R.id.groupDisplayPicture);
         userListView = findViewById(R.id.userList);
@@ -66,7 +82,11 @@ public class GroupSettingsActivity extends AppCompatActivity {
         groupName = getIntent().getStringExtra("groupName");
         groupDisplayPictureURL = getIntent().getStringExtra("groupDisplayPictureURL");
         usersList = new ArrayList<>();
+        userListAdapter = new UserListAdapter(getApplicationContext(), R.layout.user_list_item, usersList);
+        userListView.setAdapter(userListAdapter);
+
         requestQueue = Volley.newRequestQueue(this);
+        firestoreDB = FirebaseFirestore.getInstance();
 
         dbGetUsersList();
 
@@ -98,53 +118,68 @@ public class GroupSettingsActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), GroupInviteActivity.class);
                 intent.putExtra("groupId", groupId);
-                intent.putExtra("groupName", groupName);
                 startActivity(intent);
             }
         });
     }
 
+    //----------------------------------------------------------------------------------------------
+    //      MEMBER METHODS
+    //----------------------------------------------------------------------------------------------
+
     void dbGetUsersList() {
-        String url = baseUrl + "users/userList/" + groupId;
-        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
+
+        firestoreDB.collection("GROUPS").document(groupId)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
-                    public void onResponse(JSONArray response) {
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                JSONObject jsonObject = response.getJSONObject(i);
-                                String userId = jsonObject.getString("User_id");
-                                String Name = jsonObject.getString("Name");
-                                String Phone = jsonObject.getString("Phone");
-                                String userDisplayPictureURL = null;
-                                if (!jsonObject.getString("Image_url").equalsIgnoreCase("null")) {
-                                    userDisplayPictureURL = jsonObject.getString("Image_url");
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        ArrayList<String> userIds = (ArrayList<String>) documentSnapshot.get("Users");
+                        for (String userId : userIds) {
+
+                            firestoreDB.collection("USERS").document(userId)
+                                    .get()
+                                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                                            String userId = documentSnapshot.getId();
+                                            String Name = documentSnapshot.getString("Name");
+                                            String Phone = documentSnapshot.getString("Phone");
+                                            String userDisplayPictureURL = null;
+                                            if (documentSnapshot.contains("ImageURL")) {
+                                                userDisplayPictureURL = documentSnapshot.getString("ImageURL");
+                                            }
+                                            usersList.add(
+                                                    new UserListDataModel(
+                                                            userId,
+                                                            Name,
+                                                            Phone,
+                                                            userDisplayPictureURL
+                                                    )
+                                            );
+                                            userListAdapter.notifyDataSetChanged();
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.d(TAG, "onFailure: " + e);
                                 }
-                                usersList.add(
-                                        new UserListDataModel(
-                                                userId,
-                                                Name,
-                                                Phone,
-                                                userDisplayPictureURL
-                                        )
-                                );
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
+                            });
+
                         }
-                        UserListAdapter userListAdapter = new UserListAdapter(getApplicationContext(), R.layout.user_list_item, usersList);
-                        userListView.setAdapter(userListAdapter);
                     }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        );
-        requestQueue.add(getRequest);
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
+        });
     }
+
+    //----------------------------------------------------------------------------------------------
+    //      USERS LIST VIEW OBJECTS AND METHODS
+    //----------------------------------------------------------------------------------------------
 
     class UserListAdapter extends ArrayAdapter<UserListDataModel> {
 

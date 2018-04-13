@@ -75,7 +75,7 @@ public class NotificationsActivity extends AppCompatActivity {
         notificationsList = new ArrayList<>();
         notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
         notificationsListView.setAdapter(notificationsListAdapter);
-        
+
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         firestoreDB = FirebaseFirestore.getInstance();

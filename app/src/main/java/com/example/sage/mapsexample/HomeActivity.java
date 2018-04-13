@@ -187,43 +187,6 @@ public class HomeActivity extends AppCompatActivity {
                 Log.d(TAG, "onFailure: " + e);
             }
         });
-
-//        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-//                new Response.Listener<JSONArray>() {
-//                    @Override
-//                    public void onResponse(JSONArray response) {
-//                        for (int i = 0; i < response.length(); i++) {
-//                            try {
-//                                JSONObject jsonObject = response.getJSONObject(i);
-//                                int memberCount = jsonObject.getInt("Member_count");
-//                                int tripCount = jsonObject.getInt("Trip_count");
-//                                int imageCount = jsonObject.getInt("Image_count");
-//                                groupsList.add(
-//                                        new GroupListDataModel(
-//                                                groupId,
-//                                                groupName,
-//                                                groupDisplayPictureURL,
-//                                                "69/69/69",                 //get actual trip date after db query fix
-//                                                memberCount,
-//                                                tripCount,
-//                                                imageCount
-//                                        )
-//                                );
-////                            } catch (JSONException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//
-//                    }
-//                },
-//                new Response.ErrorListener() {
-//                    @Override
-//                    public void onErrorResponse(VolleyError error) {
-//                        Log.d("Error.Response", error.toString());
-//                    }
-//                }
-//        );
-//        requestQueue.add(getRequest);
     }
 
     class GroupListAdapter extends ArrayAdapter<GroupListDataModel> {
