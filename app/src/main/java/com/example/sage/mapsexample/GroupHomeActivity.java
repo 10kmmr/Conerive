@@ -87,6 +87,7 @@ public class GroupHomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), TripCreateActivity.class);
+                intent.putExtra("groupId", groupId);
                 startActivity(intent);
             }
         });

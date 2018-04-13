@@ -3,6 +3,7 @@ package com.example.sage.mapsexample;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +29,12 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,24 +45,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TripCreateActivity extends AppCompatActivity {
-
     private static final String TAG = "TripCreateActivity";
-    SeekBar notificationRadiusSB;
-    TextView notificationRadiusTV;
-    EditText tripNameET;
-    Button startTrip;
-    ListView userListView;
 
-    //volley stuff
-    public String baseUrl;
-    public RequestQueue requestQueue;
+    // View objects
+    private SeekBar notificationRadiusSB;
+    private TextView notificationRadiusTV;
+    private EditText tripNameET;
+    private Button startTrip;
+    private ListView userListView;
 
-    public String groupId;
-    public String tripName;
-    public int notificationRadius;
-    public String tripId;
+    // Volley stuff
+    private RequestQueue requestQueue;
 
-    ArrayList<UserListDataModel> usersList;
+    // Member variables
+    private String groupId;
+    private String tripName;
+    private int notificationRadius;
+    private String tripId;
+    private ArrayList<UserListDataModel> usersList;
+    UserListAdapter userListAdapter;
+
+    // Firebase objects
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+    private FirebaseFirestore firestoreDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,12 +80,62 @@ public class TripCreateActivity extends AppCompatActivity {
         notificationRadiusTV = findViewById(R.id.notification_radius_display);
         tripNameET = findViewById(R.id.trip_name);
         startTrip = findViewById(R.id.start_trip);
+
         userListView = findViewById(R.id.user_list);
-
         usersList = new ArrayList<>();
+        // aaaaaaaaaaa
+        usersList.add(
+                new UserListDataModel(
+                        "1",
+                        "abc",
+                        "1223",
+                        null
+                )
+        );
+        usersList.add(
+                new UserListDataModel(
+                        "2",
+                        "def",
+                        "1223",
+                        null
+                )
+        );
+        usersList.add(
+                new UserListDataModel(
+                        "3",
+                        "ghi",
+                        "1223",
+                        null
+                )
+        );
+        usersList.add(
+                new UserListDataModel(
+                        "4",
+                        "jkl",
+                        "1223",
+                        null
+                )
+        );
+        usersList.add(
+                new UserListDataModel(
+                        "5",
+                        "mno",
+                        "1223",
+                        null
+                )
+        );
+        // aaaaaaaaaaaaaaaaaaaaa
 
-        baseUrl = getString(R.string.api_url);
+        userListAdapter = new UserListAdapter(getApplicationContext(), R.layout.user_list_item, usersList);
+        userListView.setAdapter(userListAdapter);
+
         requestQueue = Volley.newRequestQueue(this);
+
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        firestoreDB = FirebaseFirestore.getInstance();
+
+
 
         dbGetUsersList();
     }
@@ -86,14 +149,10 @@ public class TripCreateActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 notificationRadiusTV.setText(String.valueOf(progress / 10) + " Km");
             }
-
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
+            public void onStartTrackingTouch(SeekBar seekBar) { }
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
         });
 
         startTrip.setOnClickListener(new View.OnClickListener() {
@@ -107,8 +166,7 @@ public class TripCreateActivity extends AppCompatActivity {
     }
 
     public void dbCreateTrip() {
-        String url = baseUrl + "trips";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+        StringRequest postRequest = new StringRequest(Request.Method.POST, "  ",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -131,7 +189,7 @@ public class TripCreateActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - createuser", error.toString());
+                        Log.d("Error.", error.toString());
                     }
                 }
         ) {
@@ -147,8 +205,7 @@ public class TripCreateActivity extends AppCompatActivity {
     }
 
     public void dbCreateNotificationRadius() {
-        String url = baseUrl + "trips/notification-radius";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+        StringRequest postRequest = new StringRequest(Request.Method.POST, "  ",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -161,7 +218,7 @@ public class TripCreateActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response - createuser", error.toString());
+                        Log.d("Error.Resuser", error.toString());
                     }
                 }
         ) {
@@ -177,45 +234,52 @@ public class TripCreateActivity extends AppCompatActivity {
     }
 
     void dbGetUsersList() {
-        String url = baseUrl + "users/userList/" + groupId;
-        JsonArrayRequest getRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
+        firestoreDB.collection("GROUPS").document(groupId)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
-                    public void onResponse(JSONArray response) {
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                JSONObject jsonObject = response.getJSONObject(i);
-                                String userId = jsonObject.getString("User_id");
-                                String Name = jsonObject.getString("Name");
-                                String Phone = jsonObject.getString("Phone");
-                                String userDisplayPictureURL = null;
-                                if (!jsonObject.getString("Image_url").equalsIgnoreCase("null")) {
-                                    userDisplayPictureURL = jsonObject.getString("Image_url");
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        ArrayList<String> userIds = (ArrayList<String>) documentSnapshot.get("Users");
+                        for (String userId : userIds) {
+
+                            firestoreDB.collection("USERS").document(userId)
+                                    .get()
+                                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                                            String userId = documentSnapshot.getId();
+                                            String Name = documentSnapshot.getString("Name");
+                                            String Phone = documentSnapshot.getString("Phone");
+                                            String userDisplayPictureURL = null;
+                                            if (documentSnapshot.contains("ImageURL")) {
+                                                userDisplayPictureURL = documentSnapshot.getString("ImageURL");
+                                            }
+                                            usersList.add(
+                                                    new UserListDataModel(
+                                                            userId,
+                                                            Name,
+                                                            Phone,
+                                                            userDisplayPictureURL
+                                                    )
+                                            );
+                                            userListAdapter.notifyDataSetChanged();
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.d(TAG, "onFailure: " + e);
                                 }
-                                usersList.add(
-                                        new UserListDataModel(
-                                                userId,
-                                                Name,
-                                                Phone,
-                                                userDisplayPictureURL
-                                        )
-                                );
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
+                            });
+
                         }
-                        UserListAdapter userListAdapter = new UserListAdapter(getApplicationContext(), R.layout.user_list_item, usersList);
-                        userListView.setAdapter(userListAdapter);
                     }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
-                    }
-                }
-        );
-        requestQueue.add(getRequest);
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
+        });
     }
 
     class UserListAdapter extends ArrayAdapter<UserListDataModel> {
@@ -247,6 +311,7 @@ public class TripCreateActivity extends AppCompatActivity {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         userListDataModelItem.selected = isChecked;
+                        Log.d(TAG, "onCheckedChanged: " + userListDataModelItem.userName + " : " + userListDataModelItem.selected);
                     }
                 });
 
