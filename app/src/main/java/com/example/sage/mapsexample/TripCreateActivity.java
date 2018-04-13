@@ -83,49 +83,6 @@ public class TripCreateActivity extends AppCompatActivity {
 
         userListView = findViewById(R.id.user_list);
         usersList = new ArrayList<>();
-        // aaaaaaaaaaa
-        usersList.add(
-                new UserListDataModel(
-                        "1",
-                        "abc",
-                        "1223",
-                        null
-                )
-        );
-        usersList.add(
-                new UserListDataModel(
-                        "2",
-                        "def",
-                        "1223",
-                        null
-                )
-        );
-        usersList.add(
-                new UserListDataModel(
-                        "3",
-                        "ghi",
-                        "1223",
-                        null
-                )
-        );
-        usersList.add(
-                new UserListDataModel(
-                        "4",
-                        "jkl",
-                        "1223",
-                        null
-                )
-        );
-        usersList.add(
-                new UserListDataModel(
-                        "5",
-                        "mno",
-                        "1223",
-                        null
-                )
-        );
-        // aaaaaaaaaaaaaaaaaaaaa
-
         userListAdapter = new UserListAdapter(getApplicationContext(), R.layout.user_list_item, usersList);
         userListView.setAdapter(userListAdapter);
 
