@@ -36,11 +36,6 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
-
-        <activity
-            android:name=".MapsActivity"
-            android:screenOrientation="portrait" />
-
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
@@ -57,9 +52,6 @@
             android:label="@string/title_activity_user_setting"
             android:theme="@style/AppTheme" />
         <activity android:name=".UserProfileActivity" />
-        <activity android:name=".NotificationsActivity" />
-        <activity android:name=".HomeActivity" />
-        <activity android:name=".GroupCreateActivity" />
         <activity android:name=".PhoneAuthenticationActivity" />
 
         <service android:name=".MyFirebaseMessagingService">
@@ -73,10 +65,10 @@
             </intent-filter>
         </service>
         <service
-            android:exported="false"
-            android:name=".MyJobService">
+            android:name=".MyJobService"
+            android:exported="false">
             <intent-filter>
-                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
+                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE" />
             </intent-filter>
         </service>
         <!-- <service -->
@@ -86,16 +78,12 @@
         <!-- </intent-filter> -->
         <!-- </service> -->
 
-        <activity
-            android:name=".GroupHomeActivity"
-            android:label="@string/title_activity_trip_home"
-            android:theme="@style/AppTheme" />
-        <activity
-            android:name=".GroupSettingsActivity"
-            android:label="@string/title_activity_group_setting"
-            android:theme="@style/AppTheme" />
-        <activity android:name=".GroupInviteActivity" />
-        <activity android:name=".TripCreateActivity"></activity>
+        <activity android:name=".HomeActivity" />
+        <activity android:name=".UserSettingsActivity" />
+        <activity android:name=".NotificationsActivity" />
+        <activity android:name=".FriendsActivity" />
+        <activity android:name=".TripCreateActivity" />
+        <activity android:name=".TripActivity"></activity>
     </application>
 
 </manifest>
