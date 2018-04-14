@@ -33,6 +33,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -63,7 +64,7 @@ public class TripCreateActivity extends AppCompatActivity {
     private int notificationRadius;
     private String tripId;
     private ArrayList<UserListDataModel> usersList;
-    UserListAdapter userListAdapter;
+    private UserListAdapter userListAdapter;
 
     // Firebase objects
     private FirebaseAuth mAuth;
@@ -91,8 +92,6 @@ public class TripCreateActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         firestoreDB = FirebaseFirestore.getInstance();
-
-
 
         dbGetUsersList();
     }
@@ -123,74 +122,39 @@ public class TripCreateActivity extends AppCompatActivity {
     }
 
     public void dbCreateTrip() {
-        StringRequest postRequest = new StringRequest(Request.Method.POST, "  ",
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            tripId = jsonObject.get("insertId").toString();
-                            if (notificationRadius > 0) {
-                                dbCreateNotificationRadius();
-//                                dbCreateTripMembers();
-                            } else {
-                                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-                                intent.putExtra("tripId", tripId);
-                                startActivity(intent);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.", error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("tripName", tripName);
-                params.put("groupId", groupId);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
-    }
 
-    public void dbCreateNotificationRadius() {
-        StringRequest postRequest = new StringRequest(Request.Method.POST, "  ",
-                new Response.Listener<String>() {
+        final Map<String, Object> trip = new HashMap<>();
+        trip.put("Trip_name", tripName);
+        if(notificationRadius>0)
+            trip.put("Notification_radius", notificationRadius);
+
+        ArrayList<String> tripMembers = new ArrayList<>();
+        for(UserListDataModel user : usersList){
+            if(user.selected)
+                tripMembers.add(user.userId);
+        }
+        trip.put("Trip_members", tripMembers);
+
+        firestoreDB.collection("GROUPS").document(groupId)
+                .collection("TRIPS")
+                .add(trip)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
-                    public void onResponse(String response) {
-                        Log.d(TAG, "onResponse: " + response);
+                    public void onSuccess(DocumentReference documentReference) {
                         Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
                         intent.putExtra("tripId", tripId);
                         startActivity(intent);
                     }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Resuser", error.toString());
-                    }
-                }
-        ) {
+                }).addOnFailureListener(new OnFailureListener() {
             @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("tripId", tripId);
-                params.put("notificationRadius", String.valueOf(notificationRadius));
-                return params;
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: " + e);
             }
-        };
-        requestQueue.add(postRequest);
+        });
     }
 
     void dbGetUsersList() {
+
         firestoreDB.collection("GROUPS").document(groupId)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
