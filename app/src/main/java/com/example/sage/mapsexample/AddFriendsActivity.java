@@ -12,6 +12,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,6 +26,9 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +46,8 @@ public class AddFriendsActivity extends AppCompatActivity {
 
     private String recieverPhone;
 
+    public RequestQueue requestQueue;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,48 +59,38 @@ public class AddFriendsActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
 
+        requestQueue = Volley.newRequestQueue(this);
+
         SendReqBT = findViewById(R.id.send_request);
         SendReqBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 recieverPhone = phoneNumberET.getText().toString();
-
-                firestoreDB.collection("USERS").whereEqualTo("Phone", recieverPhone).get()
-                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                String url = "https://conerive-fcm.herokuapp.com/sendrequest";
+                StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                        new Response.Listener<String>() {
                             @Override
-                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                               String recieverId = queryDocumentSnapshots.getDocuments().get(0).getId();
-
-                               Map<String, Object> notification = new HashMap<>();
-                               notification.put("Sender_id", currentUser.getUid());
-                               notification.put("Type", "FRIEND_REQUEST");
-
-                               firestoreDB.collection("USERS").document(recieverId)
-                                       .collection("NOTIFICATIONS")
-                                       .add(notification)
-                                       .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                           @Override
-                                           public void onSuccess(DocumentReference documentReference) {
-                                               Intent intent = new Intent(getApplicationContext(), FriendsActivity.class);
-                                               startActivity(intent);
-                                           }
-                                       })
-                                       .addOnFailureListener(new OnFailureListener() {
-                                           @Override
-                                           public void onFailure(@NonNull Exception e) {
-                                               Log.d(TAG, "onFailure: " + e);
-                                           }
-                                       });
-
+                            public void onResponse(String response) {
+                                Intent intent = new Intent(getApplicationContext(), FriendsActivity.class);
+                                startActivity(intent);
                             }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
+                        },
+                        new Response.ErrorListener() {
                             @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.d(TAG, "onFailure: " + e);
+                            public void onErrorResponse(VolleyError error) {
+                                Log.d("Error.Response", error.toString());
                             }
-                        });
-
+                        }
+                ) {
+                    @Override
+                    protected Map<String, String> getParams() {
+                        Map<String, String> params = new HashMap<>();
+                        params.put("senderId", currentUser.getUid());
+                        params.put("phone", recieverPhone);
+                        return params;
+                    }
+                };
+                requestQueue.add(postRequest);
             }
         });
     }

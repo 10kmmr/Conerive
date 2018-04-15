@@ -172,6 +172,7 @@ public class NotificationsActivity extends AppCompatActivity {
         });
     }
 
+
     //TODO - figure out way to shift outside front end if possible OR use transactions / batch writing
     public void dbCreateGroupMember(final String groupId, final String userId) {
 
@@ -302,8 +303,7 @@ public class NotificationsActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
 //                        dbCreateFriendship(notificationsListDataModelItem.getSenderId(), mAuth.getCurrentUser().getUid());
-                        //dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
-
+//                        dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
                     }
                 });
 
