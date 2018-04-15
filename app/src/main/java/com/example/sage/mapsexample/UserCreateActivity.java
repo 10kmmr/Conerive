@@ -120,7 +120,7 @@ public class UserCreateActivity extends AppCompatActivity {
         Map<String, String> user = new HashMap<>();
         user.put("Name", name);
         user.put("Phone", phone);
-        user.put("token",FirebaseInstanceId.getInstance().getToken());
+        user.put("Token",FirebaseInstanceId.getInstance().getToken());
         if (email != null && email.length() > 0)
             user.put("Email", email);
         if (imageURL != null && imageURL.length() > 0)

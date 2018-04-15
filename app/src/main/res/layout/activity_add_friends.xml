@@ -23,7 +23,7 @@
         app:layout_constraintVertical_bias="0.018" />
 
     <Button
-        android:id="@+id/SendFriend"
+        android:id="@+id/send_request"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="148dp"
