@@ -103,7 +103,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     void checkIsLoggedIn() {
         if (currentUser == null) {
-            Intent intent = new Intent(this, PhoneAuthenticationActivity.class);
+            Intent intent = new Intent(this, Email_auth.class);
             startActivity(intent);
         } else {
             dbCheckUserProfileExists();

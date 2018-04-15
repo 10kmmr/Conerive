@@ -95,7 +95,7 @@ public class UserCreateActivity extends AppCompatActivity {
                 userId = currentUser.getUid();
                 name = nameET.getText().toString();
                 email = emailET.getText().toString();
-                phone = currentUser.getPhoneNumber();
+                phone = currentUser.getUid();
                 dbCreateUser();
             }
         });

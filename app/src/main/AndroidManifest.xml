@@ -83,7 +83,11 @@
         <activity android:name=".NotificationsActivity" />
         <activity android:name=".FriendsActivity" />
         <activity android:name=".TripCreateActivity" />
-        <activity android:name=".TripActivity"></activity>
+        <activity android:name=".TripActivity" />
+        <activity
+            android:name=".Email_auth"
+            android:label="@string/title_activity_email_auth"
+            android:theme="@style/AppTheme"></activity>
     </application>
 
 </manifest>
