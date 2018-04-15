@@ -51,7 +51,7 @@
             android:name=".UserCreateActivity"
             android:label="@string/title_activity_user_setting"
             android:theme="@style/AppTheme" />
-        <activity android:name=".UserProfileActivity" />
+        <activity android:name=".UserSettingsActivity" />
         <activity android:name=".PhoneAuthenticationActivity" />
 
         <service android:name=".MyFirebaseMessagingService">
@@ -79,11 +79,10 @@
         <!-- </service> -->
 
         <activity android:name=".HomeActivity" />
-        <activity android:name=".UserSettingsActivity" />
         <activity android:name=".NotificationsActivity" />
         <activity android:name=".FriendsActivity" />
         <activity android:name=".TripCreateActivity" />
-        <activity android:name=".TripActivity"></activity>
+        <activity android:name=".TripActivity" />
     </application>
 
 </manifest>
