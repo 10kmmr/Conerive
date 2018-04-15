@@ -17,4 +17,5 @@
     <string name="title_activity_email_auth">Email_auth</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_random_maps">Map</string>
+    <string name="title_activity_add_friends">addFriends</string>
 </resources>

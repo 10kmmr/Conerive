@@ -28,6 +28,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -119,6 +120,7 @@ public class UserCreateActivity extends AppCompatActivity {
         Map<String, String> user = new HashMap<>();
         user.put("Name", name);
         user.put("Phone", phone);
+        user.put("token",FirebaseInstanceId.getInstance().getToken());
         if (email != null && email.length() > 0)
             user.put("Email", email);
         if (imageURL != null && imageURL.length() > 0)

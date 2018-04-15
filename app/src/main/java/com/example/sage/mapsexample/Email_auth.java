@@ -6,11 +6,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,17 +28,39 @@ public class Email_auth extends AppCompatActivity {
         setContentView(R.layout.activity_email_auth);
         mAuth = FirebaseAuth.getInstance();
         getLocationPermission();
-        Email = (EditText) findViewById(R.id.Email);
-        pass = (EditText) findViewById(R.id.Password);
+        Email = (EditText) findViewById(R.id.EmailE);
+        pass = (EditText) findViewById(R.id.PasswordE);
         signUp = (Button) findViewById(R.id.signUp);
-
+        loginE = (Button)findViewById(R.id.loginE);
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 SignupButton(Email.getText().toString(),pass.getText().toString());
             }
         });
+        loginE.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                signIn(Email.getText().toString(),pass.getText().toString());
+            }
+        });
     }
+
+    private void signIn(String email, String passW) {
+        mAuth.signInWithEmailAndPassword(email, passW)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithEmail:success");
+                            //FirebaseUser user = mAuth.getCurrentUser();
+                            NextActivity();
+                        }
+                    }
+                });
+    }
+
     public FirebaseAuth mAuth;
 
     // Permission Objects
@@ -52,6 +71,7 @@ public class Email_auth extends AppCompatActivity {
     public EditText pass;
     public EditText Email;
     public Button signUp;
+    public Button loginE;
 
     @Override
     public void onStart() {

@@ -18,6 +18,7 @@ package com.example.sage.mapsexample;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -26,7 +27,13 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 
@@ -42,7 +49,7 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
     private static final String TAG = "MyFirebaseIDService";
     Context context;
     FirebaseAuth mAuth;
-
+    private FirebaseFirestore firestoreDB;
     public RequestQueue requestQueue;
 
     /**
@@ -53,6 +60,8 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
     // [START refresh_token]
     @Override
     public void onTokenRefresh() {
+        firestoreDB = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
         // Get updated InstanceID token.
         String refreshedToken = FirebaseInstanceId.getInstance().getToken();
         Log.d(TAG, "Refreshed token: " + refreshedToken);
@@ -60,7 +69,7 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
         // If you want to send messages to this application instance or
         // manage this apps subscriptions on the server side, send the
         // Instance ID token to your app server.
-        //sendRegistrationToServer(refreshedToken, this.context);
+        sendRegistrationToServer(refreshedToken);
     }
     // [END refresh_token]
 
@@ -72,40 +81,7 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
      *
      * @param token The new token.
      */
-    public void sendRegistrationToServer(final String token, Context context) {
-        this.context = context;
-        try {
-            mAuth = FirebaseAuth.getInstance();
-            requestQueue = Volley.newRequestQueue(context);
-            if (mAuth.getCurrentUser() != null) {
-                Log.d(TAG, "sendRegistrationToServer: ");
-                String url = getString(R.string.fcm_url) + "fcm/newtoken";
-                StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                        new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
-                                Log.d(" newtoken written", TAG);
-                            }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("Error.Response - token insertion FIREBASE INSTANCEIDSERVICE", error.toString());
-                            }
-                        }
-                ) {
-                    @Override
-                    protected Map<String, String> getParams() {
-                        Map<String, String> params = new HashMap<>();
-                        params.put("userId", mAuth.getCurrentUser().getUid());
-                        params.put("token", token);
-                        return params;
-                    }
-                };
-                requestQueue.add(postRequest);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void sendRegistrationToServer(final String token) {
+        firestoreDB.collection("USERS").document(mAuth.getCurrentUser().getUid()).update("FCM",token);
     }
 }

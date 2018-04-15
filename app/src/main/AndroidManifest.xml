@@ -86,6 +86,10 @@
         <activity
             android:name=".Email_auth"
             android:label="@string/title_activity_email_auth"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name=".addFriends"
+            android:label="@string/title_activity_add_friends"
             android:theme="@style/AppTheme"></activity>
     </application>
 
