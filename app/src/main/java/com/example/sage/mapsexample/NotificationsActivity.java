@@ -42,6 +42,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class NotificationsActivity extends AppCompatActivity {
@@ -173,6 +174,88 @@ public class NotificationsActivity extends AppCompatActivity {
     }
 
 
+    void dbCreateFriendship(final String firstUserId, final String secondUserId){
+
+        firestoreDB.collection("USERS").document(firstUserId)
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                        ArrayList<String> firstUserFriends;
+                        if (documentSnapshot.contains("Friends"))
+                            firstUserFriends = (ArrayList<String>) documentSnapshot.get("Friends");
+                        else
+                            firstUserFriends = new ArrayList<>();
+                        firstUserFriends.add(secondUserId);
+
+                        firestoreDB.collection("USERS").document(firstUserId)
+                                .update("Friends", firstUserFriends)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+
+                                        firestoreDB.collection("USERS").document(secondUserId)
+                                                .get()
+                                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                                    @Override
+                                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                                                        ArrayList<String> secondUserFriends;
+                                                        if (documentSnapshot.contains("Friends"))
+                                                            secondUserFriends = (ArrayList<String>) documentSnapshot.get("Friends");
+                                                        else
+                                                            secondUserFriends = new ArrayList<>();
+                                                        secondUserFriends.add(firstUserId);
+
+                                                        firestoreDB.collection("USERS").document(secondUserId)
+                                                                .update("Friends", secondUserFriends)
+                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                    @Override
+                                                                    public void onSuccess(Void aVoid) {
+
+                                                                        Intent intent = new Intent(getApplicationContext(), FriendsActivity.class);
+                                                                        startActivity(intent);
+
+                                                                    }
+                                                                })
+                                                                .addOnFailureListener(new OnFailureListener() {
+                                                                    @Override
+                                                                    public void onFailure(@NonNull Exception e) {
+                                                                        Log.d(TAG, "onFailure: " + e);
+                                                                    }
+                                                                });
+
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+
+                                                    }
+                                                });
+
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.d(TAG, "onFailure: " + e);
+                                    }
+                                });
+
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+
+                    }
+                });
+
+    }
+
+
     //TODO - figure out way to shift outside front end if possible OR use transactions / batch writing
     public void dbCreateGroupMember(final String groupId, final String userId) {
 
@@ -189,7 +272,6 @@ public class NotificationsActivity extends AppCompatActivity {
                             groupIds = new ArrayList<>();
 
                         groupIds.add(groupId);
-
 
 
                         firestoreDB.collection("USERS").document(userId)
@@ -302,8 +384,8 @@ public class NotificationsActivity extends AppCompatActivity {
                 acceptBTN.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-//                        dbCreateFriendship(notificationsListDataModelItem.getSenderId(), mAuth.getCurrentUser().getUid());
-//                        dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
+                        dbCreateFriendship(notificationsListDataModelItem.getSenderId(), mAuth.getCurrentUser().getUid());
+                        dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
                     }
                 });
 
