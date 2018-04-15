@@ -14,10 +14,7 @@
     <string name="fcm_url">http://192.168.0.104:7777/</string>
     <string name="title_activity_group_setting">GroupSettingActivity</string>
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
-<<<<<<< HEAD
     <string name="title_activity_email_auth">Email_auth</string>
-=======
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_random_maps">Map</string>
->>>>>>> c267b71813cb4fa072c0c42a755b493b30df7948
 </resources>
