@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -23,6 +24,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
@@ -30,6 +32,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,33 +69,81 @@ public class AddFriendsActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 recieverPhone = phoneNumberET.getText().toString();
-                String url = "https://conerive-fcm.herokuapp.com/sendrequest";
-                StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                        new Response.Listener<String>() {
+
+                firestoreDB.collection("USERS").whereEqualTo("Phone", recieverPhone)
+                        .get()
+                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                             @Override
-                            public void onResponse(String response) {
-                                Intent intent = new Intent(getApplicationContext(), FriendsActivity.class);
-                                startActivity(intent);
+                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                if(queryDocumentSnapshots.size()>0) {
+
+                                    final String recieverId = queryDocumentSnapshots.getDocuments().get(0).getId();
+                                    final String recieverName = queryDocumentSnapshots.getDocuments().get(0).getString("Name");
+
+                                    firestoreDB.collection("USERS").document(currentUser.getUid())
+                                            .get()
+                                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                                @Override
+                                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                                    if (documentSnapshot.contains("Friends")) {
+                                                        ArrayList friendIds = (ArrayList<String>) documentSnapshot.get("Friends");
+                                                        if (friendIds.contains(recieverId)) {
+                                                            Toast.makeText(AddFriendsActivity.this, recieverName + " is already your friend", Toast.LENGTH_SHORT).show();
+                                                        } else {
+                                                            sendFriendRequestToServer();
+                                                        }
+                                                    } else {
+                                                        sendFriendRequestToServer();
+                                                    }
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Log.d(TAG, "onFailure - 2: " + e);
+                                                }
+                                            });
+                                } else {
+                                    Toast.makeText(AddFriendsActivity.this, "This user does not have the application! ", Toast.LENGTH_SHORT).show();
+                                }
+
                             }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("Error.Response", error.toString());
-                            }
-                        }
-                ) {
+                        }).addOnFailureListener(new OnFailureListener() {
                     @Override
-                    protected Map<String, String> getParams() {
-                        Map<String, String> params = new HashMap<>();
-                        params.put("senderId", currentUser.getUid());
-                        params.put("phone", recieverPhone);
-                        return params;
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure - 1: " + e);
                     }
-                };
-                requestQueue.add(postRequest);
+                });
             }
         });
+    }
+
+    void sendFriendRequestToServer(){
+        String url = "https://conerive-fcm.herokuapp.com/sendrequest";
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Intent intent = new Intent(getApplicationContext(), FriendsActivity.class);
+                        startActivity(intent);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("senderId", currentUser.getUid());
+                params.put("phone", recieverPhone);
+                return params;
+            }
+        };
+        requestQueue.add(postRequest);
     }
 
 }

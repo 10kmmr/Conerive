@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
@@ -81,38 +82,42 @@ public class FriendsActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        ArrayList<String> userIds = (ArrayList<String>) documentSnapshot.get("Friends");
-                        for (String userId : userIds) {
+                        if(documentSnapshot.contains("Friends")) {
+                            ArrayList<String> userIds = (ArrayList<String>) documentSnapshot.get("Friends");
+                            for (String userId : userIds) {
 
-                            firestoreDB.collection("USERS").document(userId)
-                                    .get()
-                                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                        @Override
-                                        public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                firestoreDB.collection("USERS").document(userId)
+                                        .get()
+                                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onSuccess(DocumentSnapshot documentSnapshot) {
 
-                                            String userId = documentSnapshot.getId();
-                                            String Name = documentSnapshot.getString("Name");
-                                            String Phone = documentSnapshot.getString("Phone");
-                                            String userDisplayPictureURL = null;
-                                            if (documentSnapshot.contains("ImageURL")) {
-                                                userDisplayPictureURL = documentSnapshot.getString("ImageURL");
+                                                String userId = documentSnapshot.getId();
+                                                String Name = documentSnapshot.getString("Name");
+                                                String Phone = documentSnapshot.getString("Phone");
+                                                String userDisplayPictureURL = null;
+                                                if (documentSnapshot.contains("ImageURL")) {
+                                                    userDisplayPictureURL = documentSnapshot.getString("ImageURL");
+                                                }
+                                                friendsList.add(
+                                                        new UserListDataModel(
+                                                                userId,
+                                                                Name,
+                                                                Phone,
+                                                                userDisplayPictureURL
+                                                        )
+                                                );
+                                                friendsListAdapter.notifyDataSetChanged();
                                             }
-                                            friendsList.add(
-                                                    new UserListDataModel(
-                                                            userId,
-                                                            Name,
-                                                            Phone,
-                                                            userDisplayPictureURL
-                                                    )
-                                            );
-                                            friendsListAdapter.notifyDataSetChanged();
-                                        }
-                                    }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.d(TAG, "onFailure: " + e);
-                                }
-                            });
+                                        }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.d(TAG, "onFailure: " + e);
+                                    }
+                                });
+                            }
+                        } else {
+                            Toast.makeText(FriendsActivity.this, "You have no friends loner! xP", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }).addOnFailureListener(new OnFailureListener() {
