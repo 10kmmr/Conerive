@@ -153,7 +153,7 @@ public class UserCreateActivity extends AppCompatActivity {
                         listOfUserInApp = (ArrayList<String>) documentSnapshot.get("PhoneNumbers");
                         listOfUserInApp.add(phone);
                         firestoreDB.collection("GENERAL").document("ALLUSERS")
-                                .update("PhoneNumber", listOfUserInApp)
+                                .update("PhoneNumbers", listOfUserInApp)
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
