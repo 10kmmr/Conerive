@@ -150,7 +150,7 @@ public class FriendsActivity extends AppCompatActivity {
             if (userListDataModelItem != null) {
 
                 TextView userNameTV = view.findViewById(R.id.userName);
-                TextView phoneNumberTV = view.findViewById(R.id.phone_number);
+                TextView phoneNumberTV = view.findViewById(R.id.contact_number);
                 NetworkImageView userImageNIV = view.findViewById(R.id.userImage);
 
                 userNameTV.setText(userListDataModelItem.getUserName());

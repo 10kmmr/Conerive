@@ -1,6 +1,5 @@
 package com.example.sage.mapsexample;
 
-import android.*;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,12 +13,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
@@ -30,8 +23,6 @@ import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import org.json.JSONArray;
 
 import java.util.concurrent.TimeUnit;
 
@@ -71,7 +62,7 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_phone_authentication);
 
-        phoneNumberEditText = findViewById(R.id.phone_number);
+        phoneNumberEditText = findViewById(R.id.contact_number);
         otpEditText = findViewById(R.id.otp);
         sendOtpButton = findViewById(R.id.send_otp);
         verifyOtpButton = findViewById(R.id.verify_otp);
