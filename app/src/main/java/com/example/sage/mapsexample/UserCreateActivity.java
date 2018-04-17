@@ -145,7 +145,7 @@ public class UserCreateActivity extends AppCompatActivity {
                     }
                 });
 
-        firestoreDB.collection("General").document("ALLUSERS").get()
+        firestoreDB.collection("GENERAL").document("ALLUSERS").get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
