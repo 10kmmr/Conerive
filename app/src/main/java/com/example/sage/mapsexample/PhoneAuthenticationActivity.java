@@ -200,6 +200,7 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         if (task.isSuccessful()) {
+                            startService(new Intent(getApplicationContext(), LocationUpdateService.class));
                             DocumentSnapshot document = task.getResult();
                             if (document != null && document.exists()) {
                                 Intent intent = new Intent(getApplicationContext(), HomeActivity.class);

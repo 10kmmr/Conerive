@@ -59,7 +59,6 @@ public class SplashScreenActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
         mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
         firestoreDB = FirebaseFirestore.getInstance();
         tv = findViewById(R.id.splash_text);
         iv = findViewById(R.id.splash_image);
@@ -71,12 +70,16 @@ public class SplashScreenActivity extends AppCompatActivity {
                 getSystemService(Context.LOCATION_SERVICE);
         gpsText = findViewById(R.id.gps_disabled_text);
 
-        startService(new Intent(getApplicationContext(), LocationUpdateService.class));
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
+        currentUser = mAuth.getCurrentUser();
+        if(currentUser!=null){
+            startService(new Intent(getApplicationContext(), LocationUpdateService.class));
+        }
         Log.d(TAG, "onStart: " + FirebaseInstanceId.getInstance().getToken());
 
         // Check if location service is on and proceed once turned on
