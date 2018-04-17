@@ -117,7 +117,7 @@ public class AddFriendsActivity extends AppCompatActivity {
             }
         });
     }
-
+    
     void sendFriendRequestToServer(){
         String url = "https://conerive-fcm.herokuapp.com/sendrequest";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,

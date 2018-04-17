@@ -120,7 +120,7 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
                         phoneNumber,
                         60,                                                                       // Timeout duration
                         TimeUnit.SECONDS,                                                           // Unit of timeout
-                        PhoneAuthenticationActivity.this,                                     // Activity (for callback binding)
+                        PhoneAuthenticationActivity.this,                                    // Activity (for callback binding)
                         mCallbacks);
             }
         });

@@ -56,10 +56,8 @@ public class LocationUpdateService extends Service {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-                    Log.i(TAG, "Location: " + location.getLatitude() + " " + location.getLongitude());
                     mLastKnownLocation=location;
                     ownerGeoFireObject.setLocation("Location", new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
-
                 }
             }
         };
@@ -68,7 +66,6 @@ public class LocationUpdateService extends Service {
         mLocationRequest.setInterval(2000);
         mLocationRequest.setFastestInterval(2000);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
     }
 
