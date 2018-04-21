@@ -52,7 +52,7 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
     private Button friendsButton;
     private Button notificationsButton;
     private Button userSettingsButton;
-    private ArrayList<Trip> ArrayTrips;
+    private ArrayList<Trip> trips;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +75,7 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
         userSettingsButton = findViewById(R.id.user_settings);
         notificationsButton = findViewById(R.id.notifications);
 
-        ArrayTrips = new ArrayList<Trip>();
+        trips = new ArrayList<>();
     }
 
     @Override
@@ -148,7 +148,7 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                                         .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>(){
                                             @Override
                                             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                ArrayTrips.add(new Trip(
+                                                trips.add(new Trip(
                                                         documentSnapshot.getId(),
                                                         documentSnapshot.getString("Name"),
                                                         documentSnapshot.getGeoPoint("Destination"),
