@@ -1,6 +1,7 @@
 package com.example.sage.mapsexample;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
@@ -16,9 +17,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -64,12 +67,13 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
         ownerReference = database.getReference("USERS/" + currentUser.getUid());
+        firestoreDB = FirebaseFirestore.getInstance();
+
 
         tripCreateButton = findViewById(R.id.trip_create);
         friendsButton = findViewById(R.id.friends);
         userSettingsButton = findViewById(R.id.user_settings);
         notificationsButton = findViewById(R.id.notifications);
-        firestoreDB = FirebaseFirestore.getInstance();
 
         ArrayTrips = new ArrayList<Trip>();
     }
@@ -117,6 +121,19 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
 
         ownerReference.child("Location").addValueEventListener(new LocationValueEventListener());
 
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+
+                if(marker.getTag()!=null) {
+                    Intent intent = new Intent(getApplicationContext(), TripActivity.class);
+                    intent.putExtra("tripId", marker.getTag().toString());
+                    startActivity(intent);
+                }
+                return false;
+            }
+        });
+
         firestoreDB.collection("USERS").document(mAuth.getCurrentUser().getUid())
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>(){
@@ -131,31 +148,40 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                                         .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>(){
                                             @Override
                                             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                ArrayTrips.add(new Trip(mMap,documentSnapshot.getId(),documentSnapshot.getString("Name"),documentSnapshot.getGeoPoint("Destination")
-                                                        ,documentSnapshot.getString("AdmingID"),documentSnapshot.getDouble("Radius"),((ArrayList<String>)documentSnapshot.get("Users")).size()));
+                                                ArrayTrips.add(new Trip(
+                                                        documentSnapshot.getId(),
+                                                        documentSnapshot.getString("Name"),
+                                                        documentSnapshot.getGeoPoint("Destination"),
+                                                        documentSnapshot.getString("AdmingID"),
+                                                        documentSnapshot.getDouble("Radius"),
+                                                        ((ArrayList<String>)documentSnapshot.get("Users")).size()));
                                             }
                                         });
                             }
                         }
                     }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e);
+                    }
                 });
 
     }
 
-
-    public class LocationValueEventListener implements ValueEventListener{
-
+    public class LocationValueEventListener implements ValueEventListener {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
-            LatLng location = new LatLng(dataSnapshot.child("Latitude").getValue(double.class),
+            LatLng location = new LatLng(
+                    dataSnapshot.child("Latitude").getValue(double.class),
                     dataSnapshot.child("Longitude").getValue(double.class));
 
             if(ownerMarker ==null){
-                ownerMarker = mMap.addMarker(new MarkerOptions().
-                        position(location).
-                        title("Location"));
+                ownerMarker = mMap.addMarker(new MarkerOptions()
+                        .position(location)
+                        .title("You"));
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
-
             } else {
                 ownerMarker.setPosition(location);
             }
@@ -166,29 +192,33 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
             Log.d(TAG, "onCancelled: " + databaseError);
         }
     }
-}
-class Trip {
-    String Name;
-    GeoPoint Destination;
-    String AdminId;
-    double Radius;
-    int NoOfPeopleOnTrip;
-    String TripId;
-    GoogleMap GM;
-    Marker selfM;
-    Trip(GoogleMap gm,String Docid,String N,GeoPoint d,String Aid,double R,int gg){
-        this.GM = gm;
-        this.TripId = Docid;
-        this.NoOfPeopleOnTrip = gg;
-        this.Name=N;
-        this.Destination= d;
-        this.AdminId=Aid;
-        this.Radius=R;
-        selfM = GM.addMarker(new MarkerOptions().
-                position(new LatLng(Destination.getLatitude(),Destination.getLongitude())).
-                title(Name));
 
+    public class Trip {
 
+        public String name;
+        public String adminId;
+        public double Radius;
+        public int userCount;
+        public String tripId;
+        Marker destination;
+
+        Trip(String tripId,String name,GeoPoint location,String adminId,double radius,int userCount){
+            this.tripId = tripId;
+            this.userCount = userCount;
+            this.name=name;
+            this.adminId=adminId;
+            this.Radius=radius;
+            destination = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(
+                            location.getLatitude(),
+                            location.getLongitude()))
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+                    .title(name));
+            destination.setTag(tripId);
+        }
     }
+
 }
+
+
 
