@@ -125,7 +125,6 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.d(TAG, "onDataChange: " + dataSnapshot);
                 ownerMarker.setPosition(location);
             }
-
         }
 
         @Override
@@ -133,6 +132,5 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
             Log.d(TAG, "onCancelled: " + databaseError);
         }
     }
-
 
 }
