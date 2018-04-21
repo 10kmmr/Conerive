@@ -17,23 +17,26 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class HomeActivity extends FragmentActivity implements OnMapReadyCallback {
     private static final String TAG = "HomeActivity";
 
     private GoogleMap mMap;
+    private Marker ownerMarker;
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private DatabaseReference ownerReference;
     private FirebaseDatabase database;
-    private GeoFire ownerGeoFireObject;
 
     private FloatingActionButton tripCreateButton;
     private Button friendsButton;
@@ -53,7 +56,6 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
         ownerReference = database.getReference("USERS/" + currentUser.getUid());
-        ownerGeoFireObject = new GeoFire(ownerReference);
 
         tripCreateButton = findViewById(R.id.trip_create);
         friendsButton = findViewById(R.id.friends);
@@ -102,11 +104,34 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        ownerReference.child("Location").addValueEventListener(new LocationValueEventListener());
+    }
 
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+    public class LocationValueEventListener implements ValueEventListener{
+
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            LatLng location = new LatLng(dataSnapshot.child("Latitude").getValue(double.class),
+                    dataSnapshot.child("Longitude").getValue(double.class));
+
+            if(ownerMarker ==null){
+                ownerMarker = mMap.addMarker(new MarkerOptions().
+                        position(location).
+                        title("Location"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
+
+            } else {
+                Log.d(TAG, "onDataChange: " + dataSnapshot);
+                ownerMarker.setPosition(location);
+            }
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            Log.d(TAG, "onCancelled: " + databaseError);
+        }
     }
 
 
