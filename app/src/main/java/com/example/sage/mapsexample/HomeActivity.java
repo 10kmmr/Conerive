@@ -122,7 +122,6 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
 
             } else {
-                Log.d(TAG, "onDataChange: " + dataSnapshot);
                 ownerMarker.setPosition(location);
             }
         }

@@ -10,6 +10,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import android.os.Bundle;
 import android.view.View;
@@ -26,6 +30,11 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
     private SeekBar notifRadiusSB;
     private TextView notifRadiusDisplayTV;
     private FloatingActionButton createTripFAB;
+
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+    private DatabaseReference ownerReference;
+    private FirebaseDatabase database;
 
     private Marker tripDestinationMarker;
 
@@ -44,6 +53,11 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
         notifRadiusSB=findViewById(R.id.notification_radius);
         notifRadiusDisplayTV=findViewById(R.id.notification_radius_display);
         createTripFAB=findViewById(R.id.create_trip);
+
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+        database = FirebaseDatabase.getInstance();
+        ownerReference = database.getReference("USERS/" + currentUser.getUid());
 
     }
 
@@ -78,9 +92,20 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
     public void onMapReady(com.google.android.gms.maps.GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                if(tripDestinationMarker == null ) {
+                    tripDestinationMarker = mMap.addMarker(new MarkerOptions().
+                            position(latLng).
+                            title("Destination"));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+                } else {
+                    tripDestinationMarker.setPosition(latLng);
+                }
+            }
+        });
     }
 }
