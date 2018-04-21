@@ -1,5 +1,7 @@
 package com.example.sage.mapsexample;
 
+import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 
@@ -10,22 +12,39 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class TripCreateActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    private static final String TAG = "TripCreateActivity";
     private GoogleMap mMap;
 
+    private FirebaseFirestore firestoreDB;
     private EditText tripNameET;
     private SeekBar notifRadiusSB;
     private TextView notifRadiusDisplayTV;
@@ -58,6 +77,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
         ownerReference = database.getReference("USERS/" + currentUser.getUid());
+        firestoreDB = FirebaseFirestore.getInstance();
 
     }
 
@@ -80,19 +100,98 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
         createTripFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String tripName = tripNameET.getText().toString();
-                int notifRadius = notifRadiusSB.getProgress()/10;
+                if(tripDestinationMarker!=null) {
+
+                    String tripName = tripNameET.getText().toString();
+                    double notifRadius = notifRadiusSB.getProgress() / 10;
+                    LatLng destinationLocation = tripDestinationMarker.getPosition();
+                    GeoPoint geoPoint = new GeoPoint(destinationLocation.latitude, destinationLocation.longitude);
+
+                    final Map<String, Object> trip= new HashMap<>();
+                    trip.put("Name", tripName);
+                    trip.put("Radius", notifRadius);
+                    trip.put("Destination", geoPoint);
+                    trip.put("AdminId", currentUser.getUid());
+                    ArrayList<String> users = new ArrayList<>();
+                    users.add(currentUser.getUid());
+                    trip.put("Users",users);
+
+                    firestoreDB.collection("TRIPS").add(trip)
+                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                @Override
+                                public void onSuccess(DocumentReference documentReference) {
+
+                                    final String tripId = documentReference.getId();
+                                    firestoreDB.collection("USERS").document(currentUser.getUid())
+                                            .get()
+                                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                                @Override
+                                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                                                    ArrayList<String> trips;
+                                                    if (documentSnapshot.contains("Trips"))
+                                                        trips = (ArrayList<String>) documentSnapshot.get("Trips");
+                                                    else
+                                                        trips = new ArrayList<>();
+                                                    trips.add(tripId);
+
+                                                    firestoreDB.collection("USERS").document(currentUser.getUid())
+                                                            .update("Trips", trips)
+                                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                @Override
+                                                                public void onSuccess(Void aVoid) {
+                                                                    Intent intent = new Intent(getApplicationContext(), TripActivity.class);
+                                                                    intent.putExtra("tripId", tripId);
+                                                                    startActivity(intent);
+                                                                }
+                                                            })
+                                                            .addOnFailureListener(new OnFailureListener() {
+                                                                @Override
+                                                                public void onFailure(@NonNull Exception e) {
+                                                                    Log.d(TAG, "onFailure: " + e);
+                                                                }
+                                                            });
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+
+                                                }
+                                            });
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.d(TAG, "onFailure: " + e);
+                                }
+                            });
+                } else {
+                    Toast.makeText(TripCreateActivity.this, "Select a destination", Toast.LENGTH_SHORT).show();
+                }
             }
         });
-
-
     }
+
 
     @Override
     public void onMapReady(com.google.android.gms.maps.GoogleMap googleMap) {
         mMap = googleMap;
 
+        ownerReference.child("Location").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                LatLng location = new LatLng(dataSnapshot.child("Latitude").getValue(double.class),
+                        dataSnapshot.child("Longitude").getValue(double.class));
 
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled: " + databaseError);
+            }
+        });
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -101,10 +200,10 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                     tripDestinationMarker = mMap.addMarker(new MarkerOptions().
                             position(latLng).
                             title("Destination"));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
                 } else {
                     tripDestinationMarker.setPosition(latLng);
                 }
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
             }
         });
     }
