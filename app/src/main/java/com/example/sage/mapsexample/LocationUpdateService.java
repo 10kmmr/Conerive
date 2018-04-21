@@ -2,10 +2,12 @@ package com.example.sage.mapsexample;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -18,17 +20,18 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class LocationUpdateService extends Service {
     private static final String TAG = "LocationUpdateService";
 
     private FusedLocationProviderClient mFusedLocationClient;
-    private Location mLastKnownLocation;
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
 
     private DatabaseReference ownerReference;
     private FirebaseDatabase database;
-    private GeoFire ownerGeoFireObject;
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
@@ -49,15 +52,16 @@ public class LocationUpdateService extends Service {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
-        ownerReference = database.getReference("USERS/"+currentUser.getUid());
-        ownerGeoFireObject = new GeoFire(ownerReference);
+        ownerReference = database.getReference("USERS/" + currentUser.getUid());
 
-        mLocationCallback = new LocationCallback(){
+        mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
-                    mLastKnownLocation=location;
-                    ownerGeoFireObject.setLocation("Location", new GeoLocation(mLastKnownLocation.getLatitude(), mLastKnownLocation.getLongitude()));
+                    Map<String, Double> mLastKnownLocation = new HashMap<>();
+                    mLastKnownLocation.put("Latitude", location.getLatitude());
+                    mLastKnownLocation.put( "Longitude",  location.getLongitude());
+                    ownerReference.child("Location").setValue(mLastKnownLocation);
                 }
             }
         };
