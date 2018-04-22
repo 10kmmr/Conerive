@@ -1,14 +1,22 @@
 package com.example.sage.mapsexample;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -129,6 +137,7 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                     Intent intent = new Intent(getApplicationContext(), TripActivity.class);
                     intent.putExtra("tripId", marker.getTag().toString());
                     startActivity(intent);
+                    return true;
                 }
                 return false;
             }
@@ -200,7 +209,7 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
         public double Radius;
         public int userCount;
         public String tripId;
-        Marker destination;
+        public Marker destination;
 
         Trip(String tripId,String name,GeoPoint location,String adminId,double radius,int userCount){
             this.tripId = tripId;
@@ -208,13 +217,31 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
             this.name=name;
             this.adminId=adminId;
             this.Radius=radius;
+
+            // CODE FOR CUSTOM MARKER
+            View view = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.marker_home_trip, null);
+            TextView tripNameTV = view.findViewById(R.id.marker_trip_name);
+            tripNameTV.setText(name);
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            (HomeActivity.this).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            view.setLayoutParams(new ConstraintLayout.LayoutParams(ConstraintLayout.LayoutParams.WRAP_CONTENT, ConstraintLayout.LayoutParams.WRAP_CONTENT));
+            view.measure(displayMetrics.widthPixels, displayMetrics.heightPixels);
+            view.layout(0, 0, displayMetrics.widthPixels, displayMetrics.heightPixels);
+            view.buildDrawingCache();
+            Bitmap bitmap = Bitmap.createBitmap(view.getMeasuredWidth(), view.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            view.draw(canvas);
+
             destination = mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(
                             location.getLatitude(),
                             location.getLongitude()))
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+//                    .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                     .title(name));
             destination.setTag(tripId);
+
+
         }
     }
 
