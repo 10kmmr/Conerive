@@ -48,7 +48,6 @@ public class UserCreateActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private FirebaseStorage firebaseStorage;
-    private StorageReference displayPictureReference;
 
     // Member variables
     private String userId;
@@ -84,8 +83,6 @@ public class UserCreateActivity extends AppCompatActivity {
         displayPicture = findViewById(R.id.displayPicture);
 
         firebaseStorage = FirebaseStorage.getInstance();
-        displayPictureReference = firebaseStorage.getReference().child("user_display_picture");
-
     }
 
     @Override
@@ -155,13 +152,13 @@ public class UserCreateActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         ArrayList<String> listOfUserInApp;
-                        if(documentSnapshot.contains("PhoneNumbers"))
-                            listOfUserInApp = (ArrayList<String>) documentSnapshot.get("PhoneNumbers");
+                        if(documentSnapshot.contains("Phone"))
+                            listOfUserInApp = (ArrayList<String>) documentSnapshot.get("Phone");
                         else
                             listOfUserInApp = new ArrayList<>();
                         listOfUserInApp.add(phone);
                         firestoreDB.collection("GENERAL").document("ALLUSERS")
-                                .update("PhoneNumbers", listOfUserInApp)
+                                .update("Phone", listOfUserInApp)
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
@@ -196,7 +193,10 @@ public class UserCreateActivity extends AppCompatActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageByte = baos.toByteArray();
         //fireBase updating dp
-        UploadTask uploadTask = displayPictureReference.child(userId + ".jpg").putBytes(imageByte);
+        UploadTask uploadTask = firebaseStorage.getReference()
+                .child("user_display_picture")
+                .child(userId + ".jpg")
+                .putBytes(imageByte);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {

@@ -143,7 +143,12 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
             public boolean onMarkerClick(Marker marker) {
 
                 if(!zoomedIn){
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), (float) (ZOOM_THRESHOLD+0.1)), 500, null);
+                    mMap.animateCamera(
+                            CameraUpdateFactory.newLatLngZoom(
+                                    marker.getPosition(),
+                                    (float) (ZOOM_THRESHOLD+0.1)),
+                            500,
+                            null);
                     return true;
                 }else if(marker.getTag()!=null) {
                     Intent intent = new Intent(getApplicationContext(), TripActivity.class);
@@ -160,14 +165,12 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
             public void onCameraMove() {
                 if(zoomedIn && (mMap.getCameraPosition().zoom < ZOOM_THRESHOLD)){
                     zoomedIn = false;
-                    Log.d(TAG, "cam now zoomed out");
                     for(Trip t : trips){
                         t.destination.setIcon(t.zoomedOutIcon);
                     }
                 }
                 if(!zoomedIn && mMap.getCameraPosition().zoom >= ZOOM_THRESHOLD){
                     zoomedIn = true;
-                    Log.d(TAG, "cam now zoomed in");
                     for(Trip t : trips){
                         t.destination.setIcon(t.zoomedInIcon);
                     }

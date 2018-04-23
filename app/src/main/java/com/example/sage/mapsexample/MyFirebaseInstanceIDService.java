@@ -82,6 +82,19 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
      * @param token The new token.
      */
     public void sendRegistrationToServer(final String token) {
-        firestoreDB.collection("USERS").document(mAuth.getCurrentUser().getUid()).update("FCM",token);
+        firestoreDB.collection("USERS").document(mAuth.getCurrentUser().getUid())
+                .update("Token",token)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "onSuccess: " + "wrote refreshed token to DB");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e);
+                    }
+                });
     }
 }

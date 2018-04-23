@@ -1,5 +1,6 @@
 package com.example.sage.mapsexample;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -101,6 +102,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
             @Override
             public void onClick(View v) {
                 if(tripDestinationMarker!=null) {
+
 
                     String tripName = tripNameET.getText().toString();
                     double notifRadius = notifRadiusSB.getProgress() / 10;
