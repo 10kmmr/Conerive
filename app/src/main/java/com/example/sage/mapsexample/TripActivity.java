@@ -1,10 +1,13 @@
 package com.example.sage.mapsexample;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -37,6 +40,9 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private static final String TAG = "TripActivity";
     private GoogleMap mMap;
     private Marker ownerMarker;
+    private Marker destination;
+
+    private Button homeBT;
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
@@ -47,7 +53,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private HashMap<String, Member> members;
     private String tripId;
     private String tripName;
-    private Marker destination;
     private double radius;
 
 
@@ -63,19 +68,43 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         tripId = getIntent().getStringExtra("tripId");
         members = new HashMap<>();
 
+        homeBT = findViewById(R.id.home);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
         firestoreDB = FirebaseFirestore.getInstance();
         ownerReference = database.getReference("USERS/" + currentUser.getUid());
 
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        homeBT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
         ownerReference.child("Location").addValueEventListener(new OwnerLocationValueEventListener());
+
         firestoreDB.collection("TRIPS").document(tripId)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {

@@ -144,6 +144,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                                                                     Intent intent = new Intent(getApplicationContext(), TripActivity.class);
                                                                     intent.putExtra("tripId", tripId);
                                                                     startActivity(intent);
+                                                                    finish();
                                                                 }
                                                             })
                                                             .addOnFailureListener(new OnFailureListener() {

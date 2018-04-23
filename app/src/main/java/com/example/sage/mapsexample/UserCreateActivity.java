@@ -114,6 +114,11 @@ public class UserCreateActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "onBackPressed: " + "Dont do anything");
+    }
+
     //----------------------------------------------------------------------------------------------
     //      MEMBER METHODS
     //----------------------------------------------------------------------------------------------
@@ -150,7 +155,10 @@ public class UserCreateActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         ArrayList<String> listOfUserInApp;
-                        listOfUserInApp = (ArrayList<String>) documentSnapshot.get("PhoneNumbers");
+                        if(documentSnapshot.contains("PhoneNumbers"))
+                            listOfUserInApp = (ArrayList<String>) documentSnapshot.get("PhoneNumbers");
+                        else
+                            listOfUserInApp = new ArrayList<>();
                         listOfUserInApp.add(phone);
                         firestoreDB.collection("GENERAL").document("ALLUSERS")
                                 .update("PhoneNumbers", listOfUserInApp)

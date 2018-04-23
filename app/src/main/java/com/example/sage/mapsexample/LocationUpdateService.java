@@ -27,8 +27,8 @@ public class LocationUpdateService extends Service {
     private static final String TAG = "LocationUpdateService";
 
     private FusedLocationProviderClient mFusedLocationClient;
-    private LocationRequest mLocationRequest;
-    private LocationCallback mLocationCallback;
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
 
     private DatabaseReference ownerReference;
     private FirebaseDatabase database;
@@ -54,7 +54,7 @@ public class LocationUpdateService extends Service {
         database = FirebaseDatabase.getInstance();
         ownerReference = database.getReference("USERS/" + currentUser.getUid());
 
-        mLocationCallback = new LocationCallback() {
+        locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
@@ -66,11 +66,11 @@ public class LocationUpdateService extends Service {
             }
         };
 
-        mLocationRequest = LocationRequest.create();
-        mLocationRequest.setInterval(2000);
-        mLocationRequest.setFastestInterval(2000);
+        locationRequest = LocationRequest.create();
+        locationRequest.setInterval(3000);
+        locationRequest.setFastestInterval(3000);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
+        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
     }
 
     @Override

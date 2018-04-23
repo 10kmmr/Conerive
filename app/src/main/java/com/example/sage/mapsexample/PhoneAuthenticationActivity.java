@@ -125,6 +125,11 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "onBackPressed: " + "dont do anything");
+    }
+
     //----------------------------------------------------------------------------------------------
     //      PHONE AUTHENTICATION METHODS
     //----------------------------------------------------------------------------------------------
@@ -201,6 +206,7 @@ public class PhoneAuthenticationActivity extends AppCompatActivity {
                                 Intent intent = new Intent(getApplicationContext(), UserCreateActivity.class);
                                 startActivity(intent);
                             }
+                            finish();
                         } else {
                             Log.d(TAG, "get failed with ", task.getException());
                         }

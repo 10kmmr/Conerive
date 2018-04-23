@@ -134,6 +134,7 @@ public class SplashScreenActivity extends AppCompatActivity {
                                 Intent intent = new Intent(getApplicationContext(), UserCreateActivity.class);
                                 startActivity(intent);
                             }
+                            finish();
                         } else {
                             Log.d(TAG, "get failed with ", task.getException());
                         }
