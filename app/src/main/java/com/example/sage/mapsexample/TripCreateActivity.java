@@ -112,6 +112,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                     trip.put("Radius", notifRadius);
                     trip.put("Destination", geoPoint);
                     trip.put("AdminId", currentUser.getUid());
+                    trip.put("Status", "TRIP_RUNNING");
                     ArrayList<String> users = new ArrayList<>();
                     users.add(currentUser.getUid());
                     trip.put("Users",users);

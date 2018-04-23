@@ -25,6 +25,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -46,6 +47,7 @@ import java.util.ArrayList;
 
 public class HomeActivity extends FragmentActivity implements OnMapReadyCallback {
     private static final String TAG = "HomeActivity";
+    private static final double ZOOM_THRESHOLD = 16;
 
     private GoogleMap mMap;
     private Marker ownerMarker;
@@ -60,6 +62,8 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
     private Button friendsButton;
     private Button notificationsButton;
     private Button userSettingsButton;
+
+    private boolean zoomedIn;
     private ArrayList<Trip> trips;
 
     @Override
@@ -84,6 +88,7 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
         notificationsButton = findViewById(R.id.notifications);
 
         trips = new ArrayList<>();
+        zoomedIn = false;
     }
 
     @Override
@@ -133,7 +138,10 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public boolean onMarkerClick(Marker marker) {
 
-                if(marker.getTag()!=null) {
+                if(!zoomedIn){
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.getPosition(), (float) (ZOOM_THRESHOLD+0.1)), 500, null);
+                    return true;
+                }else if(marker.getTag()!=null) {
                     Intent intent = new Intent(getApplicationContext(), TripActivity.class);
                     intent.putExtra("tripId", marker.getTag().toString());
                     startActivity(intent);
@@ -143,15 +151,34 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+            @Override
+            public void onCameraMove() {
+                if(zoomedIn && (mMap.getCameraPosition().zoom < ZOOM_THRESHOLD)){
+                    zoomedIn = false;
+                    Log.d(TAG, "cam now zoomed out");
+                    for(Trip t : trips){
+                        t.destination.setIcon(t.zoomedOutIcon);
+                    }
+                }
+                if(!zoomedIn && mMap.getCameraPosition().zoom >= ZOOM_THRESHOLD){
+                    zoomedIn = true;
+                    Log.d(TAG, "cam now zoomed in");
+                    for(Trip t : trips){
+                        t.destination.setIcon(t.zoomedInIcon);
+                    }
+                }
+            }
+        });
+
         firestoreDB.collection("USERS").document(mAuth.getCurrentUser().getUid())
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>(){
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        ArrayList<String> UsersTrips;
                         if (documentSnapshot.contains("Trips")){
-                            UsersTrips = (ArrayList<String>) documentSnapshot.get("Trips");
-                            for(String trip : UsersTrips){
+                            ArrayList<String> tripIds = (ArrayList<String>) documentSnapshot.get("Trips");
+                            for(String trip : tripIds){
                                 firestoreDB.collection("TRIPS").document(trip)
                                         .get()
                                         .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>(){
@@ -190,7 +217,7 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                 ownerMarker = mMap.addMarker(new MarkerOptions()
                         .position(location)
                         .title("You"));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 14));
             } else {
                 ownerMarker.setPosition(location);
             }
@@ -210,6 +237,8 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
         public int userCount;
         public String tripId;
         public Marker destination;
+        public BitmapDescriptor zoomedInIcon;
+        public BitmapDescriptor zoomedOutIcon;
 
         Trip(String tripId,String name,GeoPoint location,String adminId,double radius,int userCount){
             this.tripId = tripId;
@@ -232,12 +261,14 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
             Canvas canvas = new Canvas(bitmap);
             view.draw(canvas);
 
+            zoomedInIcon = BitmapDescriptorFactory.fromBitmap(bitmap);
+            zoomedOutIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
+
             destination = mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(
                             location.getLatitude(),
                             location.getLongitude()))
-//                    .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                    .icon(zoomedOutIcon)
                     .title(name));
             destination.setTag(tripId);
 

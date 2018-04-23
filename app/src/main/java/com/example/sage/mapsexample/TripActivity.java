@@ -61,7 +61,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         tripId = getIntent().getStringExtra("tripId");
-        members = new HashMap<String, Member>();
+        members = new HashMap<>();
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
