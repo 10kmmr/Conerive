@@ -13,17 +13,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.NetworkImageView;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -36,14 +32,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 
 public class NotificationsActivity extends AppCompatActivity {
     private static final String TAG = "NotificationsActivity";
@@ -54,12 +43,14 @@ public class NotificationsActivity extends AppCompatActivity {
     private FirebaseFirestore firestoreDB;
 
     // View objects
-    private ListView notificationsListView;
+    private LinearLayout notificationsLL;
 
     // Member variables
-    private ArrayList<NotificationsListDataModel> notificationsList;
-    private NotificationsListAdapter notificationsListAdapter;
     private RequestQueue requestQueue;
+    private ArrayList<FriendRequest> friendRequests;
+    private ArrayList<TripInvite> tripInvites;
+    ImageLoader imageLoader;
+
 
     //----------------------------------------------------------------------------------------------
     //      ACTIVITY LIFECYCLE METHODS
@@ -72,10 +63,22 @@ public class NotificationsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_notifications);
         requestQueue = Volley.newRequestQueue(this);
 
-        notificationsListView = findViewById(R.id.notifications_list);
-        notificationsList = new ArrayList<>();
-        notificationsListAdapter = new NotificationsListAdapter(getApplicationContext(), R.layout.notification_list_item, notificationsList);
-        notificationsListView.setAdapter(notificationsListAdapter);
+        notificationsLL = findViewById(R.id.notifications_linear_layout);
+
+        friendRequests = new ArrayList<>();
+        tripInvites = new ArrayList<>();
+
+        imageLoader = new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
+            private final LruCache<String, Bitmap> mCache = new LruCache<>(10);
+
+            public void putBitmap(String url, Bitmap bitmap) {
+                mCache.put(url, bitmap);
+            }
+
+            public Bitmap getBitmap(String url) {
+                return mCache.get(url);
+            }
+        });
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
@@ -91,64 +94,39 @@ public class NotificationsActivity extends AppCompatActivity {
 
         firestoreDB.collection("USERS").document(currentUser.getUid())
                 .collection("NOTIFICATIONS")
-                .whereEqualTo("Type", "FRIEND_REQUEST")
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                                final String notificationId = document.getId();
-                                final String senderId = document.getString("Sender_id");
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        for(DocumentSnapshot notification : queryDocumentSnapshots){
+                            NotificationType notificationType = NotificationType.valueOf(notification.getString("Type"));
+                            switch (notificationType){
+                                case FRIEND_REQUEST: friendRequests.add(new FriendRequest(
+                                        notification.getId(),
+                                        notification.getString("Sender_id"),
+                                        notification.getString("Sender_name"),
+                                        notification.getString("Sender_image_url")
+                                ));
+                                break;
 
-                                firestoreDB.collection("USERS").document(senderId)
-                                        .get()
-                                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                                if (task.isSuccessful()) {
-                                                    DocumentSnapshot document = task.getResult();
-                                                    final String senderName = document.getString("Name");
-                                                    String senderDisplayPictureURL = null;
-                                                    if (document.contains("ImageURL")) {
-                                                        senderDisplayPictureURL = document.getString("ImageURL");
-                                                    }
-                                                    final String finalSenderDisplayPictureURL = senderDisplayPictureURL;
-                                                    firestoreDB.collection("USERS").document(senderId)
-                                                            .get()
-                                                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                                                @Override
-                                                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                                                    if (task.isSuccessful()) {
-                                                                        DocumentSnapshot document = task.getResult();
-                                                                        String senderName = document.getString("Name");
-                                                                        notificationsList.add(
-                                                                                new NotificationsListDataModel(
-                                                                                        notificationId,
-                                                                                        senderId,
-                                                                                        senderName,
-                                                                                        finalSenderDisplayPictureURL
-                                                                                )
-                                                                        );
-                                                                        notificationsListAdapter.notifyDataSetChanged();
+                                case TRIP_INVITE: tripInvites.add(new TripInvite(
+                                        notification.getId(),
+                                        notification.getString("Sender_id"),
+                                        notification.getString("Sender_name"),
+                                        notification.getString("Trip_id"),
+                                        notification.getString("Trip_name")
+                                ));
+                                break;
 
-                                                                    } else {
-                                                                        Log.d(TAG, "get failed with ", task.getException());
-                                                                    }
-                                                                }
-                                                            });
-
-                                                } else {
-                                                    Log.d(TAG, "get failed with ", task.getException());
-                                                }
-                                            }
-                                        });
-
+                                default:break;
                             }
-                        } else {
-                            Log.d(TAG, "Error getting documents: ", task.getException());
                         }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e);
                     }
                 });
 
@@ -255,100 +233,166 @@ public class NotificationsActivity extends AppCompatActivity {
 
     }
 
-    //----------------------------------------------------------------------------------------------
-    //      NOTIFICATIONS LIST VIEW OBJECTS AND METHODS
-    //----------------------------------------------------------------------------------------------
-
-    class NotificationsListAdapter extends ArrayAdapter<NotificationsListDataModel> {
-
-        public NotificationsListAdapter(Context context, int resource, ArrayList<NotificationsListDataModel> items) {
-            super(context, resource, items);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-            View view = convertView;
-            Log.d(TAG, "accessed getView" + "position : " + position);
-            if (view == null) {
-                LayoutInflater vi;
-                vi = LayoutInflater.from(getContext());
-                view = vi.inflate(R.layout.notification_list_item, null);
-            }
-
-            final NotificationsListDataModel notificationsListDataModelItem = getItem(position);
-
-            if (notificationsListDataModelItem != null) {
-
-                TextView senderNameTV = view.findViewById(R.id.sender_name);
-                NetworkImageView senderImageNIV = view.findViewById(R.id.sender_image);
-                Button acceptBTN = view.findViewById(R.id.accept);
-                Button rejectBTN = view.findViewById(R.id.reject);
-
-                senderNameTV.setText(notificationsListDataModelItem.getSenderName());
-
-                ImageLoader imageLoader;
-                imageLoader = new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
-                    private final LruCache<String, Bitmap> mCache = new LruCache<>(10);
-
-                    public void putBitmap(String url, Bitmap bitmap) {
-                        mCache.put(url, bitmap);
-                    }
-
-                    public Bitmap getBitmap(String url) {
-                        return mCache.get(url);
-                    }
-                });
-                senderImageNIV.setImageUrl(notificationsListDataModelItem.getSenderDisplayPictureURL(), imageLoader);
-
-                acceptBTN.setOnClickListener(new View.OnClickListener() {
+    void dbCreateTripMembership(final String tripId){
+        firestoreDB.collection("TRIPS").document(tripId).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
-                    public void onClick(View v) {
-                        dbCreateFriendship(notificationsListDataModelItem.getSenderId(), mAuth.getCurrentUser().getUid());
-                        dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
-                    }
-                });
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
 
-                rejectBTN.setOnClickListener(new View.OnClickListener() {
+                        ArrayList<String> users = (ArrayList<String>) documentSnapshot.get("Users");
+                        users.add(currentUser.getUid());
+
+                        firestoreDB.collection("TRIPS").document(tripId)
+                                .update("Users", users)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+
+                                        firestoreDB.collection("USERS").document(currentUser.getUid())
+                                                .get()
+                                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                                    @Override
+                                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                                                        ArrayList<String> trips;
+                                                        if (documentSnapshot.contains("Trips"))
+                                                            trips = (ArrayList<String>) documentSnapshot.get("Trips");
+                                                        else
+                                                            trips = new ArrayList<>();
+                                                        trips.add(tripId);
+
+                                                        firestoreDB.collection("USERS").document(currentUser.getUid())
+                                                                .update("Trips", trips)
+                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                    @Override
+                                                                    public void onSuccess(Void aVoid) {
+                                                                        Intent intent = new Intent(getApplicationContext(), TripActivity.class);
+                                                                        intent.putExtra("tripId", tripId);
+                                                                        startActivity(intent);
+                                                                    }
+                                                                })
+                                                                .addOnFailureListener(new OnFailureListener() {
+                                                                    @Override
+                                                                    public void onFailure(@NonNull Exception e) {
+                                                                        Log.d(TAG, "onFailure: " + e);
+                                                                    }
+                                                                });
+
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+
+                                                    }
+                                                });
+
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.d(TAG, "onFailure: " + e);
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
                     @Override
-                    public void onClick(View v) {
-                        dbDeleteNotification(notificationsListDataModelItem.getNotificationId());
-                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                        startActivity(intent);
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e);
                     }
                 });
-            }
-            return view;
-        }
     }
 
-    public class NotificationsListDataModel {
+    enum NotificationType {
+        FRIEND_REQUEST, TRIP_INVITE
+    }
+
+    public class FriendRequest {
         String notificationId;
         String senderId;
         String senderName;
-        String senderDisplayPictureURL;
+        String senderImageURL;
+        View notificationView;
 
-        public NotificationsListDataModel(String notificationId, String senderId, String senderName, String senderDisplayPictureURL) {
+        public FriendRequest(final String notificationId, final String senderId, String senderName, String senderImageURL) {
             this.notificationId = notificationId;
             this.senderId = senderId;
             this.senderName = senderName;
-            this.senderDisplayPictureURL = senderDisplayPictureURL;
-        }
+            this.senderImageURL = senderImageURL;
 
-        public String getNotificationId() {
-            return notificationId;
-        }
+            notificationView = getLayoutInflater().inflate(R.layout.notification_friend_request, notificationsLL, false);
+            TextView senderNameTV = notificationView.findViewById(R.id.sender_name);
+            Button acceptBTN = notificationView.findViewById(R.id.accept);
+            Button ignoreBTN = notificationView.findViewById(R.id.ignore);
+            NetworkImageView senderImageNIV = notificationView.findViewById(R.id.sender_image);
 
-        public String getSenderId() {
-            return senderId;
-        }
+            senderNameTV.setText(senderName);
+            senderImageNIV.setImageUrl(senderImageURL, imageLoader);
 
-        public String getSenderName() {
-            return senderName;
-        }
+            acceptBTN.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dbCreateFriendship(senderId, mAuth.getCurrentUser().getUid());
+                    dbDeleteNotification(notificationId);
+                }
+            });
 
-        public String getSenderDisplayPictureURL() {
-            return senderDisplayPictureURL;
+            ignoreBTN.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dbDeleteNotification(notificationId);
+                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                    startActivity(intent);
+                }
+            });
+            notificationsLL.addView(notificationView);
+        }
+    }
+
+    public class TripInvite {
+        String notificationId;
+        String senderId;
+        String senderName;
+        String tripId;
+        String tripName;
+        View notificationView;
+
+        public TripInvite(final String notificationId, final String senderId, String senderName, final String tripId, String tripName) {
+            this.notificationId = notificationId;
+            this.senderId = senderId;
+            this.senderName = senderName;
+            this.tripId = tripId;
+            this.tripName = tripName;
+
+            notificationView = getLayoutInflater().inflate(R.layout.notification_trip_invite, notificationsLL, false);
+            TextView senderNameTV = notificationView.findViewById(R.id.sender_name);
+            TextView tripNameTV = notificationView.findViewById(R.id.trip_name);
+            Button acceptBTN = notificationView.findViewById(R.id.accept);
+            Button ignoreBTN = notificationView.findViewById(R.id.ignore);
+
+            senderNameTV.setText(senderName);
+            tripNameTV.setText(tripName);
+
+            acceptBTN.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dbCreateTripMembership(tripId);
+                    dbDeleteNotification(notificationId);
+                }
+            });
+
+            ignoreBTN.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dbDeleteNotification(notificationId);
+                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                    startActivity(intent);
+                }
+            });
+            notificationsLL.addView(notificationView);
+
         }
     }
 

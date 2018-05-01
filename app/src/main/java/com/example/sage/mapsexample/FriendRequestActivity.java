@@ -4,13 +4,11 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,8 +23,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -41,8 +37,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AddFriendsActivity extends AppCompatActivity {
-    private static final String TAG = "AddFriendsActivity";
+public class FriendRequestActivity extends AppCompatActivity {
+    private static final String TAG = "FriendRequestActivity";
 
     //View Variable
     public Button sendRequestBTN;
@@ -65,7 +61,7 @@ public class AddFriendsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_friends);
+        setContentView(R.layout.activity_friend_request);
 
         firestoreDB = FirebaseFirestore.getInstance();
         phoneNumberET = findViewById(R.id.contact_number);
@@ -105,7 +101,7 @@ public class AddFriendsActivity extends AppCompatActivity {
                                                     if (documentSnapshot.contains("Friends")) {
                                                         ArrayList friendIds = (ArrayList<String>) documentSnapshot.get("Friends");
                                                         if (friendIds.contains(recieverId)) {
-                                                            Toast.makeText(AddFriendsActivity.this, recieverName + " is already your friend", Toast.LENGTH_SHORT).show();
+                                                            Toast.makeText(FriendRequestActivity.this, recieverName + " is already your friend", Toast.LENGTH_SHORT).show();
                                                         } else {
                                                             sendFriendRequestToServer();
                                                         }
@@ -121,7 +117,7 @@ public class AddFriendsActivity extends AppCompatActivity {
                                                 }
                                             });
                                 } else {
-                                    Toast.makeText(AddFriendsActivity.this, "This user does not have the application! ", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(FriendRequestActivity.this, "This user does not have the application! ", Toast.LENGTH_SHORT).show();
                                 }
 
                             }

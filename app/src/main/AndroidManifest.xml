@@ -90,7 +90,7 @@
             android:label="@string/title_activity_email_auth"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".AddFriendsActivity"
+            android:name=".FriendRequestActivity"
             android:label="@string/title_activity_add_friends"
             android:theme="@style/AppTheme" />
 

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="#3de7f7">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/image"
+        android:src="@drawable/front_page_background"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_centerVertical="true"/>
+
+    <LinearLayout
+        android:layout_toRightOf="@+id/image"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/sender_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sender name"
+            android:textSize="15dp"
+            android:layout_marginRight="10dp"
+            android:textColor="@color/wierdBlack"/>
+
+        <TextView
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/trip_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="trip name"
+            android:textSize="15dp"
+            android:layout_marginLeft="10dp"
+            android:textColor="@color/wierdBlack"/>
+
+    </LinearLayout>
+
+
+
+        <LinearLayout
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/accept"
+                android:layout_width="84dp"
+                android:layout_height="48dp"
+                android:text="ACCEPT" />
+
+            <Button
+                android:id="@+id/ignore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="IGNORE" />
+
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+
+
+
+</RelativeLayout>

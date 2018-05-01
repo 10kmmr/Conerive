@@ -70,7 +70,7 @@ public class FriendsActivity extends AppCompatActivity {
         addFriendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), AddFriendsActivity.class);
+                Intent intent = new Intent(getApplicationContext(), FriendRequestActivity.class);
                 startActivity(intent);
             }
         });
