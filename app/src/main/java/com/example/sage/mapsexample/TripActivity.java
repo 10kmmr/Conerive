@@ -7,7 +7,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
+import android.widget.ScrollView;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -42,7 +46,9 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private Marker ownerMarker;
     private Marker destination;
 
+    private HorizontalScrollView scrollview;
     private Button homeBT;
+    private Button scrollViewExpandBT;
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
@@ -68,7 +74,10 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         tripId = getIntent().getStringExtra("tripId");
         members = new HashMap<>();
 
+        scrollview = findViewById(R.id.members_list_scroll_view);
         homeBT = findViewById(R.id.home);
+        scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
+
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
@@ -89,6 +98,25 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 finish();
             }
         });
+
+        scrollViewExpandBT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ViewGroup.LayoutParams params = scrollview.getLayoutParams();
+                if(params.height == 0){
+                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+
+                } else {
+                    params.height = 0;
+                }
+                scrollview.setLayoutParams(params);
+            }
+        });
+
+
+        ViewGroup.LayoutParams params = scrollview.getLayoutParams();
+        params.height = 0;
+        scrollview.setLayoutParams(params);
     }
 
 
@@ -102,6 +130,8 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.getUiSettings().setMapToolbarEnabled(false);
+
 
         ownerReference.child("Location").addValueEventListener(new OwnerLocationValueEventListener());
 
