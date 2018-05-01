@@ -17,7 +17,7 @@
 
     <HorizontalScrollView
         android:id="@+id/members_list_scroll_view"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbarSize="2dp">
 
@@ -28,16 +28,6 @@
             android:orientation="horizontal"
             android:background="@color/wierdBlack"
             android:isScrollContainer="true">
-
-            <include layout="@layout/member_activity_trip" />
-            <include layout="@layout/member_activity_trip" />
-            <include layout="@layout/member_activity_trip" />
-            <include layout="@layout/member_activity_trip" />
-            <include layout="@layout/member_activity_trip" />
-            <include layout="@layout/member_activity_trip" />
-            <include layout="@layout/member_activity_trip" />
-
-
 
         </LinearLayout>
 

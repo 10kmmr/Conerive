@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -38,6 +39,8 @@ import com.google.firebase.firestore.GeoPoint;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class TripActivity extends FragmentActivity implements OnMapReadyCallback {
 
 
@@ -47,8 +50,11 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private Marker destination;
 
     private HorizontalScrollView scrollview;
+    private LinearLayout membersListLL;
     private Button homeBT;
     private Button scrollViewExpandBT;
+    private CircleImageView inviteBT;
+    private View inviteView;
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
@@ -75,8 +81,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         members = new HashMap<>();
 
         scrollview = findViewById(R.id.members_list_scroll_view);
+        membersListLL = findViewById(R.id.members_list);
         homeBT = findViewById(R.id.home);
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
+
+        inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, membersListLL, false);
+        inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
+        membersListLL.addView(inviteView);
+
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
@@ -89,6 +101,18 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onStart() {
         super.onStart();
+
+        ViewGroup.LayoutParams params = scrollview.getLayoutParams();
+        params.height = 0;
+        scrollview.setLayoutParams(params);
+
+        inviteBT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), TripInviteActivity.class);
+                startActivity(intent);
+            }
+        });
 
         homeBT.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,10 +137,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-
-        ViewGroup.LayoutParams params = scrollview.getLayoutParams();
-        params.height = 0;
-        scrollview.setLayoutParams(params);
     }
 
 
@@ -131,7 +151,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
-
 
         ownerReference.child("Location").addValueEventListener(new OwnerLocationValueEventListener());
 
@@ -194,6 +213,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         String memberPhone;
         String memberEmail;
         Marker memberMarker;
+        View memberViewItem;
 
         public Member(final String memberID) {
             this.memberID = memberID;
@@ -223,7 +243,11 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                             } else {
                                                 memberMarker.setPosition(location);
                                             }
+
+                                            memberViewItem = getLayoutInflater().inflate(R.layout.member_activity_trip, membersListLL, false);
+                                            membersListLL.addView(memberViewItem);
                                         }
+
 
                                         @Override
                                         public void onCancelled(DatabaseError databaseError) {
