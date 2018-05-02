@@ -118,7 +118,7 @@ public class NotificationsActivity extends AppCompatActivity {
                                 ));
                                 break;
 
-                                default:break;
+                                default: break;
                             }
                         }
                     }
