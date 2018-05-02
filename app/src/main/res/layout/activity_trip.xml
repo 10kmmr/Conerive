@@ -19,6 +19,7 @@
         android:id="@+id/members_list_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/wierdBlack"
         android:scrollbarSize="2dp">
 
         <LinearLayout
@@ -26,7 +27,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:background="@color/wierdBlack"
             android:isScrollContainer="true">
 
         </LinearLayout>
