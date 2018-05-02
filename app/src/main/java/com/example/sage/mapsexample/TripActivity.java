@@ -11,8 +11,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,6 +37,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -110,6 +113,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), TripInviteActivity.class);
+                intent.putExtra("tripId", tripId);
                 startActivity(intent);
             }
         });
@@ -212,6 +216,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         String memberID;
         String memberPhone;
         String memberEmail;
+        String memberImageURL;
         Marker memberMarker;
         View memberViewItem;
 
@@ -226,6 +231,19 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             memberEmail = documentSnapshot.getString("Email");
                             memberName = documentSnapshot.getString("Name");
                             memberPhone = documentSnapshot.getString("Phone");
+                            memberImageURL = documentSnapshot.getString("ImageURL");
+
+                            memberViewItem = getLayoutInflater().inflate(R.layout.member_activity_trip, membersListLL, false);
+                            ((TextView)memberViewItem.findViewById(R.id.name)).setText(memberName);
+                            ImageView imageView = memberViewItem.findViewById(R.id.image);
+
+                            if(memberImageURL!=null){
+                                Picasso.get()
+                                        .load(memberImageURL)
+                                        .into(imageView);
+                            }
+                            membersListLL.addView(memberViewItem);
+
 
                             database.getReference("USERS/"+memberID).child("Location")
                                     .addValueEventListener(new ValueEventListener() {
@@ -244,10 +262,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                                 memberMarker.setPosition(location);
                                             }
 
-                                            memberViewItem = getLayoutInflater().inflate(R.layout.member_activity_trip, membersListLL, false);
-                                            membersListLL.addView(memberViewItem);
                                         }
-
 
                                         @Override
                                         public void onCancelled(DatabaseError databaseError) {

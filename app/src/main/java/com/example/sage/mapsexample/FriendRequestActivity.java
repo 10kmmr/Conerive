@@ -41,9 +41,7 @@ import java.util.Map;
 public class FriendRequestActivity extends AppCompatActivity {
     private static final String TAG = "FriendRequestActivity";
 
-    //View Variable
     public Button sendRequestBTN;
-    public Button sendMultipleRequestsBTN;
     public EditText phoneNumberET;
 
     private FirebaseFirestore firestoreDB;
@@ -53,7 +51,6 @@ public class FriendRequestActivity extends AppCompatActivity {
     private String name;
     private String imageURL;
     private String recieverPhone;
-
 
     public RequestQueue requestQueue;
 
@@ -65,7 +62,6 @@ public class FriendRequestActivity extends AppCompatActivity {
         firestoreDB = FirebaseFirestore.getInstance();
         phoneNumberET = findViewById(R.id.contact_number);
         sendRequestBTN = findViewById(R.id.send_request);
-        sendMultipleRequestsBTN = findViewById(R.id.send_requests);
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
