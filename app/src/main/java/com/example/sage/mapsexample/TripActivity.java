@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,11 +36,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -64,8 +69,11 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private FirebaseDatabase database;
     private FirebaseFirestore firestoreDB;
     private DatabaseReference ownerReference;
+    ListenerRegistration listener;
+
 
     private HashMap<String, Member> members;
+    private ArrayList<String> userIDs;
     private String tripId;
     private String tripName;
     private double radius;
@@ -91,6 +99,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, membersListLL, false);
         inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
         membersListLL.addView(inviteView);
+
 
 
         mAuth = FirebaseAuth.getInstance();
@@ -172,11 +181,38 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
                                 .title("Destination"));
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-                        ArrayList<String> userIDs = (ArrayList<String>)documentSnapshot.get("Users");
+                        userIDs = (ArrayList<String>)documentSnapshot.get("Users");
                         userIDs.remove(currentUser.getUid());
                         Log.d(TAG, "after removal : " +  userIDs);
                         for(String userID : userIDs)
-                            members.put(userID, new Member(userID));
+                            members.put(userID, new Member(userID, false));
+
+                        listener = firestoreDB.collection("TRIPS").document(tripId)
+                                .addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+
+                                        if (e != null) {
+                                            Log.w(TAG, "Listen failed.", e);
+                                            return;
+                                        }
+
+                                        ArrayList<String> newUserIds = (ArrayList<String>)documentSnapshot.get("Users");
+                                        newUserIds.remove(currentUser.getUid());
+                                        if(newUserIds.size() > userIDs.size()){
+                                            newUserIds.removeAll(userIDs);
+                                            String newUserId = newUserIds.get(0);
+                                            userIDs.add(newUserId);
+                                            members.put(newUserId, new Member(newUserId, true));
+
+                                        } else if(newUserIds.size() < userIDs.size()){
+                                            ArrayList<String> temp = new ArrayList<>(userIDs);
+                                            temp.removeAll(newUserIds);
+                                            String toDeleteUserID = temp.get(0);
+                                            members.get(toDeleteUserID).delete();
+                                        }
+                                    }
+                                });
 
                     }
                 })
@@ -210,7 +246,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-
     public class Member{
         String memberName;
         String memberID;
@@ -219,8 +254,9 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         String memberImageURL;
         Marker memberMarker;
         View memberViewItem;
+        ValueEventListener valueEventListener;
 
-        public Member(final String memberID) {
+        public Member(final String memberID, final boolean realtimeUpdate) {
             this.memberID = memberID;
 
             firestoreDB.collection("USERS").document(memberID)
@@ -235,6 +271,8 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
 
                             memberViewItem = getLayoutInflater().inflate(R.layout.member_activity_trip, membersListLL, false);
                             ((TextView)memberViewItem.findViewById(R.id.name)).setText(memberName);
+                            if(realtimeUpdate)
+                                Toast.makeText(TripActivity.this, "Now tracking " + memberName, Toast.LENGTH_SHORT).show();
                             ImageView imageView = memberViewItem.findViewById(R.id.image);
 
                             if(memberImageURL!=null){
@@ -245,7 +283,8 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             membersListLL.addView(memberViewItem);
 
 
-                            database.getReference("USERS/"+memberID).child("Location")
+
+                            valueEventListener = database.getReference("USERS/"+memberID).child("Location")
                                     .addValueEventListener(new ValueEventListener() {
 
                                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -277,6 +316,20 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             Log.d(TAG, "onFailure: " + e);
                         }
                     });
+        }
+
+        void delete(){
+            Toast.makeText(TripActivity.this, memberName + "has left the trip", Toast.LENGTH_SHORT).show();
+            membersListLL.removeView(memberViewItem);
+            if(valueEventListener!=null)
+                database.getReference("USERS/"+memberID)
+                        .child("Location")
+                        .removeEventListener(valueEventListener);
+            if(memberMarker!=null)
+                memberMarker.remove();
+
+            members.remove(memberID);
+
         }
     }
 }
