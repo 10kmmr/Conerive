@@ -274,6 +274,16 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             if(realtimeUpdate)
                                 Toast.makeText(TripActivity.this, "Now tracking " + memberName, Toast.LENGTH_SHORT).show();
                             ImageView imageView = memberViewItem.findViewById(R.id.image);
+                            imageView.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    mMap.animateCamera(
+                                            CameraUpdateFactory.newLatLng(memberMarker.getPosition()),
+                                            500,
+                                            null
+                                    );
+                                }
+                            });
 
                             if(memberImageURL!=null){
                                 Picasso.get()
