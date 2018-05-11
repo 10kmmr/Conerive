@@ -95,13 +95,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         membersListLL = findViewById(R.id.members_list);
         homeBT = findViewById(R.id.home);
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
-
-        inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, membersListLL, false);
-        inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
-        membersListLL.addView(inviteView);
-
-
-
+        
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
@@ -118,14 +112,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         params.height = 0;
         scrollview.setLayoutParams(params);
 
-        inviteBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), TripInviteActivity.class);
-                intent.putExtra("tripId", tripId);
-                startActivity(intent);
-            }
-        });
+
 
         homeBT.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,6 +159,21 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                        if(currentUser.getUid().equals(documentSnapshot.getString("AdminId"))) {
+                            inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, membersListLL, false);
+                            inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
+                            inviteBT.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(getApplicationContext(), TripInviteActivity.class);
+                                    intent.putExtra("tripId", tripId);
+                                    startActivity(intent);
+                                }
+                            });
+                            membersListLL.addView(inviteView);
+                        }
+
                         tripName = documentSnapshot.getString("Name");
                         radius = documentSnapshot.getDouble("Radius");
                         GeoPoint geoPoint = (GeoPoint)documentSnapshot.get("Destination");
