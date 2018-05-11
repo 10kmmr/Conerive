@@ -82,6 +82,7 @@ public class FriendRequestActivity extends AppCompatActivity {
                                 if(queryDocumentSnapshots.size()>0) {
                                     final String recieverId = queryDocumentSnapshots.getDocuments().get(0).getId();
                                     final String recieverName = queryDocumentSnapshots.getDocuments().get(0).getString("Name");
+                                    final String recieverToken = queryDocumentSnapshots.getDocuments().get(0).getString("Token");
 
                                     firestoreDB.collection("USERS").document(currentUser.getUid())
                                             .get()
@@ -97,11 +98,11 @@ public class FriendRequestActivity extends AppCompatActivity {
                                                             Toast.makeText(FriendRequestActivity.this, recieverName + " is already your friend", Toast.LENGTH_SHORT).show();
                                                         } else {
                                                             dbSendFriendRequest(recieverId);
-                                                            //sendFriendRequestToServer();
+                                                            ServerSendFriendRequest(name, imageURL, recieverToken);
                                                         }
                                                     } else {
                                                         dbSendFriendRequest(recieverId);
-                                                        //sendFriendRequestToServer();
+                                                        ServerSendFriendRequest(name, imageURL, recieverToken);
                                                     }
                                                 }
                                             })
@@ -158,28 +159,29 @@ public class FriendRequestActivity extends AppCompatActivity {
                 });
     }
 
-    void ServerSendFriendRequest(){
-        String url = "https://conerive-fcm.herokuapp.com/sendrequest";
+    void ServerSendFriendRequest(final String senderName, final String senderImage, final String recieverToken){
+        String url = "https://conerive-fcm.herokuapp.com/sendFriendRequest";
         StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Intent intent = new Intent(getApplicationContext(), FriendsActivity.class);
-                        startActivity(intent);
+                        Log.d(TAG, "onResponse: " + response);
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Error.Response", error.toString());
+                        Log.d(TAG, error.toString());
                     }
                 }
         ) {
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
-                params.put("senderId", currentUser.getUid());
-                params.put("phone", recieverPhone);
+                params.put("SenderName", senderName);
+                params.put("SenderImage", senderImage);
+                params.put("Token", recieverToken);
+
                 return params;
             }
         };

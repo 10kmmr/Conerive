@@ -14,7 +14,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -146,7 +150,8 @@ public class TripInviteActivity extends AppCompatActivity {
                                         documentSnapshot.getId(),
                                         documentSnapshot.getString("Name"),
                                         documentSnapshot.getString("Phone"),
-                                        documentSnapshot.getString("ImageURL")
+                                        documentSnapshot.getString("ImageURL"),
+                                        documentSnapshot.getString("Token")
                                 );
                             }
                         })
@@ -169,10 +174,13 @@ public class TripInviteActivity extends AppCompatActivity {
                         if (queryDocumentSnapshots.size() > 0) {
                             String receiverId = queryDocumentSnapshots.getDocuments().get(0).getId();
                             String receiverName = queryDocumentSnapshots.getDocuments().get(0).getString("Name");
+                            String receiverToken = queryDocumentSnapshots.getDocuments().get(0).getString("Token");
+
                             if(tripMembers.contains(receiverId)){
                                 Toast.makeText(TripInviteActivity.this, receiverName + "is already part of this trip!", Toast.LENGTH_SHORT).show();
                             } else {
                                 dbSendTripInvite(receiverId);
+                                serverSendTripInvite(name, tripName, receiverToken);
                             }
                         } else {
                             Toast.makeText(TripInviteActivity.this, "This user does not have the application! ", Toast.LENGTH_SHORT).show();
@@ -214,19 +222,49 @@ public class TripInviteActivity extends AppCompatActivity {
                 });
     }
 
+    void serverSendTripInvite(final String senderName, final String TripName, final String recieverToken){
+        Log.d(TAG, "serverSendTripInvite: ");
+        String url = "https://conerive-fcm.herokuapp.com/sendTripRequest";
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d(TAG, "onResponse: " + response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("SenderName", senderName);
+                params.put("TripName", TripName);
+                params.put("Token", recieverToken);
+                return params;
+            }
+        };
+        requestQueue.add(postRequest);
+    }
+
     public class Friend{
         String friendId;
         String friendName;
         String friendPhone;
         String friendImageURL;
+        String friendToken;
         View view;
 
-        public Friend(final String friendId, String friendName, String friendPhone, String friendImageURL) {
+        public Friend(final String friendId, String friendName, String friendPhone, String friendImageURL, final String friendToken) {
             this.friendId = friendId;
             this.friendName = friendName;
             this.friendPhone = friendPhone;
             this.friendImageURL = friendImageURL;
-
+            this.friendToken = friendToken;
             view = getLayoutInflater().inflate(R.layout.friend_trip_invite, friendsLL, false);
             TextView nameTV = view.findViewById(R.id.name);
             ImageView imageIV = view.findViewById(R.id.image);
@@ -240,6 +278,7 @@ public class TripInviteActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     dbSendTripInvite(friendId);
+                    serverSendTripInvite(name, tripName, friendToken);
                 }
             });
 

@@ -95,7 +95,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         membersListLL = findViewById(R.id.members_list);
         homeBT = findViewById(R.id.home);
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
-        
+
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
