@@ -216,7 +216,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         for (String userID : userIDs)
                             members.put(userID, new Member(userID, false));
 
-                        // creating popup
                         if (currentUser.getUid().equals(tripAdminId)) {
                             adminMode = true;
                             View inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, popupLL, false);
@@ -235,30 +234,48 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         leaveTripBT.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                final Map<String, Object> updateMap = new HashMap<>();
-                                if (adminMode) {
-                                    updateMap.put("AdminId", userIDs.get(0));
+                                if(userIDs.size() == 0){
+                                    firestoreDB.collection("TRIPS").document(tripId)
+                                            .delete()
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void aVoid) {
+                                                    leaveTrip();
+                                                }
+                                            })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Log.d(TAG, "onFailure: " + e);
+                                                }
+                                            });
+
+                                } else {
+                                    final Map<String, Object> updateMap = new HashMap<>();
+                                    if (adminMode) {
+                                        updateMap.put("AdminId", userIDs.get(0));
+                                    }
+
+                                    firestoreDB.collection("TRIPS").document(tripId)
+                                            .get()
+                                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                                @Override
+                                                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                                    ArrayList<String> currentUsers = (ArrayList<String>) documentSnapshot.get("Users");
+                                                    currentUsers.remove(currentUser.getUid());
+                                                    updateMap.put("Users", currentUsers);
+                                                    firestoreDB.collection("TRIPS").document(tripId)
+                                                            .update(updateMap)
+                                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                @Override
+                                                                public void onSuccess(Void aVoid) {
+                                                                    leaveTrip();
+                                                                }
+                                                            });
+                                                }
+                                            });
+
                                 }
-
-                                firestoreDB.collection("TRIPS").document(tripId)
-                                        .get()
-                                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                            @Override
-                                            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                ArrayList<String> currentUsers = (ArrayList<String>) documentSnapshot.get("Users");
-                                                currentUsers.remove(currentUser.getUid());
-                                                updateMap.put("Users", currentUsers);
-                                            }
-                                        });
-
-                                firestoreDB.collection("TRIPS").document(tripId)
-                                        .update(updateMap)
-                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                            @Override
-                                            public void onSuccess(Void aVoid) {
-                                                leaveTrip();
-                                            }
-                                        });
                             }
                         });
 
@@ -275,20 +292,23 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                             Log.w(TAG, "Listen failed.", e);
                                             return;
                                         }
+                                        try {
+                                            ArrayList<String> newUserIds = (ArrayList<String>) documentSnapshot.get("Users");
+                                            newUserIds.remove(currentUser.getUid());
+                                            if (newUserIds.size() > userIDs.size()) {
+                                                newUserIds.removeAll(userIDs);
+                                                String newUserId = newUserIds.get(0);
+                                                userIDs.add(newUserId);
+                                                members.put(newUserId, new Member(newUserId, true));
 
-                                        ArrayList<String> newUserIds = (ArrayList<String>) documentSnapshot.get("Users");
-                                        newUserIds.remove(currentUser.getUid());
-                                        if (newUserIds.size() > userIDs.size()) {
-                                            newUserIds.removeAll(userIDs);
-                                            String newUserId = newUserIds.get(0);
-                                            userIDs.add(newUserId);
-                                            members.put(newUserId, new Member(newUserId, true));
-
-                                        } else if (newUserIds.size() < userIDs.size()) {
-                                            ArrayList<String> temp = new ArrayList<>(userIDs);
-                                            temp.removeAll(newUserIds);
-                                            String toDeleteUserID = temp.get(0);
-                                            members.get(toDeleteUserID).delete();
+                                            } else if (newUserIds.size() < userIDs.size()) {
+                                                ArrayList<String> temp = new ArrayList<>(userIDs);
+                                                temp.removeAll(newUserIds);
+                                                String toDeleteUserID = temp.get(0);
+                                                members.get(toDeleteUserID).delete();
+                                            }
+                                        } catch (Exception ex){
+                                            Log.d(TAG, "onEvent: " + ex);
                                         }
                                     }
                                 });
@@ -326,7 +346,31 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     void leaveTrip() {
-//        firestoreDB.collection()
+        firestoreDB.collection("USERS").document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                        ArrayList<String> trips = (ArrayList<String>) documentSnapshot.get("Trips");
+                        trips.remove(tripId);
+                        firestoreDB.collection("USERS").document(currentUser.getUid())
+                                .update("Trips", trips)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e);
+                    }
+                });
     }
 
     public class Member {
