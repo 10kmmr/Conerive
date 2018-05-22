@@ -45,6 +45,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -82,6 +83,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<String> userIDs;
     private String tripId;
     private String tripName;
+    private String tripAdminId;
     private boolean adminMode;
     private double tripRadius;
 
@@ -101,7 +103,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         scrollview = findViewById(R.id.members_list_scroll_view);
         membersListLL = findViewById(R.id.members_list);
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
-        popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip,null);
+        popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip, null);
         leaveTripBT = popupView.findViewById(R.id.leave_trip);
         popupLL = popupView.findViewById(R.id.popup_settings_linear_layout);
         goHomeBT = popupView.findViewById(R.id.go_home);
@@ -116,7 +118,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         popupWindow.setBackgroundDrawable(new BitmapDrawable());
         popupWindow.setOutsideTouchable(false);
         popupWindow.setFocusable(false);
-        if(Build.VERSION.SDK_INT>=21){
+        if (Build.VERSION.SDK_INT >= 21) {
             popupWindow.setElevation(50.0f);
         }
 
@@ -158,7 +160,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         settingsBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER,0,0);
+                popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
             }
         });
 
@@ -166,7 +168,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 ViewGroup.LayoutParams params = scrollview.getLayoutParams();
-                if(params.height == 0){
+                if (params.height == 0) {
                     params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 } else {
                     params.height = 0;
@@ -200,21 +202,23 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
 
                         tripName = documentSnapshot.getString("Name");
                         tripRadius = documentSnapshot.getDouble("Radius");
-                        GeoPoint geoPoint = (GeoPoint)documentSnapshot.get("Destination");
+                        tripAdminId = documentSnapshot.getString("AdminId");
+                        GeoPoint geoPoint = (GeoPoint) documentSnapshot.get("Destination");
                         LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
                         destination = mMap.addMarker(new MarkerOptions()
                                 .position(latLng)
                                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
                                 .title("Destination"));
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-                        userIDs = (ArrayList<String>)documentSnapshot.get("Users");
+                        userIDs = (ArrayList<String>) documentSnapshot.get("Users");
                         userIDs.remove(currentUser.getUid());
-                        Log.d(TAG, "after removal : " +  userIDs);
-                        for(String userID : userIDs)
+                        Log.d(TAG, "after removal : " + userIDs);
+                        for (String userID : userIDs)
                             members.put(userID, new Member(userID, false));
 
                         // creating popup
-                        if(currentUser.getUid().equals(documentSnapshot.getString("AdminId"))){
+                        if (currentUser.getUid().equals(tripAdminId)) {
+                            adminMode = true;
                             View inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, popupLL, false);
                             Button inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
                             inviteBT.setOnClickListener(new View.OnClickListener() {
@@ -231,13 +235,35 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         leaveTripBT.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                // TODO - exit user from trip
+                                final Map<String, Object> updateMap = new HashMap<>();
+                                if (adminMode) {
+                                    updateMap.put("AdminId", userIDs.get(0));
+                                }
+
+                                firestoreDB.collection("TRIPS").document(tripId)
+                                        .get()
+                                        .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                                                ArrayList<String> currentUsers = (ArrayList<String>) documentSnapshot.get("Users");
+                                                currentUsers.remove(currentUser.getUid());
+                                                updateMap.put("Users", currentUsers);
+                                            }
+                                        });
+
+                                firestoreDB.collection("TRIPS").document(tripId)
+                                        .update(updateMap)
+                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                leaveTrip();
+                                            }
+                                        });
                             }
                         });
 
                         tripNameTV.setText(tripName);
                         tripRadiusTV.setText(Double.toString(tripRadius));
-
 
 
                         listener = firestoreDB.collection("TRIPS").document(tripId)
@@ -250,15 +276,15 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                             return;
                                         }
 
-                                        ArrayList<String> newUserIds = (ArrayList<String>)documentSnapshot.get("Users");
+                                        ArrayList<String> newUserIds = (ArrayList<String>) documentSnapshot.get("Users");
                                         newUserIds.remove(currentUser.getUid());
-                                        if(newUserIds.size() > userIDs.size()){
+                                        if (newUserIds.size() > userIDs.size()) {
                                             newUserIds.removeAll(userIDs);
                                             String newUserId = newUserIds.get(0);
                                             userIDs.add(newUserId);
                                             members.put(newUserId, new Member(newUserId, true));
 
-                                        } else if(newUserIds.size() < userIDs.size()){
+                                        } else if (newUserIds.size() < userIDs.size()) {
                                             ArrayList<String> temp = new ArrayList<>(userIDs);
                                             temp.removeAll(newUserIds);
                                             String toDeleteUserID = temp.get(0);
@@ -284,7 +310,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                     dataSnapshot.child("Latitude").getValue(double.class),
                     dataSnapshot.child("Longitude").getValue(double.class));
 
-            if(ownerMarker ==null){
+            if (ownerMarker == null) {
                 ownerMarker = mMap.addMarker(new MarkerOptions()
                         .position(location)
                         .title("You"));
@@ -299,7 +325,11 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    public class Member{
+    void leaveTrip() {
+//        firestoreDB.collection()
+    }
+
+    public class Member {
         String memberName;
         String memberID;
         String memberPhone;
@@ -323,8 +353,8 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             memberImageURL = documentSnapshot.getString("ImageURL");
 
                             memberViewItem = getLayoutInflater().inflate(R.layout.member_activity_trip, membersListLL, false);
-                            ((TextView)memberViewItem.findViewById(R.id.name)).setText(memberName);
-                            if(realtimeUpdate)
+                            ((TextView) memberViewItem.findViewById(R.id.name)).setText(memberName);
+                            if (realtimeUpdate)
                                 Toast.makeText(TripActivity.this, "Now tracking " + memberName, Toast.LENGTH_SHORT).show();
                             ImageView imageView = memberViewItem.findViewById(R.id.image);
                             imageView.setOnClickListener(new View.OnClickListener() {
@@ -338,16 +368,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                 }
                             });
 
-                            if(memberImageURL!=null){
+                            if (memberImageURL != null) {
                                 Picasso.get()
                                         .load(memberImageURL)
                                         .into(imageView);
                             }
                             membersListLL.addView(memberViewItem);
 
-
-
-                            valueEventListener = database.getReference("USERS/"+memberID).child("Location")
+                            valueEventListener = database.getReference("USERS/" + memberID).child("Location")
                                     .addValueEventListener(new ValueEventListener() {
 
                                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -355,7 +383,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                                     dataSnapshot.child("Latitude").getValue(double.class),
                                                     dataSnapshot.child("Longitude").getValue(double.class));
 
-                                            if(memberMarker ==null){
+                                            if (memberMarker == null) {
                                                 memberMarker = mMap.addMarker(new MarkerOptions()
                                                         .position(location)
                                                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
@@ -381,14 +409,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                     });
         }
 
-        void delete(){
+        void delete() {
             Toast.makeText(TripActivity.this, memberName + "has left the trip", Toast.LENGTH_SHORT).show();
             membersListLL.removeView(memberViewItem);
-            if(valueEventListener!=null)
-                database.getReference("USERS/"+memberID)
+            if (valueEventListener != null)
+                database.getReference("USERS/" + memberID)
                         .child("Location")
                         .removeEventListener(valueEventListener);
-            if(memberMarker!=null)
+            if (memberMarker != null)
                 memberMarker.remove();
 
             members.remove(memberID);
