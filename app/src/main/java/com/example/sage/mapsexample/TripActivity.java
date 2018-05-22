@@ -1,23 +1,23 @@
 package com.example.sage.mapsexample;
 
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -44,7 +44,6 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -59,42 +58,74 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
 
     private HorizontalScrollView scrollview;
     private LinearLayout membersListLL;
-    private Button homeBT;
+    private LinearLayout popupLL;
     private Button scrollViewExpandBT;
-    private CircleImageView inviteBT;
-    private View inviteView;
+    private Button leaveTripBT;
+    private Button goHomeBT;
+    private Button closePopBT;
+    private TextView tripNameTV;
+    private TextView tripRadiusTV;
+    private CircleImageView settingsBT;
+    private View settingsView;
+    private View popupView;
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private FirebaseDatabase database;
     private FirebaseFirestore firestoreDB;
     private DatabaseReference ownerReference;
-    ListenerRegistration listener;
+    private ListenerRegistration listener;
 
+    private PopupWindow popupWindow;
 
     private HashMap<String, Member> members;
     private ArrayList<String> userIDs;
     private String tripId;
     private String tripName;
-    private double radius;
+    private boolean adminMode;
+    private double tripRadius;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trip);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.trip_map);
         mapFragment.getMapAsync(this);
 
+        adminMode = false;
         tripId = getIntent().getStringExtra("tripId");
         members = new HashMap<>();
 
         scrollview = findViewById(R.id.members_list_scroll_view);
         membersListLL = findViewById(R.id.members_list);
-        homeBT = findViewById(R.id.home);
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
+        popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip,null);
+        leaveTripBT = popupView.findViewById(R.id.leave_trip);
+        popupLL = popupView.findViewById(R.id.popup_settings_linear_layout);
+        goHomeBT = popupView.findViewById(R.id.go_home);
+        closePopBT = popupView.findViewById(R.id.close_popup);
+        tripNameTV = popupView.findViewById(R.id.trip_name);
+        tripRadiusTV = popupView.findViewById(R.id.trip_radius);
+        popupWindow = new PopupWindow(
+                popupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        popupWindow.setBackgroundDrawable(new BitmapDrawable());
+        popupWindow.setOutsideTouchable(false);
+        popupWindow.setFocusable(false);
+        if(Build.VERSION.SDK_INT>=21){
+            popupWindow.setElevation(50.0f);
+        }
+
+        ViewGroup.LayoutParams params = scrollview.getLayoutParams();
+        params.height = 0;
+        scrollview.setLayoutParams(params);
+        settingsView = getLayoutInflater().inflate(R.layout.settings_activity_trip, membersListLL, false);
+        settingsBT = settingsView.findViewById(R.id.settings);
+        membersListLL.addView(settingsView);
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
@@ -108,18 +139,26 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onStart() {
         super.onStart();
 
-        ViewGroup.LayoutParams params = scrollview.getLayoutParams();
-        params.height = 0;
-        scrollview.setLayoutParams(params);
+        closePopBT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupWindow.dismiss();
+            }
+        });
 
-
-
-        homeBT.setOnClickListener(new View.OnClickListener() {
+        goHomeBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
                 startActivity(intent);
                 finish();
+            }
+        });
+
+        settingsBT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER,0,0);
             }
         });
 
@@ -129,7 +168,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 ViewGroup.LayoutParams params = scrollview.getLayoutParams();
                 if(params.height == 0){
                     params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-
                 } else {
                     params.height = 0;
                 }
@@ -160,22 +198,8 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
 
-                        if(currentUser.getUid().equals(documentSnapshot.getString("AdminId"))) {
-                            inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, membersListLL, false);
-                            inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
-                            inviteBT.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    Intent intent = new Intent(getApplicationContext(), TripInviteActivity.class);
-                                    intent.putExtra("tripId", tripId);
-                                    startActivity(intent);
-                                }
-                            });
-                            membersListLL.addView(inviteView);
-                        }
-
                         tripName = documentSnapshot.getString("Name");
-                        radius = documentSnapshot.getDouble("Radius");
+                        tripRadius = documentSnapshot.getDouble("Radius");
                         GeoPoint geoPoint = (GeoPoint)documentSnapshot.get("Destination");
                         LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
                         destination = mMap.addMarker(new MarkerOptions()
@@ -188,6 +212,33 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.d(TAG, "after removal : " +  userIDs);
                         for(String userID : userIDs)
                             members.put(userID, new Member(userID, false));
+
+                        // creating popup
+                        if(currentUser.getUid().equals(documentSnapshot.getString("AdminId"))){
+                            View inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, popupLL, false);
+                            Button inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
+                            inviteBT.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(getApplicationContext(), TripInviteActivity.class);
+                                    intent.putExtra("tripId", tripId);
+                                    startActivity(intent);
+                                }
+                            });
+                            popupLL.addView(inviteView, 2);
+                        }
+
+                        leaveTripBT.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                // TODO - exit user from trip
+                            }
+                        });
+
+                        tripNameTV.setText(tripName);
+                        tripRadiusTV.setText(Double.toString(tripRadius));
+
+
 
                         listener = firestoreDB.collection("TRIPS").document(tripId)
                                 .addSnapshotListener(new EventListener<DocumentSnapshot>() {
