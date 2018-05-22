@@ -218,7 +218,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
 
                         if (currentUser.getUid().equals(tripAdminId)) {
                             adminMode = true;
-                            View inviteView = getLayoutInflater().inflate(R.layout.invite_activity_trip, popupLL, false);
+                            View inviteView = getLayoutInflater().inflate(R.layout.admin_activity_trip, popupLL, false);
                             Button inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
                             inviteBT.setOnClickListener(new View.OnClickListener() {
                                 @Override
@@ -235,20 +235,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             @Override
                             public void onClick(View v) {
                                 if(userIDs.size() == 0){
-                                    firestoreDB.collection("TRIPS").document(tripId)
-                                            .delete()
-                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                @Override
-                                                public void onSuccess(Void aVoid) {
-                                                    leaveTrip();
-                                                }
-                                            })
-                                            .addOnFailureListener(new OnFailureListener() {
-                                                @Override
-                                                public void onFailure(@NonNull Exception e) {
-                                                    Log.d(TAG, "onFailure: " + e);
-                                                }
-                                            });
+                                    deleteTrip();
 
                                 } else {
                                     final Map<String, Object> updateMap = new HashMap<>();
@@ -281,7 +268,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
 
                         tripNameTV.setText(tripName);
                         tripRadiusTV.setText(Double.toString(tripRadius));
-
 
                         listener = firestoreDB.collection("TRIPS").document(tripId)
                                 .addSnapshotListener(new EventListener<DocumentSnapshot>() {
@@ -363,6 +349,23 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                         finish();
                                     }
                                 });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e);
+                    }
+                });
+    }
+
+    void deleteTrip(){
+        firestoreDB.collection("TRIPS").document(tripId)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        leaveTrip();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
