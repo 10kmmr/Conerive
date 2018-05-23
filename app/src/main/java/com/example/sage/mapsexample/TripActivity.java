@@ -1,5 +1,6 @@
 package com.example.sage.mapsexample;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
@@ -292,6 +293,13 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                                 temp.removeAll(newUserIds);
                                                 String toDeleteUserID = temp.get(0);
                                                 members.get(toDeleteUserID).delete();
+                                            }
+
+                                            if(documentSnapshot.getString("AdminId").equals(currentUser.getUid()) && !adminMode){
+                                                Toast.makeText(TripActivity.this, "You are now the admin", Toast.LENGTH_SHORT).show();
+                                                Intent intent = getIntent();
+                                                finish();
+                                                startActivity(intent);
                                             }
                                         } catch (Exception ex){
                                             Log.d(TAG, "onEvent: " + ex);
