@@ -90,7 +90,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
         notifRadiusSB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                notifRadiusDisplayTV.setText(String.valueOf(progress / 10) + " Km");
+                notifRadiusDisplayTV.setText(String.valueOf(progress /10.0 ) + " Km");
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) { }
@@ -105,7 +105,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
 
 
                     String tripName = tripNameET.getText().toString();
-                    double notifRadius = notifRadiusSB.getProgress() / 10;
+                    double notifRadius = notifRadiusSB.getProgress()*100;
                     LatLng destinationLocation = tripDestinationMarker.getPosition();
                     GeoPoint geoPoint = new GeoPoint(destinationLocation.latitude, destinationLocation.longitude);
 
@@ -160,7 +160,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                                             .addOnFailureListener(new OnFailureListener() {
                                                 @Override
                                                 public void onFailure(@NonNull Exception e) {
-
+                                                    Log.d(TAG, "onFailure: " + e);
                                                 }
                                             });
                                 }
