@@ -2,8 +2,12 @@ package com.example.sage.mapsexample;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -24,6 +28,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -57,6 +63,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private Marker ownerMarker;
     private Marker destination;
+    private Circle tripCircle;
 
     private HorizontalScrollView scrollview;
     private LinearLayout membersListLL;
@@ -192,7 +199,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
-
+        resetCircle();
         ownerReference.child("Location").addValueEventListener(new OwnerLocationValueEventListener());
 
         firestoreDB.collection("TRIPS").document(tripId)
@@ -337,6 +344,68 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         public void onCancelled(DatabaseError databaseError) {
             Log.d(TAG, "onCancelled: " + databaseError);
         }
+    }
+
+    void resetCircle(){
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    // calculate midpoint
+                    double latSum = ownerMarker.getPosition().latitude;
+                    double lngSum = ownerMarker.getPosition().longitude;
+                    for(Map.Entry<String, Member> u : members.entrySet()){
+                        latSum += u.getValue().memberMarker.getPosition().latitude;
+                        lngSum += u.getValue().memberMarker.getPosition().longitude;
+                    }
+                    Location midPoint = new Location(LocationManager.GPS_PROVIDER);
+                    midPoint.setLatitude(latSum/(members.size()+1));
+                    midPoint.setLongitude(lngSum/(members.size()+1));
+
+                    // calculate radius
+                    Location ownerLocation = new Location(LocationManager.GPS_PROVIDER);
+                    ownerLocation.setLongitude(ownerMarker.getPosition().longitude);
+                    ownerLocation.setLatitude(ownerMarker.getPosition().latitude);
+                    double radius = midPoint.distanceTo(ownerLocation);
+                    for(Map.Entry<String, Member> u : members.entrySet()){
+                        Location temp = new Location(LocationManager.GPS_PROVIDER);
+                        temp.setLongitude(u.getValue().memberMarker.getPosition().longitude);
+                        temp.setLatitude(u.getValue().memberMarker.getPosition().latitude);
+                        double distance = midPoint.distanceTo(temp);
+                        if(distance>radius)
+                            radius = distance;
+                    }
+
+                    if(tripCircle==null){
+                        tripCircle = mMap.addCircle(new CircleOptions()
+                            .center(new LatLng(
+                                    midPoint.getLatitude(),
+                                    midPoint.getLongitude()
+                            ))
+                        );
+                    }
+
+                    tripCircle.setCenter(new LatLng(
+                            midPoint.getLatitude(),
+                            midPoint.getLongitude()
+                            )
+                    );
+
+                    tripCircle.setRadius(radius+100);
+                    if(radius>tripRadius){
+                        tripCircle.setStrokeColor(Color.RED);
+                    } else {
+                        tripCircle.setStrokeColor(Color.BLUE);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    handler.postDelayed(this, 500);
+                }
+            }
+        });
     }
 
     void leaveTrip() {

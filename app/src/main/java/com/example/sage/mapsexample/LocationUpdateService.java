@@ -67,8 +67,8 @@ public class LocationUpdateService extends Service {
         };
 
         locationRequest = LocationRequest.create();
-        locationRequest.setInterval(3000);
-        locationRequest.setFastestInterval(3000);
+        locationRequest.setInterval(1500);
+        locationRequest.setFastestInterval(1500);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
     }
