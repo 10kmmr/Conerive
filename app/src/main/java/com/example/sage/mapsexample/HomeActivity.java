@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
@@ -39,9 +40,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.Transaction;
 
 import java.util.ArrayList;
 
@@ -186,19 +190,29 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onSuccess(DocumentSnapshot documentSnapshot) {
                         if (documentSnapshot.contains("Trips")){
                             ArrayList<String> tripIds = (ArrayList<String>) documentSnapshot.get("Trips");
-                            for(String trip : tripIds){
+                            for(final String trip : tripIds){
                                 firestoreDB.collection("TRIPS").document(trip)
                                         .get()
                                         .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>(){
                                             @Override
                                             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                trips.add(new Trip(
-                                                        documentSnapshot.getId(),
-                                                        documentSnapshot.getString("Name"),
-                                                        documentSnapshot.getGeoPoint("Destination"),
-                                                        documentSnapshot.getString("AdmingID"),
-                                                        documentSnapshot.getDouble("Radius"),
-                                                        ((ArrayList<String>)documentSnapshot.get("Users")).size()));
+                                                if(documentSnapshot.getData() != null) {
+                                                    trips.add(new Trip(
+                                                            documentSnapshot.getId(),
+                                                            documentSnapshot.getString("Name"),
+                                                            documentSnapshot.getGeoPoint("Destination"),
+                                                            documentSnapshot.getString("AdmingID"),
+                                                            documentSnapshot.getDouble("Radius"),
+                                                            ((ArrayList<String>) documentSnapshot.get("Users")).size()));
+                                                } else {
+                                                    dbRemoveTrip(trip);
+                                                }
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Log.d(TAG, "onFailure: " + e);
                                             }
                                         });
                             }
@@ -212,6 +226,32 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
 
+    }
+
+    void dbRemoveTrip(final String tripId){
+        firestoreDB.runTransaction(new Transaction.Function<Void>() {
+            @Nullable
+            @Override
+            public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                DocumentReference reference = firestoreDB.collection("USERS").document(mAuth.getCurrentUser().getUid());
+                DocumentSnapshot snapshot = transaction.get(reference);
+                ArrayList<String> tripIds = (ArrayList<String>)snapshot.get("Trips");
+                tripIds.remove(tripId);
+                transaction.update(reference, "Trips", tripIds);
+
+                return null;
+            }
+        }).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.d(TAG, "onSuccess: " + "removed trip " + tripId);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
+        });
     }
 
     public class LocationValueEventListener implements ValueEventListener {
