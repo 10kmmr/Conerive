@@ -13,6 +13,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -72,6 +73,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private Button leaveTripBT;
     private Button goHomeBT;
     private Button closePopBT;
+    private Button trackUserBT;
     private TextView tripNameTV;
     private TextView tripRadiusTV;
     private CircleImageView settingsBT;
@@ -94,6 +96,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private String tripAdminId;
     private boolean adminMode;
     private double tripRadius;
+    private boolean trackUser;
 
 
     @Override
@@ -105,18 +108,21 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         adminMode = false;
+        trackUser = false;
         tripId = getIntent().getStringExtra("tripId");
         members = new HashMap<>();
 
         scrollview = findViewById(R.id.members_list_scroll_view);
         membersListLL = findViewById(R.id.members_list);
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
+        trackUserBT = findViewById(R.id.track_user);
         popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip, null);
         leaveTripBT = popupView.findViewById(R.id.leave_trip);
 
         popupLL = popupView.findViewById(R.id.popup_settings_linear_layout);
         goHomeBT = popupView.findViewById(R.id.go_home);
         closePopBT = popupView.findViewById(R.id.close_popup);
+
         tripNameTV = popupView.findViewById(R.id.trip_name);
         tripRadiusTV = popupView.findViewById(R.id.trip_radius);
         popupWindow = new PopupWindow(
@@ -186,8 +192,22 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-    }
+        trackUserBT.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN){
+                    Log.d(TAG, "onTouch: pressed");
+                    trackUser = true;
+                }
 
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    Log.d(TAG, "onTouch: released");
+                    trackUser = false;
+                }
+                return false;
+            }
+        });
+    }
 
     @Override
     public void onBackPressed() {
@@ -201,6 +221,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
         resetCircle();
+        resetCamera();
         ownerReference.child("Location").addValueEventListener(new OwnerLocationValueEventListener());
 
         firestoreDB.collection("TRIPS").document(tripId)
@@ -247,8 +268,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             popupLL.addView(adminView, 2);
                         }
 
-
-
                         leaveTripBT.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -286,7 +305,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         });
 
                         tripNameTV.setText(tripName);
-                        tripRadiusTV.setText(Double.toString(tripRadius));
+                        tripRadiusTV.setText(Double.toString(tripRadius/1000.0) + "Km");
 
                         listener = firestoreDB.collection("TRIPS").document(tripId)
                                 .addSnapshotListener(new EventListener<DocumentSnapshot>() {
@@ -365,6 +384,24 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    void resetCamera(){
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    if(trackUser){
+                        LatLng location = ownerMarker.getPosition();
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
+                    }
+                }catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    handler.postDelayed(this, 150);
+                }
+            }
+        });
+    }
     void resetCircle(){
         final Handler handler = new Handler();
         handler.post(new Runnable() {
