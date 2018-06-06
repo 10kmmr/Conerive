@@ -1,5 +1,6 @@
 package com.example.sage.mapsexample;
 
+import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -30,7 +31,10 @@ import com.google.firebase.firestore.GeoPoint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,6 +54,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
     private SeekBar notifRadiusSB;
     private TextView notifRadiusDisplayTV;
     private FloatingActionButton createTripFAB;
+    private ProgressBar progressBar;
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
@@ -64,16 +69,16 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trip_create);
 
-         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.trip_create_map);
         mapFragment.getMapAsync(this);
 
-        tripNameET=findViewById(R.id.trip_name);
-        notifRadiusSB=findViewById(R.id.notification_radius);
-        notifRadiusDisplayTV=findViewById(R.id.notification_radius_display);
-        createTripFAB=findViewById(R.id.create_trip);
-
+        tripNameET = findViewById(R.id.trip_name);
+        notifRadiusSB = findViewById(R.id.notification_radius);
+        notifRadiusDisplayTV = findViewById(R.id.notification_radius_display);
+        createTripFAB = findViewById(R.id.create_trip);
+        progressBar = findViewById(R.id.progress_bar);
+        progressBar.setVisibility(View.INVISIBLE);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();
@@ -90,7 +95,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
         notifRadiusSB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                notifRadiusDisplayTV.setText(String.valueOf(progress / 10) + " Km");
+                notifRadiusDisplayTV.setText(String.valueOf(progress /10.0 ) + " Km");
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) { }
@@ -102,10 +107,9 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
             @Override
             public void onClick(View v) {
                 if(tripDestinationMarker!=null) {
-
-
+                    startLoading();
                     String tripName = tripNameET.getText().toString();
-                    double notifRadius = notifRadiusSB.getProgress() / 10;
+                    double notifRadius = notifRadiusSB.getProgress()*100;
                     LatLng destinationLocation = tripDestinationMarker.getPosition();
                     GeoPoint geoPoint = new GeoPoint(destinationLocation.latitude, destinationLocation.longitude);
 
@@ -160,7 +164,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                                             .addOnFailureListener(new OnFailureListener() {
                                                 @Override
                                                 public void onFailure(@NonNull Exception e) {
-
+                                                    Log.d(TAG, "onFailure: " + e);
                                                 }
                                             });
                                 }
@@ -169,6 +173,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
                                     Log.d(TAG, "onFailure: " + e);
+                                    stopLoading();
                                 }
                             });
                 } else {
@@ -210,5 +215,15 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
             }
         });
+    }
+
+    void startLoading(){
+        createTripFAB.setVisibility(View.INVISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    void stopLoading(){
+        createTripFAB.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.INVISIBLE);
     }
 }

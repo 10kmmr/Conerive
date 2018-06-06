@@ -24,12 +24,27 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/create_trip"
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
+        android:layout_gravity="center">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/create_trip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:srcCompat="@android:drawable/ic_dialog_email" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:layout_gravity="center"/>
+
+    </RelativeLayout>
+
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:map="http://schemas.android.com/apk/res-auto"
@@ -39,9 +54,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".TripCreateActivity" />
-
-
-
 
 
 </LinearLayout>
