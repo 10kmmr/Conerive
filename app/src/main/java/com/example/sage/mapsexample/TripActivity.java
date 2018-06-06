@@ -113,6 +113,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
         popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip, null);
         leaveTripBT = popupView.findViewById(R.id.leave_trip);
+
         popupLL = popupView.findViewById(R.id.popup_settings_linear_layout);
         goHomeBT = popupView.findViewById(R.id.go_home);
         closePopBT = popupView.findViewById(R.id.close_popup);
@@ -168,7 +169,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         settingsBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+                    popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
             }
         });
 
@@ -226,8 +227,8 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
 
                         if (currentUser.getUid().equals(tripAdminId)) {
                             adminMode = true;
-                            View inviteView = getLayoutInflater().inflate(R.layout.admin_activity_trip, popupLL, false);
-                            Button inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
+                            View adminView = getLayoutInflater().inflate(R.layout.admin_activity_trip, popupLL, false);
+                            Button inviteBT = adminView.findViewById(R.id.go_to_trip_invite);
                             inviteBT.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
@@ -236,15 +237,23 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                     startActivity(intent);
                                 }
                             });
-                            popupLL.addView(inviteView, 2);
+                            Button deleteTripBT = adminView.findViewById(R.id.delete_trip);
+                            deleteTripBT.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    deleteTrip();
+                                }
+                            });
+                            popupLL.addView(adminView, 2);
                         }
+
+
 
                         leaveTripBT.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 if(userIDs.size() == 0){
                                     deleteTrip();
-
                                 } else {
                                     final Map<String, Object> updateMap = new HashMap<>();
                                     if (adminMode) {
@@ -264,7 +273,9 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                 @Override
                                                                 public void onSuccess(Void aVoid) {
-                                                                    leaveTrip();
+                                                                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                                                    startActivity(intent);
+                                                                    finish();
                                                                 }
                                                             });
                                                 }
@@ -286,6 +297,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                             Log.w(TAG, "Listen failed.", e);
                                             return;
                                         }
+
+                                        if(documentSnapshot.getData() == null){
+                                            Toast.makeText(TripActivity.this, "This trip has been deleted", Toast.LENGTH_SHORT).show();
+                                            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                            startActivity(intent);
+                                            finish();
+                                        }
+
                                         try {
                                             ArrayList<String> newUserIds = (ArrayList<String>) documentSnapshot.get("Users");
                                             newUserIds.remove(currentUser.getUid());
@@ -408,33 +427,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    void leaveTrip() {
-        firestoreDB.collection("USERS").document(currentUser.getUid())
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        ArrayList<String> trips = (ArrayList<String>) documentSnapshot.get("Trips");
-                        trips.remove(tripId);
-                        firestoreDB.collection("USERS").document(currentUser.getUid())
-                                .update("Trips", trips)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                                        startActivity(intent);
-                                        finish();
-                                    }
-                                });
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "onFailure: " + e);
-                    }
-                });
-    }
 
     void deleteTrip(){
         firestoreDB.collection("TRIPS").document(tripId)
@@ -442,7 +434,9 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        leaveTrip();
+                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                        startActivity(intent);
+                        finish();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
