@@ -15,7 +15,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
@@ -152,7 +154,7 @@ public class NotificationsActivity extends AppCompatActivity {
     }
 
 
-    void dbCreateFriendship(final String firstUserId, final String secondUserId){
+    void dbCreateFriendship(final String firstUserId, final String secondUserId, final FriendRequest friendRequest){
 
         firestoreDB.collection("USERS").document(firstUserId)
                 .get()
@@ -191,15 +193,14 @@ public class NotificationsActivity extends AppCompatActivity {
                                                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                     @Override
                                                                     public void onSuccess(Void aVoid) {
-
-                                                                        Intent intent = new Intent(getApplicationContext(), FriendsActivity.class);
-                                                                        startActivity(intent);
+                                                                        friendRequest.stopLoading(true);
 
                                                                     }
                                                                 })
                                                                 .addOnFailureListener(new OnFailureListener() {
                                                                     @Override
                                                                     public void onFailure(@NonNull Exception e) {
+                                                                        friendRequest.stopLoading(false);
                                                                         Log.d(TAG, "onFailure: " + e);
                                                                     }
                                                                 });
@@ -209,7 +210,7 @@ public class NotificationsActivity extends AppCompatActivity {
                                                 .addOnFailureListener(new OnFailureListener() {
                                                     @Override
                                                     public void onFailure(@NonNull Exception e) {
-
+                                                        friendRequest.stopLoading(false);
                                                     }
                                                 });
 
@@ -218,6 +219,7 @@ public class NotificationsActivity extends AppCompatActivity {
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
+                                        friendRequest.stopLoading(false);
                                         Log.d(TAG, "onFailure: " + e);
                                     }
                                 });
@@ -227,7 +229,7 @@ public class NotificationsActivity extends AppCompatActivity {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-
+                        friendRequest.stopLoading(false);
                     }
                 });
 
@@ -316,6 +318,11 @@ public class NotificationsActivity extends AppCompatActivity {
         String senderImageURL;
         View notificationView;
 
+        LinearLayout idleLL;
+        ProgressBar progressBar;
+        TextView successTV;
+
+
         public FriendRequest(final String notificationId, final String senderId, String senderName, String senderImageURL) {
             this.notificationId = notificationId;
             this.senderId = senderId;
@@ -326,6 +333,9 @@ public class NotificationsActivity extends AppCompatActivity {
             TextView senderNameTV = notificationView.findViewById(R.id.sender_name);
             Button acceptBTN = notificationView.findViewById(R.id.accept);
             Button ignoreBTN = notificationView.findViewById(R.id.ignore);
+            idleLL = notificationView.findViewById(R.id.idle);
+            progressBar = notificationView.findViewById(R.id.progress_bar);
+            successTV = notificationView.findViewById(R.id.accept_success);
             NetworkImageView senderImageNIV = notificationView.findViewById(R.id.sender_image);
 
             senderNameTV.setText(senderName);
@@ -334,7 +344,8 @@ public class NotificationsActivity extends AppCompatActivity {
             acceptBTN.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    dbCreateFriendship(senderId, mAuth.getCurrentUser().getUid());
+                    startLoading();
+                    dbCreateFriendship(senderId, mAuth.getCurrentUser().getUid(), FriendRequest.this);
                     dbDeleteNotification(notificationId);
                 }
             });
@@ -342,12 +353,31 @@ public class NotificationsActivity extends AppCompatActivity {
             ignoreBTN.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    deleteNotification();
                     dbDeleteNotification(notificationId);
-                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                    startActivity(intent);
+                    Toast.makeText(NotificationsActivity.this, "request ignored", Toast.LENGTH_SHORT).show();
                 }
             });
             notificationsLL.addView(notificationView);
+        }
+
+        void startLoading(){
+            idleLL.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+        void stopLoading(boolean success){
+            progressBar.setVisibility(View.INVISIBLE);
+            if(success){
+                successTV.setVisibility(View.VISIBLE);
+            } else {
+                idleLL.setVisibility(View.VISIBLE);
+                Toast.makeText(NotificationsActivity.this, "failed to send friend request", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        void deleteNotification(){
+            notificationsLL.removeView(notificationView);
         }
     }
 
