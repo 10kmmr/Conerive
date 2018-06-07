@@ -392,7 +392,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 try{
                     if(trackUser){
                         LatLng location = ownerMarker.getPosition();
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15), 10, null);
                     }
                 }catch (Exception e) {
                     e.printStackTrace();
