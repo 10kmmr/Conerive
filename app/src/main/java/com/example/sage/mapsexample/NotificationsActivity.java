@@ -204,8 +204,8 @@ public class NotificationsActivity extends AppCompatActivity {
 
     }
 
-    void dbCreateTripMembership(final String tripId){
-        
+    void dbCreateTripMembership(final String tripId, final TripInvite tripInvite){
+
         firestoreDB.runTransaction(new Transaction.Function<Void>() {
             @Nullable
             @Override
@@ -233,14 +233,12 @@ public class NotificationsActivity extends AppCompatActivity {
         }).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                Toast.makeText(NotificationsActivity.this, "You have joined the trip", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getApplicationContext(), TripActivity.class);
-                intent.putExtra("tripId", tripId);
-                startActivity(intent);
+                tripInvite.stopLoading(true);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
+                tripInvite.stopLoading(false);
                 Log.d(TAG, "onFailure: " + e);
             }
         });
@@ -329,6 +327,9 @@ public class NotificationsActivity extends AppCompatActivity {
         String tripName;
         View notificationView;
 
+        LinearLayout idleLL;
+        ProgressBar progressBar;
+
         public TripInvite(final String notificationId, final String senderId, String senderName, final String tripId, String tripName) {
             this.notificationId = notificationId;
             this.senderId = senderId;
@@ -341,6 +342,8 @@ public class NotificationsActivity extends AppCompatActivity {
             TextView tripNameTV = notificationView.findViewById(R.id.trip_name);
             Button acceptBTN = notificationView.findViewById(R.id.accept);
             Button ignoreBTN = notificationView.findViewById(R.id.ignore);
+            idleLL = notificationView.findViewById(R.id.idle);
+            progressBar = notificationView.findViewById(R.id.progress_bar);
 
             senderNameTV.setText(senderName);
             tripNameTV.setText(tripName);
@@ -348,7 +351,8 @@ public class NotificationsActivity extends AppCompatActivity {
             acceptBTN.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    dbCreateTripMembership(tripId);
+                    startLoading();
+                    dbCreateTripMembership(tripId, TripInvite.this);
                     dbDeleteNotification(notificationId);
                 }
             });
@@ -356,13 +360,35 @@ public class NotificationsActivity extends AppCompatActivity {
             ignoreBTN.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    deleteNotification();
                     dbDeleteNotification(notificationId);
-                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                    startActivity(intent);
+                    Toast.makeText(NotificationsActivity.this, "Trip invite ignored", Toast.LENGTH_SHORT).show();
                 }
             });
             notificationsLL.addView(notificationView);
 
+        }
+
+        void startLoading(){
+            idleLL.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+        void stopLoading(boolean success){
+            progressBar.setVisibility(View.INVISIBLE);
+            if(success){
+                Toast.makeText(NotificationsActivity.this, "You have joined the trip", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getApplicationContext(), TripActivity.class);
+                intent.putExtra("tripId", tripId);
+                startActivity(intent);
+            } else {
+                idleLL.setVisibility(View.VISIBLE);
+                Toast.makeText(NotificationsActivity.this, "failed to join trip", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        void deleteNotification(){
+            notificationsLL.removeView(notificationView);
         }
     }
 
