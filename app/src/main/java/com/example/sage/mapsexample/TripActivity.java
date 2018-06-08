@@ -492,10 +492,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         String memberImageURL;
         Marker memberMarker;
         View memberViewItem;
+        View memberPopupView;
+        PopupWindow memberPopupWindow;
         ValueEventListener valueEventListener;
 
         public Member(final String memberID, final boolean realtimeUpdate) {
             this.memberID = memberID;
+
+
 
             firestoreDB.collection("USERS").document(memberID)
                     .get()
@@ -523,6 +527,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                 }
                             });
 
+                            imageView.setOnLongClickListener(new View.OnLongClickListener() {
+                                @Override
+                                public boolean onLongClick(View v) {
+                                    memberPopupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+                                    return false;
+                                }
+                            });
+
                             if (memberImageURL != null) {
                                 Picasso.get()
                                         .load(memberImageURL)
@@ -530,13 +542,56 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             }
                             membersListLL.addView(memberViewItem);
 
+
+                            //POPUP
+                            memberPopupView = getLayoutInflater().inflate(R.layout.popup_member_activity_trip, null);
+                            if (memberImageURL != null) {
+                                Picasso.get()
+                                        .load(memberImageURL)
+                                        .into((ImageView)memberPopupView.findViewById(R.id.display_picture));
+                            }
+                            ArrayList<String> memberFriends;
+                            if(documentSnapshot.contains("Friends"))
+                                memberFriends = (ArrayList<String>) documentSnapshot.get("Friends");
+                            else
+                                memberFriends = new ArrayList<>();
+                            if(memberFriends.contains(currentUser.getUid())){
+                                memberPopupView.findViewById(R.id.friend_status).setBackgroundResource(R.color.wierdRed);
+                            } else {
+                                memberPopupView.findViewById(R.id.friend_status).setBackgroundResource(R.color.wierdGreen);
+
+                            }
+                            ((TextView) memberPopupView.findViewById(R.id.name)).setText(memberName);
+                            ((TextView) memberPopupView.findViewById(R.id.phone_number)).setText(memberPhone);
+                            ((TextView) memberPopupView.findViewById(R.id.email_id)).setText(memberEmail);
+
+                            memberPopupView.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    memberPopupWindow.dismiss();
+                                }
+                            });
+
+                            memberPopupWindow = new PopupWindow(
+                                    memberPopupView,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT
+                            );
+                            memberPopupWindow.setBackgroundDrawable(new BitmapDrawable());
+                            memberPopupWindow.setOutsideTouchable(false);
+                            memberPopupWindow.setFocusable(false);
+                            if (Build.VERSION.SDK_INT >= 21) {
+                                memberPopupWindow.setElevation(50.0f);
+                            }
+
                             valueEventListener = database.getReference("USERS/" + memberID).child("Location")
                                     .addValueEventListener(new ValueEventListener() {
 
                                         public void onDataChange(DataSnapshot dataSnapshot) {
                                             LatLng location = new LatLng(
                                                     dataSnapshot.child("Latitude").getValue(double.class),
-                                                    dataSnapshot.child("Longitude").getValue(double.class));
+                                                    dataSnapshot.child("Longitude").getValue(double.class)
+                                            );
 
                                             if (memberMarker == null) {
                                                 memberMarker = mMap.addMarker(new MarkerOptions()

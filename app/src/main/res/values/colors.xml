@@ -6,4 +6,6 @@
     <color name="buttonAndTextYellowColor">#dfd2ae</color>
     <color name="buttonAndTextOrangeColor">#e98d58</color>
     <color name="wierdBlack">#212121</color>
+    <color name="wierdRed">#F44336</color>
+    <color name="wierdGreen">#66ab26</color>
 </resources>
