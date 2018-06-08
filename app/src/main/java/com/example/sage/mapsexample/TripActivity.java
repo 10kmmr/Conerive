@@ -1,11 +1,13 @@
 package com.example.sage.mapsexample;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -88,6 +90,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private ListenerRegistration listener;
 
     private PopupWindow popupWindow;
+    private PopupWindow currentPopupWindow;
 
     private HashMap<String, Member> members;
     private ArrayList<String> userIDs;
@@ -175,7 +178,10 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         settingsBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+                if(currentPopupWindow!=null && currentPopupWindow!=popupWindow)
+                    currentPopupWindow.dismiss();
+                popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+                currentPopupWindow = popupWindow;
             }
         });
 
@@ -499,8 +505,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         public Member(final String memberID, final boolean realtimeUpdate) {
             this.memberID = memberID;
 
-
-
             firestoreDB.collection("USERS").document(memberID)
                     .get()
                     .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -530,7 +534,10 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             imageView.setOnLongClickListener(new View.OnLongClickListener() {
                                 @Override
                                 public boolean onLongClick(View v) {
+                                    if(currentPopupWindow!=null && currentPopupWindow!=memberPopupWindow)
+                                        currentPopupWindow.dismiss();
                                     memberPopupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+                                    currentPopupWindow = memberPopupWindow;
                                     return false;
                                 }
                             });
@@ -564,6 +571,15 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             ((TextView) memberPopupView.findViewById(R.id.name)).setText(memberName);
                             ((TextView) memberPopupView.findViewById(R.id.phone_number)).setText(memberPhone);
                             ((TextView) memberPopupView.findViewById(R.id.email_id)).setText(memberEmail);
+
+                            memberPopupView.findViewById(R.id.call).setOnClickListener(new View.OnClickListener() {
+                                @SuppressLint("MissingPermission")
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + memberPhone));
+                                    startActivity(intent);
+                                }
+                            });
 
                             memberPopupView.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
                                 @Override
