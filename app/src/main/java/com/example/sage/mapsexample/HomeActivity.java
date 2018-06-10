@@ -101,12 +101,14 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
 
     /** Build a Google SignIn client. */
     private GoogleSignInClient buildGoogleSignInClient() {
+        String serverClientId = getString(R.string.server_client_id);
 //        GoogleSignInOptions signInOptions =
 //                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
 //                        .requestScopes(Drive.SCOPE_FILE)
+//                        .requestServerAuthCode(serverClientId)
 //                        .build();
-        //return GoogleSignIn.getClient(this, signInOptions);
-        String serverClientId = getString(R.string.server_client_id);
+//        return GoogleSignIn.getClient(this, signInOptions);
+//
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
                 .requestServerAuthCode(serverClientId)
