@@ -27,6 +27,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.drive.CreateFileActivityOptions;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveClient;
@@ -42,9 +45,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -81,6 +86,7 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
     private Button friendsButton;
     private Button notificationsButton;
     private Button userSettingsButton;
+    GoogleSignInClient mGoogleSignInClient;
 
     private boolean zoomedIn;
     private ArrayList<Trip> trips;
@@ -95,11 +101,18 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
 
     /** Build a Google SignIn client. */
     private GoogleSignInClient buildGoogleSignInClient() {
-        GoogleSignInOptions signInOptions =
-                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestScopes(Drive.SCOPE_FILE)
-                        .build();
-        return GoogleSignIn.getClient(this, signInOptions);
+//        GoogleSignInOptions signInOptions =
+//                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+//                        .requestScopes(Drive.SCOPE_FILE)
+//                        .build();
+        //return GoogleSignIn.getClient(this, signInOptions);
+        String serverClientId = getString(R.string.server_client_id);
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                .requestServerAuthCode(serverClientId)
+                .requestEmail()
+                .build();
+        return  GoogleSignIn.getClient(this,gso);
     }
     private Task<Void> createFileIntentSender(DriveContents driveContents, Bitmap image) {
         Log.i(TAG, "New contents created.");
@@ -137,12 +150,14 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                         });
     }
     @Override
-    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+    protected void onActivityResult(final int requestCode, final int resultCode,Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case REQUEST_CODE_SIGN_IN:
                 Log.i(TAG, "Sign in request code");
                 // Called after user is signed in.
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                writeAuthcode( task );
                 if (resultCode == RESULT_OK) {
                     Log.i(TAG, "Signed in successfully.");
                     // Use the last signed in account here since it already have a Drive scope.
@@ -151,8 +166,9 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                     mDriveResourceClient =
                             Drive.getDriveResourceClient(this, GoogleSignIn.getLastSignedInAccount(this));
                     // Start camera.
-                    startActivityForResult(
-                            new Intent(MediaStore.ACTION_IMAGE_CAPTURE), REQUEST_CODE_CAPTURE_IMAGE);
+                    //writeAuthcode(mGoogleSignInClient.getSignInIntent());
+//                    startActivityForResult(
+//                            new Intent(MediaStore.ACTION_IMAGE_CAPTURE), REQUEST_CODE_CAPTURE_IMAGE);
                 }
                 break;
             case REQUEST_CODE_CAPTURE_IMAGE:
@@ -190,13 +206,38 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
                 .addOnFailureListener(
                         e -> Log.w(TAG, "Failed to create new contents.", e));
     }
+    public void writeAuthcode(Task<GoogleSignInAccount> completedTask){
+
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            String authCode = account.getServerAuthCode();
+            Log.d(TAG, "writeAuthcode: got authcode :=" + authCode);
+
+        } catch (Exception e) {
+            Log.w(TAG, "Sign-in failed", e);
+        }
+//        GoogleSignInAccount account2 =GoogleSignIn.getLastSignedInAccount(this);
+//        String authCode = account2.getServerAuthCode();
+//        Log.d(TAG, "writeAuthcode: got authcode :=" + authCode);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        GoogleSignInClient GoogleSignInClient = buildGoogleSignInClient();
-        startActivityForResult(GoogleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
+        //GoogleSignInClient GoogleSignInClient = buildGoogleSignInClient();
+        //startActivityForResult(GoogleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
 
 
+//        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+//        if(account!=null){
+//            Log.d(TAG, "onCreate: Havnt handled it yet");
+//        }else{
+//            Log.d(TAG, "Testing: not signed into google");
+//            mGoogleSignInClient = buildGoogleSignInClient();
+//            startActivityForResult(GoogleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
+//        }
+        Log.d(TAG, "Testing: not signed into google");
+        mGoogleSignInClient = buildGoogleSignInClient();
+        startActivityForResult(mGoogleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
 
 
         setContentView(R.layout.activity_home);
