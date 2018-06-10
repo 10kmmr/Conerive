@@ -1,0 +1,91 @@
+package com.example.sage.mapsexample;
+
+import android.content.Context;
+import android.content.Intent;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.drive.CreateFileActivityOptions;
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveClient;
+import com.google.android.gms.drive.DriveContents;
+import com.google.android.gms.drive.DriveResourceClient;
+
+import com.google.android.gms.tasks.Task;
+
+/**
+ * Created by hvpri on 10-06-2018.
+ */
+
+public class GDriveOperator {
+
+    //Google Account api
+    public GoogleSignInClient mGoogleSignInClient;
+    public GoogleSignInAccount account;
+    private String serverClientId;
+    public String authCode;
+
+    public boolean signin=false;
+
+    //Android related objects
+    private Context ActivityContext;
+
+    //Google Drive
+    public DriveClient mDriveClient;
+    public DriveResourceClient mDriveResourceClient;
+
+
+    GDriveOperator(Context mcontext,String mServerClientId){
+        this.ActivityContext = mcontext;
+        this.serverClientId = mServerClientId;
+        account = GoogleSignIn.getLastSignedInAccount(ActivityContext);
+        if(account!=null){
+            /*
+                if uses is signed in check whether
+                 this users Oauth written written the db
+            */
+            signin = true;
+        }else{
+            mGoogleSignInClient = buildGoogleSignInClient();
+
+
+        }
+    }
+
+    public void HandleActivityOnResult(Task<GoogleSignInAccount> completedTask){
+        try {
+            this.account = completedTask.getResult(ApiException.class);
+            this.authCode = account.getServerAuthCode();
+            this.signin = true;
+            /*
+            * write the authCode to the Db of the current user in another object
+            * */
+        } catch (Exception e) {
+            System.out.print(e);
+        }
+        mDriveClient = Drive.getDriveClient(ActivityContext, GoogleSignIn.getLastSignedInAccount(ActivityContext));
+        mDriveResourceClient =
+                Drive.getDriveResourceClient(ActivityContext, GoogleSignIn.getLastSignedInAccount(ActivityContext));
+    }
+
+    private GoogleSignInClient buildGoogleSignInClient() {
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                .requestServerAuthCode(serverClientId)
+                .requestEmail()
+                .build();
+        return  GoogleSignIn.getClient(ActivityContext,gso);
+    }
+
+    public Intent GetIntent(){
+        return mGoogleSignInClient.getSignInIntent();
+    }
+
+
+}
