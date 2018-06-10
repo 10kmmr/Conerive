@@ -41,4 +41,12 @@
         android:layout_width="30dp"
         android:layout_height="30dp" />
 
+    <Button
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:id="@+id/track_user"
+        android:text="loc"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content" />
+
 </RelativeLayout>

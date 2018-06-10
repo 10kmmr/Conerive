@@ -78,7 +78,6 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
         notifRadiusDisplayTV = findViewById(R.id.notification_radius_display);
         createTripFAB = findViewById(R.id.create_trip);
         progressBar = findViewById(R.id.progress_bar);
-        progressBar.setVisibility(View.INVISIBLE);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         database = FirebaseDatabase.getInstance();

@@ -8,72 +8,84 @@
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/image"
-        android:src="@drawable/front_page_background"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:layout_centerVertical="true"/>
+        android:layout_centerVertical="true"
+        android:src="@drawable/front_page_background" />
 
     <LinearLayout
-        android:layout_toRightOf="@+id/image"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-    <LinearLayout
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <TextView
-            android:layout_gravity="center_horizontal"
-            android:id="@+id/sender_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sender name"
-            android:textSize="15dp"
-            android:layout_marginRight="10dp"
-            android:textColor="@color/wierdBlack"/>
-
-        <TextView
-            android:layout_gravity="center_horizontal"
-            android:id="@+id/trip_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="trip name"
-            android:textSize="15dp"
-            android:layout_marginLeft="10dp"
-            android:textColor="@color/wierdBlack"/>
-
-    </LinearLayout>
-
-
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/image"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:layout_gravity="center_horizontal"
-            android:orientation="horizontal"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/accept"
-                android:layout_width="84dp"
-                android:layout_height="48dp"
-                android:text="ACCEPT" />
-
-            <Button
-                android:id="@+id/ignore"
+            <TextView
+                android:id="@+id/sender_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="IGNORE" />
+                android:layout_gravity="center_horizontal"
+                android:layout_marginRight="10dp"
+                android:text="sender name"
+                android:textColor="@color/wierdBlack"
+                android:textSize="15dp" />
+
+            <TextView
+                android:id="@+id/trip_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginLeft="10dp"
+                android:text="trip name"
+                android:textColor="@color/wierdBlack"
+                android:textSize="15dp" />
 
         </LinearLayout>
 
 
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal">
+
+            <LinearLayout
+                android:id="@+id/idle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/accept"
+                    android:layout_width="84dp"
+                    android:layout_height="48dp"
+                    android:text="ACCEPT" />
+
+                <Button
+                    android:id="@+id/ignore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="IGNORE" />
+
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:indeterminate="true"
+                android:visibility="invisible" />
+
+        </RelativeLayout>
+
 
     </LinearLayout>
-
-
 
 
 </RelativeLayout>

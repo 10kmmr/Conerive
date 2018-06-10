@@ -1,11 +1,13 @@
 package com.example.sage.mapsexample;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -13,6 +15,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -72,6 +75,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private Button leaveTripBT;
     private Button goHomeBT;
     private Button closePopBT;
+    private Button trackUserBT;
     private TextView tripNameTV;
     private TextView tripRadiusTV;
     private CircleImageView settingsBT;
@@ -86,6 +90,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private ListenerRegistration listener;
 
     private PopupWindow popupWindow;
+    private PopupWindow currentPopupWindow;
 
     private HashMap<String, Member> members;
     private ArrayList<String> userIDs;
@@ -94,6 +99,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private String tripAdminId;
     private boolean adminMode;
     private double tripRadius;
+    private boolean trackUser;
 
 
     @Override
@@ -105,17 +111,21 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         adminMode = false;
+        trackUser = false;
         tripId = getIntent().getStringExtra("tripId");
         members = new HashMap<>();
 
         scrollview = findViewById(R.id.members_list_scroll_view);
         membersListLL = findViewById(R.id.members_list);
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
+        trackUserBT = findViewById(R.id.track_user);
         popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip, null);
         leaveTripBT = popupView.findViewById(R.id.leave_trip);
+
         popupLL = popupView.findViewById(R.id.popup_settings_linear_layout);
         goHomeBT = popupView.findViewById(R.id.go_home);
         closePopBT = popupView.findViewById(R.id.close_popup);
+
         tripNameTV = popupView.findViewById(R.id.trip_name);
         tripRadiusTV = popupView.findViewById(R.id.trip_radius);
         popupWindow = new PopupWindow(
@@ -168,7 +178,10 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         settingsBT.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(currentPopupWindow!=null && currentPopupWindow!=popupWindow)
+                    currentPopupWindow.dismiss();
                 popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+                currentPopupWindow = popupWindow;
             }
         });
 
@@ -185,8 +198,22 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-    }
+        trackUserBT.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN){
+                    Log.d(TAG, "onTouch: pressed");
+                    trackUser = true;
+                }
 
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    Log.d(TAG, "onTouch: released");
+                    trackUser = false;
+                }
+                return false;
+            }
+        });
+    }
 
     @Override
     public void onBackPressed() {
@@ -200,6 +227,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
         resetCircle();
+        resetCamera();
         ownerReference.child("Location").addValueEventListener(new OwnerLocationValueEventListener());
 
         firestoreDB.collection("TRIPS").document(tripId)
@@ -226,8 +254,8 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
 
                         if (currentUser.getUid().equals(tripAdminId)) {
                             adminMode = true;
-                            View inviteView = getLayoutInflater().inflate(R.layout.admin_activity_trip, popupLL, false);
-                            Button inviteBT = inviteView.findViewById(R.id.go_to_trip_invite);
+                            View adminView = getLayoutInflater().inflate(R.layout.admin_activity_trip, popupLL, false);
+                            Button inviteBT = adminView.findViewById(R.id.go_to_trip_invite);
                             inviteBT.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
@@ -236,7 +264,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                     startActivity(intent);
                                 }
                             });
-                            popupLL.addView(inviteView, 2);
+                            Button deleteTripBT = adminView.findViewById(R.id.delete_trip);
+                            deleteTripBT.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    deleteTrip();
+                                }
+                            });
+                            popupLL.addView(adminView, 2);
                         }
 
                         leaveTripBT.setOnClickListener(new View.OnClickListener() {
@@ -244,7 +279,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             public void onClick(View v) {
                                 if(userIDs.size() == 0){
                                     deleteTrip();
-
                                 } else {
                                     final Map<String, Object> updateMap = new HashMap<>();
                                     if (adminMode) {
@@ -264,7 +298,9 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                 @Override
                                                                 public void onSuccess(Void aVoid) {
-                                                                    leaveTrip();
+                                                                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                                                    startActivity(intent);
+                                                                    finish();
                                                                 }
                                                             });
                                                 }
@@ -275,7 +311,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         });
 
                         tripNameTV.setText(tripName);
-                        tripRadiusTV.setText(Double.toString(tripRadius));
+                        tripRadiusTV.setText(Double.toString(tripRadius/1000.0) + "Km");
 
                         listener = firestoreDB.collection("TRIPS").document(tripId)
                                 .addSnapshotListener(new EventListener<DocumentSnapshot>() {
@@ -286,6 +322,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                             Log.w(TAG, "Listen failed.", e);
                                             return;
                                         }
+
+                                        if(documentSnapshot.getData() == null){
+                                            Toast.makeText(TripActivity.this, "This trip has been deleted", Toast.LENGTH_SHORT).show();
+                                            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                            startActivity(intent);
+                                            finish();
+                                        }
+
                                         try {
                                             ArrayList<String> newUserIds = (ArrayList<String>) documentSnapshot.get("Users");
                                             newUserIds.remove(currentUser.getUid());
@@ -346,6 +390,24 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    void resetCamera(){
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    if(trackUser){
+                        LatLng location = ownerMarker.getPosition();
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15), 10, null);
+                    }
+                }catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    handler.postDelayed(this, 150);
+                }
+            }
+        });
+    }
     void resetCircle(){
         final Handler handler = new Handler();
         handler.post(new Runnable() {
@@ -408,33 +470,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    void leaveTrip() {
-        firestoreDB.collection("USERS").document(currentUser.getUid())
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        ArrayList<String> trips = (ArrayList<String>) documentSnapshot.get("Trips");
-                        trips.remove(tripId);
-                        firestoreDB.collection("USERS").document(currentUser.getUid())
-                                .update("Trips", trips)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                                        startActivity(intent);
-                                        finish();
-                                    }
-                                });
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "onFailure: " + e);
-                    }
-                });
-    }
 
     void deleteTrip(){
         firestoreDB.collection("TRIPS").document(tripId)
@@ -442,7 +477,9 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        leaveTrip();
+                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                        startActivity(intent);
+                        finish();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -461,6 +498,8 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         String memberImageURL;
         Marker memberMarker;
         View memberViewItem;
+        View memberPopupView;
+        PopupWindow memberPopupWindow;
         ValueEventListener valueEventListener;
 
         public Member(final String memberID, final boolean realtimeUpdate) {
@@ -492,6 +531,17 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                 }
                             });
 
+                            imageView.setOnLongClickListener(new View.OnLongClickListener() {
+                                @Override
+                                public boolean onLongClick(View v) {
+                                    if(currentPopupWindow!=null && currentPopupWindow!=memberPopupWindow)
+                                        currentPopupWindow.dismiss();
+                                    memberPopupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+                                    currentPopupWindow = memberPopupWindow;
+                                    return false;
+                                }
+                            });
+
                             if (memberImageURL != null) {
                                 Picasso.get()
                                         .load(memberImageURL)
@@ -499,13 +549,65 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             }
                             membersListLL.addView(memberViewItem);
 
+
+                            //POPUP
+                            memberPopupView = getLayoutInflater().inflate(R.layout.popup_member_activity_trip, null);
+                            if (memberImageURL != null) {
+                                Picasso.get()
+                                        .load(memberImageURL)
+                                        .into((ImageView)memberPopupView.findViewById(R.id.display_picture));
+                            }
+                            ArrayList<String> memberFriends;
+                            if(documentSnapshot.contains("Friends"))
+                                memberFriends = (ArrayList<String>) documentSnapshot.get("Friends");
+                            else
+                                memberFriends = new ArrayList<>();
+                            if(memberFriends.contains(currentUser.getUid())){
+                                memberPopupView.findViewById(R.id.friend_status).setBackgroundResource(R.color.wierdRed);
+                            } else {
+                                memberPopupView.findViewById(R.id.friend_status).setBackgroundResource(R.color.wierdGreen);
+
+                            }
+                            ((TextView) memberPopupView.findViewById(R.id.name)).setText(memberName);
+                            ((TextView) memberPopupView.findViewById(R.id.phone_number)).setText(memberPhone);
+                            ((TextView) memberPopupView.findViewById(R.id.email_id)).setText(memberEmail);
+
+                            memberPopupView.findViewById(R.id.call).setOnClickListener(new View.OnClickListener() {
+                                @SuppressLint("MissingPermission")
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + memberPhone));
+                                    startActivity(intent);
+                                }
+                            });
+
+                            memberPopupView.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    memberPopupWindow.dismiss();
+                                }
+                            });
+
+                            memberPopupWindow = new PopupWindow(
+                                    memberPopupView,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT
+                            );
+                            memberPopupWindow.setBackgroundDrawable(new BitmapDrawable());
+                            memberPopupWindow.setOutsideTouchable(false);
+                            memberPopupWindow.setFocusable(false);
+                            if (Build.VERSION.SDK_INT >= 21) {
+                                memberPopupWindow.setElevation(50.0f);
+                            }
+
                             valueEventListener = database.getReference("USERS/" + memberID).child("Location")
                                     .addValueEventListener(new ValueEventListener() {
 
                                         public void onDataChange(DataSnapshot dataSnapshot) {
                                             LatLng location = new LatLng(
                                                     dataSnapshot.child("Latitude").getValue(double.class),
-                                                    dataSnapshot.child("Longitude").getValue(double.class));
+                                                    dataSnapshot.child("Longitude").getValue(double.class)
+                                            );
 
                                             if (memberMarker == null) {
                                                 memberMarker = mMap.addMarker(new MarkerOptions()

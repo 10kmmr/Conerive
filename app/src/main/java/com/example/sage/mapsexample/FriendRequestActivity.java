@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +44,7 @@ public class FriendRequestActivity extends AppCompatActivity {
 
     public Button sendRequestBTN;
     public EditText phoneNumberET;
+    private ProgressBar progressBar;
 
     private FirebaseFirestore firestoreDB;
     private FirebaseAuth mAuth;
@@ -62,16 +64,17 @@ public class FriendRequestActivity extends AppCompatActivity {
         firestoreDB = FirebaseFirestore.getInstance();
         phoneNumberET = findViewById(R.id.contact_number);
         sendRequestBTN = findViewById(R.id.send_request);
+        progressBar = findViewById(R.id.progress_bar);
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
 
         requestQueue = Volley.newRequestQueue(this);
 
-
         sendRequestBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                startLoading();
                 recieverPhone = phoneNumberET.getText().toString();
 
                 firestoreDB.collection("USERS").whereEqualTo("Phone", recieverPhone)
@@ -95,13 +98,14 @@ public class FriendRequestActivity extends AppCompatActivity {
                                                     if (documentSnapshot.contains("Friends")) {
                                                         ArrayList friendIds = (ArrayList<String>) documentSnapshot.get("Friends");
                                                         if (friendIds.contains(recieverId)) {
+                                                            stopLoading();
                                                             Toast.makeText(FriendRequestActivity.this, recieverName + " is already your friend", Toast.LENGTH_SHORT).show();
                                                         } else {
-                                                            dbSendFriendRequest(recieverId);
+                                                            dbSendFriendRequest(recieverId, recieverName);
                                                             ServerSendFriendRequest(name, imageURL, recieverToken);
                                                         }
                                                     } else {
-                                                        dbSendFriendRequest(recieverId);
+                                                        dbSendFriendRequest(recieverId, recieverName);
                                                         ServerSendFriendRequest(name, imageURL, recieverToken);
                                                     }
                                                 }
@@ -109,10 +113,12 @@ public class FriendRequestActivity extends AppCompatActivity {
                                             .addOnFailureListener(new OnFailureListener() {
                                                 @Override
                                                 public void onFailure(@NonNull Exception e) {
+                                                    stopLoading();
                                                     Log.d(TAG, "onFailure - 2: " + e);
                                                 }
                                             });
                                 } else {
+                                    stopLoading();
                                     Toast.makeText(FriendRequestActivity.this, "This user does not have the application! ", Toast.LENGTH_SHORT).show();
                                 }
 
@@ -120,6 +126,7 @@ public class FriendRequestActivity extends AppCompatActivity {
                         }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
+                        stopLoading();
                         Log.d(TAG, "onFailure - 1: " + e);
                     }
                 });
@@ -134,7 +141,17 @@ public class FriendRequestActivity extends AppCompatActivity {
         finish();
     }
 
-    void dbSendFriendRequest(String recieverId){
+    void startLoading(){
+        sendRequestBTN.setVisibility(View.INVISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    void stopLoading(){
+        sendRequestBTN.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    void dbSendFriendRequest(String recieverId, final String recieverName){
         Map<String, String> friendRequest= new HashMap<>();
         friendRequest.put("Sender_id", currentUser.getUid());
         friendRequest.put("Sender_name", name);
@@ -147,13 +164,14 @@ public class FriendRequestActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
-                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                        startActivity(intent);
+                        stopLoading();
+                        Toast.makeText(FriendRequestActivity.this, "Friend request sent to " + recieverName, Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
+                        stopLoading();
                         Log.d(TAG, "onFailure: " + e);
                     }
                 });

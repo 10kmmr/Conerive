@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.LruCache;
@@ -15,7 +16,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
@@ -27,10 +30,13 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.Transaction;
 
 import java.util.ArrayList;
 
@@ -152,157 +158,91 @@ public class NotificationsActivity extends AppCompatActivity {
     }
 
 
-    void dbCreateFriendship(final String firstUserId, final String secondUserId){
+    void dbCreateFriendship(final String firstUserId, final String secondUserId, final FriendRequest friendRequest){
 
-        firestoreDB.collection("USERS").document(firstUserId)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+        firestoreDB.runTransaction(new Transaction.Function<Void>() {
+            @Nullable
+            @Override
+            public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                DocumentReference firstUserReference =  firestoreDB.collection("USERS").document(firstUserId);
+                DocumentReference secondUserReference =  firestoreDB.collection("USERS").document(secondUserId);
 
-                        ArrayList<String> firstUserFriends;
-                        if (documentSnapshot.contains("Friends"))
-                            firstUserFriends = (ArrayList<String>) documentSnapshot.get("Friends");
-                        else
-                            firstUserFriends = new ArrayList<>();
-                        firstUserFriends.add(secondUserId);
+                DocumentSnapshot firstUserSnapshot = transaction.get(firstUserReference);
+                DocumentSnapshot secondUserSnapshot = transaction.get(secondUserReference);
 
-                        firestoreDB.collection("USERS").document(firstUserId)
-                                .update("Friends", firstUserFriends)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
+                ArrayList<String> firstUserFriends;
+                if (firstUserSnapshot.contains("Friends"))
+                    firstUserFriends = (ArrayList<String>) firstUserSnapshot.get("Friends");
+                else
+                    firstUserFriends = new ArrayList<>();
+                firstUserFriends.add(secondUserId);
 
-                                        firestoreDB.collection("USERS").document(secondUserId)
-                                                .get()
-                                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                                    @Override
-                                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                ArrayList<String> secondUserFriends;
+                if (secondUserSnapshot.contains("Friends"))
+                    secondUserFriends = (ArrayList<String>) secondUserSnapshot.get("Friends");
+                else
+                    secondUserFriends = new ArrayList<>();
+                secondUserFriends.add(firstUserId);
 
-                                                        ArrayList<String> secondUserFriends;
-                                                        if (documentSnapshot.contains("Friends"))
-                                                            secondUserFriends = (ArrayList<String>) documentSnapshot.get("Friends");
-                                                        else
-                                                            secondUserFriends = new ArrayList<>();
-                                                        secondUserFriends.add(firstUserId);
+                transaction.update(firstUserReference, "Friends", firstUserFriends);
+                transaction.update(secondUserReference, "Friends", secondUserFriends);
 
-                                                        firestoreDB.collection("USERS").document(secondUserId)
-                                                                .update("Friends", secondUserFriends)
-                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                    @Override
-                                                                    public void onSuccess(Void aVoid) {
+                return null;
+            }
+        }).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                friendRequest.stopLoading(true);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                friendRequest.stopLoading(false);
+            }
+        });
 
-                                                                        Intent intent = new Intent(getApplicationContext(), FriendsActivity.class);
-                                                                        startActivity(intent);
-
-                                                                    }
-                                                                })
-                                                                .addOnFailureListener(new OnFailureListener() {
-                                                                    @Override
-                                                                    public void onFailure(@NonNull Exception e) {
-                                                                        Log.d(TAG, "onFailure: " + e);
-                                                                    }
-                                                                });
-
-                                                    }
-                                                })
-                                                .addOnFailureListener(new OnFailureListener() {
-                                                    @Override
-                                                    public void onFailure(@NonNull Exception e) {
-
-                                                    }
-                                                });
-
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Log.d(TAG, "onFailure: " + e);
-                                    }
-                                });
-
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-
-                    }
-                });
 
     }
 
-    void dbCreateTripMembership(final String tripId){
-        firestoreDB.collection("TRIPS").document(tripId).get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+    void dbCreateTripMembership(final String tripId, final TripInvite tripInvite){
 
-                        ArrayList<String> users = (ArrayList<String>) documentSnapshot.get("Users");
-                        users.add(currentUser.getUid());
+        firestoreDB.runTransaction(new Transaction.Function<Void>() {
+            @Nullable
+            @Override
+            public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException{
+                DocumentReference tripReference = firestoreDB.collection("TRIPS").document(tripId);
+                DocumentReference userReference = firestoreDB.collection("USERS").document(currentUser.getUid());
 
-                        firestoreDB.collection("TRIPS").document(tripId)
-                                .update("Users", users)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
+                DocumentSnapshot tripSnapshot = transaction.get(tripReference);
+                DocumentSnapshot userSnapshot = transaction.get(userReference);
 
-                                        firestoreDB.collection("USERS").document(currentUser.getUid())
-                                                .get()
-                                                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                                    @Override
-                                                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+                ArrayList<String> users = (ArrayList<String>) tripSnapshot.get("Users");
+                users.add(currentUser.getUid());
 
-                                                        ArrayList<String> trips;
-                                                        if (documentSnapshot.contains("Trips"))
-                                                            trips = (ArrayList<String>) documentSnapshot.get("Trips");
-                                                        else
-                                                            trips = new ArrayList<>();
-                                                        trips.add(tripId);
+                ArrayList<String> trips;
+                if (userSnapshot.contains("Trips"))
+                    trips = (ArrayList<String>) userSnapshot.get("Trips");
+                else
+                    trips = new ArrayList<>();
+                trips.add(tripId);
 
-                                                        firestoreDB.collection("USERS").document(currentUser.getUid())
-                                                                .update("Trips", trips)
-                                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                    @Override
-                                                                    public void onSuccess(Void aVoid) {
-                                                                        Intent intent = new Intent(getApplicationContext(), TripActivity.class);
-                                                                        intent.putExtra("tripId", tripId);
-                                                                        startActivity(intent);
-                                                                    }
-                                                                })
-                                                                .addOnFailureListener(new OnFailureListener() {
-                                                                    @Override
-                                                                    public void onFailure(@NonNull Exception e) {
-                                                                        Log.d(TAG, "onFailure: " + e);
-                                                                    }
-                                                                });
+                transaction.update(tripReference,"Users", users);
+                transaction.update(userReference,"Trips", trips);
+                return null;
+            }
+        }).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                tripInvite.stopLoading(true);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                tripInvite.stopLoading(false);
+                Log.d(TAG, "onFailure: " + e);
+            }
+        });
 
-                                                    }
-                                                })
-                                                .addOnFailureListener(new OnFailureListener() {
-                                                    @Override
-                                                    public void onFailure(@NonNull Exception e) {
-
-                                                    }
-                                                });
-
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Log.d(TAG, "onFailure: " + e);
-                                    }
-                                });
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "onFailure: " + e);
-                    }
-                });
     }
 
     enum NotificationType {
@@ -316,6 +256,11 @@ public class NotificationsActivity extends AppCompatActivity {
         String senderImageURL;
         View notificationView;
 
+        LinearLayout idleLL;
+        ProgressBar progressBar;
+        TextView successTV;
+
+
         public FriendRequest(final String notificationId, final String senderId, String senderName, String senderImageURL) {
             this.notificationId = notificationId;
             this.senderId = senderId;
@@ -326,6 +271,9 @@ public class NotificationsActivity extends AppCompatActivity {
             TextView senderNameTV = notificationView.findViewById(R.id.sender_name);
             Button acceptBTN = notificationView.findViewById(R.id.accept);
             Button ignoreBTN = notificationView.findViewById(R.id.ignore);
+            idleLL = notificationView.findViewById(R.id.idle);
+            progressBar = notificationView.findViewById(R.id.progress_bar);
+            successTV = notificationView.findViewById(R.id.accept_success);
             NetworkImageView senderImageNIV = notificationView.findViewById(R.id.sender_image);
 
             senderNameTV.setText(senderName);
@@ -334,7 +282,8 @@ public class NotificationsActivity extends AppCompatActivity {
             acceptBTN.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    dbCreateFriendship(senderId, mAuth.getCurrentUser().getUid());
+                    startLoading();
+                    dbCreateFriendship(senderId, mAuth.getCurrentUser().getUid(), FriendRequest.this);
                     dbDeleteNotification(notificationId);
                 }
             });
@@ -342,12 +291,31 @@ public class NotificationsActivity extends AppCompatActivity {
             ignoreBTN.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    deleteNotification();
                     dbDeleteNotification(notificationId);
-                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                    startActivity(intent);
+                    Toast.makeText(NotificationsActivity.this, "request ignored", Toast.LENGTH_SHORT).show();
                 }
             });
             notificationsLL.addView(notificationView);
+        }
+
+        void startLoading(){
+            idleLL.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+        void stopLoading(boolean success){
+            progressBar.setVisibility(View.INVISIBLE);
+            if(success){
+                successTV.setVisibility(View.VISIBLE);
+            } else {
+                idleLL.setVisibility(View.VISIBLE);
+                Toast.makeText(NotificationsActivity.this, "failed to send friend request", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        void deleteNotification(){
+            notificationsLL.removeView(notificationView);
         }
     }
 
@@ -358,6 +326,9 @@ public class NotificationsActivity extends AppCompatActivity {
         String tripId;
         String tripName;
         View notificationView;
+
+        LinearLayout idleLL;
+        ProgressBar progressBar;
 
         public TripInvite(final String notificationId, final String senderId, String senderName, final String tripId, String tripName) {
             this.notificationId = notificationId;
@@ -371,6 +342,8 @@ public class NotificationsActivity extends AppCompatActivity {
             TextView tripNameTV = notificationView.findViewById(R.id.trip_name);
             Button acceptBTN = notificationView.findViewById(R.id.accept);
             Button ignoreBTN = notificationView.findViewById(R.id.ignore);
+            idleLL = notificationView.findViewById(R.id.idle);
+            progressBar = notificationView.findViewById(R.id.progress_bar);
 
             senderNameTV.setText(senderName);
             tripNameTV.setText(tripName);
@@ -378,7 +351,8 @@ public class NotificationsActivity extends AppCompatActivity {
             acceptBTN.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    dbCreateTripMembership(tripId);
+                    startLoading();
+                    dbCreateTripMembership(tripId, TripInvite.this);
                     dbDeleteNotification(notificationId);
                 }
             });
@@ -386,13 +360,35 @@ public class NotificationsActivity extends AppCompatActivity {
             ignoreBTN.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    deleteNotification();
                     dbDeleteNotification(notificationId);
-                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                    startActivity(intent);
+                    Toast.makeText(NotificationsActivity.this, "Trip invite ignored", Toast.LENGTH_SHORT).show();
                 }
             });
             notificationsLL.addView(notificationView);
 
+        }
+
+        void startLoading(){
+            idleLL.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+        void stopLoading(boolean success){
+            progressBar.setVisibility(View.INVISIBLE);
+            if(success){
+                Toast.makeText(NotificationsActivity.this, "You have joined the trip", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getApplicationContext(), TripActivity.class);
+                intent.putExtra("tripId", tripId);
+                startActivity(intent);
+            } else {
+                idleLL.setVisibility(View.VISIBLE);
+                Toast.makeText(NotificationsActivity.this, "failed to join trip", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        void deleteNotification(){
+            notificationsLL.removeView(notificationView);
         }
     }
 
