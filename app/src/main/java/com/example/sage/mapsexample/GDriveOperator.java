@@ -42,6 +42,7 @@ public class GDriveOperator {
     GDriveOperator(Context mcontext,String mServerClientId){
         this.ActivityContext = mcontext;
         this.serverClientId = mServerClientId;
+//        mGoogleSignInClient = buildGoogleSignInClient();
         account = GoogleSignIn.getLastSignedInAccount(ActivityContext);
         if(account==null){
             mGoogleSignInClient = buildGoogleSignInClient();

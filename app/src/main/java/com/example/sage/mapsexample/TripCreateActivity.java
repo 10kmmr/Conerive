@@ -74,6 +74,13 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
 
     GDriveOperator mGDriveOperator;
 
+    String tripName;
+    String tripidG;
+/*
+case REQUEST_CODE_SIGN_IN:
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                this.mGDriveOperator.HandleActivityOnResult(task);
+* */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +90,8 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.trip_create_map);
         mapFragment.getMapAsync(this);
+
+        mGDriveOperator = new GDriveOperator(getApplicationContext(),getString(R.string.server_client_id));
 
         tripNameET = findViewById(R.id.trip_name);
         notifRadiusSB = findViewById(R.id.notification_radius);
@@ -118,7 +127,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
             public void onClick(View v) {
                 if(tripDestinationMarker!=null) {
                     startLoading();
-                    String tripName = tripNameET.getText().toString();
+                    tripName = tripNameET.getText().toString();
                     double notifRadius = notifRadiusSB.getProgress()*100;
                     LatLng destinationLocation = tripDestinationMarker.getPosition();
                     GeoPoint geoPoint = new GeoPoint(destinationLocation.latitude, destinationLocation.longitude);
@@ -139,6 +148,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                                 public void onSuccess(DocumentReference documentReference) {
 
                                     final String tripId = documentReference.getId();
+                                    tripidG = tripId;
                                     firestoreDB.collection("USERS").document(currentUser.getUid())
                                             .get()
                                             .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -157,21 +167,15 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                                                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                 @Override
                                                                 public void onSuccess(Void aVoid) {
-
-                                                                    GDriveOperator mGDriveOperator = new GDriveOperator(getApplicationContext(),getString(R.string.server_client_id));
                                                                     if(mGDriveOperator.account==null){
                                                                         Log.d(TAG, "account null");
                                                                         startActivityForResult(mGDriveOperator.GetIntent(), 0);
-                                                                    } else {
+                                                                    }
+                                                                    else {
                                                                         Log.d(TAG, "account not null");
                                                                         Log.d(TAG, "onSuccess: " + " auth code :"+mGDriveOperator.account.getServerAuthCode());
                                                                         serverCreateTripDriveFolder(tripName, mGDriveOperator.account.getServerAuthCode());
                                                                     }
-
-                                                                    Intent intent = new Intent(getApplicationContext(), TripActivity.class);
-                                                                    intent.putExtra("tripId", tripId);
-                                                                    startActivity(intent);
-                                                                    finish();
                                                                 }
                                                             })
                                                             .addOnFailureListener(new OnFailureListener() {
@@ -245,6 +249,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
             case 0:
                 Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                 mGDriveOperator.HandleActivityOnResult(task);
+                serverCreateTripDriveFolder(tripName, mGDriveOperator.authCode);
                 //how do i do it here?0.o
                 break;
 
@@ -259,6 +264,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                     @Override
                     public void onResponse(String response) {
                         Log.d(TAG, "onResponse: " + response);
+                        Next();
                     }
                 },
                 new Response.ErrorListener() {
@@ -287,5 +293,11 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
     void stopLoading(){
         createTripFAB.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.INVISIBLE);
+    }
+    void Next(){
+        Intent intent = new Intent(getApplicationContext(), TripActivity.class);
+        intent.putExtra("tripId", tripidG);
+        startActivity(intent);
+        finish();
     }
 }
