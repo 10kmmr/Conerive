@@ -46,6 +46,15 @@
         android:layout_alignParentRight="true"
         android:id="@+id/track_user"
         android:text="loc"
+        android:textSize="10dp"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content" />
+    <Button
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/track_user"
+        android:id="@+id/click_photo"
+        android:text="pic"
+        android:textSize="10dp"
         android:layout_width="40dp"
         android:layout_height="wrap_content" />
 

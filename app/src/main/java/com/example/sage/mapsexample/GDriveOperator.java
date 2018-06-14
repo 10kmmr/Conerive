@@ -30,7 +30,6 @@ public class GDriveOperator {
     private String serverClientId;
     public String authCode;
 
-    public boolean signin=false;
 
     //Android related objects
     private Context ActivityContext;
@@ -44,16 +43,8 @@ public class GDriveOperator {
         this.ActivityContext = mcontext;
         this.serverClientId = mServerClientId;
         account = GoogleSignIn.getLastSignedInAccount(ActivityContext);
-        if(account!=null){
-            /*
-                if uses is signed in check whether
-                 this users Oauth written written the db
-            */
-            signin = true;
-        }else{
+        if(account==null){
             mGoogleSignInClient = buildGoogleSignInClient();
-
-
         }
     }
 
@@ -61,12 +52,11 @@ public class GDriveOperator {
         try {
             this.account = completedTask.getResult(ApiException.class);
             this.authCode = account.getServerAuthCode();
-            this.signin = true;
             /*
             * write the authCode to the Db of the current user in another object
             * */
         } catch (Exception e) {
-            System.out.print(e);
+            e.printStackTrace();
         }
         mDriveClient = Drive.getDriveClient(ActivityContext, GoogleSignIn.getLastSignedInAccount(ActivityContext));
         mDriveResourceClient =

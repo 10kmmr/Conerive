@@ -3,6 +3,7 @@ package com.example.sage.mapsexample;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
@@ -10,6 +11,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -51,8 +53,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,6 +80,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     private Button goHomeBT;
     private Button closePopBT;
     private Button trackUserBT;
+    private Button clickPhotoBT;
     private TextView tripNameTV;
     private TextView tripRadiusTV;
     private CircleImageView settingsBT;
@@ -119,6 +124,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         membersListLL = findViewById(R.id.members_list);
         scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
         trackUserBT = findViewById(R.id.track_user);
+        clickPhotoBT = findViewById(R.id.click_photo);
         popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip, null);
         leaveTripBT = popupView.findViewById(R.id.leave_trip);
 
@@ -211,6 +217,14 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                     trackUser = false;
                 }
                 return false;
+            }
+        });
+
+        clickPhotoBT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, 0);
             }
         });
     }
@@ -366,6 +380,17 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.d(TAG, "onFailure: " + e);
                     }
                 });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        final Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] imageByte = baos.toByteArray();
+        // TODO - upload image to drive
     }
 
     public class OwnerLocationValueEventListener implements ValueEventListener {

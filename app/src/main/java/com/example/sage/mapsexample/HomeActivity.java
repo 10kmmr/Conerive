@@ -88,105 +88,15 @@ public class HomeActivity extends FragmentActivity implements OnMapReadyCallback
     private Button friendsButton;
     private Button notificationsButton;
     private Button userSettingsButton;
-    GoogleSignInClient mGoogleSignInClient;
 
     private boolean zoomedIn;
     private ArrayList<Trip> trips;
 
-    private Bitmap mBitmapToSave;
-    private DriveClient mDriveClient;
-    private DriveResourceClient mDriveResourceClient;
-    private static final int REQUEST_CODE_SIGN_IN = 0;
-    private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
-    private static final int REQUEST_CODE_CREATOR = 2;
 
-
-    private Task<Void> createFileIntentSender(DriveContents driveContents, Bitmap image) {
-        Log.i(TAG, "New contents created.");
-        // Get an output stream for the contents.
-        OutputStream outputStream = driveContents.getOutputStream();
-        // Write the bitmap data from it.
-        ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
-        image.compress(Bitmap.CompressFormat.PNG, 100, bitmapStream);
-        try {
-            outputStream.write(bitmapStream.toByteArray());
-        } catch (IOException e) {
-            Log.w(TAG, "Unable to write file contents.", e);
-        }
-
-        // Create the initial metadata - MIME type and title.
-        // Note that the user will be able to change the title later.
-        MetadataChangeSet metadataChangeSet =
-                new MetadataChangeSet.Builder()
-                        .setMimeType("image/jpeg")
-                        .setTitle("Android Photo.png")
-                        .build();
-        // Set up options to configure and display the create file activity.
-        CreateFileActivityOptions createFileActivityOptions =
-                new CreateFileActivityOptions.Builder()
-                        .setInitialMetadata(metadataChangeSet)
-                        .setInitialDriveContents(driveContents)
-                        .build();
-
-        return mDriveClient
-                .newCreateFileActivityIntentSender(createFileActivityOptions)
-                .continueWith(
-                        task -> {
-                            startIntentSenderForResult(task.getResult(), REQUEST_CODE_CREATOR, null, 0, 0, 0);
-                            return null;
-                        });
-    }
-    @Override
-    protected void onActivityResult(final int requestCode, final int resultCode,Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case REQUEST_CODE_SIGN_IN:
-                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                this.mGDriveOperator.HandleActivityOnResult(task);
-                break;
-            case REQUEST_CODE_CAPTURE_IMAGE:
-                Log.i(TAG, "capture image request code");
-                // Called after a photo has been taken.
-                if (resultCode == Activity.RESULT_OK) {
-                    Log.i(TAG, "Image captured successfully.");
-                    // Store the image data as a bitmap for writing later.
-                    mBitmapToSave = (Bitmap) data.getExtras().get("data");
-                    saveFileToDrive();
-                }
-                break;
-            case REQUEST_CODE_CREATOR:
-                Log.i(TAG, "creator request code");
-                // Called after a file is saved to Drive.
-                if (resultCode == RESULT_OK) {
-                    Log.i(TAG, "Image successfully saved.");
-                    mBitmapToSave = null;
-                    // Just start the camera again for another photo.
-                    startActivityForResult(
-                            new Intent(MediaStore.ACTION_IMAGE_CAPTURE), REQUEST_CODE_CAPTURE_IMAGE);
-                }
-                break;
-        }
-    }
-    private void saveFileToDrive() {
-        // Start by creating a new contents, and setting a callback.
-        Log.i(TAG, "Creating new contents.");
-        final Bitmap image = mBitmapToSave;
-
-        mDriveResourceClient
-                .createContents()
-                .continueWithTask(
-                        task -> createFileIntentSender(task.getResult(), image))
-                .addOnFailureListener(
-                        e -> Log.w(TAG, "Failed to create new contents.", e));
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mGDriveOperator = new GDriveOperator(this,getString(R.string.server_client_id));
-        if(!mGDriveOperator.signin){
-            startActivityForResult(mGDriveOperator.GetIntent(), REQUEST_CODE_SIGN_IN);
-        }
 
         setContentView(R.layout.activity_home);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.

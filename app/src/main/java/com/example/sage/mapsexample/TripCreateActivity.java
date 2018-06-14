@@ -7,6 +7,14 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -16,6 +24,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -62,6 +71,8 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
     private FirebaseDatabase database;
 
     private Marker tripDestinationMarker;
+
+    GDriveOperator mGDriveOperator;
 
 
     @Override
@@ -146,6 +157,17 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                                                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                 @Override
                                                                 public void onSuccess(Void aVoid) {
+
+                                                                    GDriveOperator mGDriveOperator = new GDriveOperator(getApplicationContext(),getString(R.string.server_client_id));
+                                                                    if(mGDriveOperator.account==null){
+                                                                        Log.d(TAG, "account null");
+                                                                        startActivityForResult(mGDriveOperator.GetIntent(), 0);
+                                                                    } else {
+                                                                        Log.d(TAG, "account not null");
+                                                                        Log.d(TAG, "onSuccess: " + " auth code :"+mGDriveOperator.account.getServerAuthCode());
+                                                                        serverCreateTripDriveFolder(tripName, mGDriveOperator.account.getServerAuthCode());
+                                                                    }
+
                                                                     Intent intent = new Intent(getApplicationContext(), TripActivity.class);
                                                                     intent.putExtra("tripId", tripId);
                                                                     startActivity(intent);
@@ -214,6 +236,47 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode,Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case 0:
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                mGDriveOperator.HandleActivityOnResult(task);
+                //how do i do it here?0.o
+                break;
+
+        }
+    }
+
+    void serverCreateTripDriveFolder(String tripName, String authCode){
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        String url = "https://conerive-fcm.herokuapp.com/SetUpTrip";
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d(TAG, "onResponse: " + response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("TripName", tripName);
+                params.put("AuthCode", authCode);
+                return params;
+            }
+        };
+        requestQueue.add(postRequest);
     }
 
     void startLoading(){

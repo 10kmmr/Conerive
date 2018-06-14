@@ -190,17 +190,17 @@ public class UserCreateActivity extends AppCompatActivity {
 
         final Bitmap bitmap = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         byte[] imageByte = baos.toByteArray();
         //fireBase updating dp
         UploadTask uploadTask = firebaseStorage.getReference()
                 .child("user_display_picture")
-                .child(userId + ".jpg")
+                .child(userId + ".png")
                 .putBytes(imageByte);
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
+                //TODO - Handle unsuccessful uploads
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
