@@ -26,7 +26,7 @@ public class GDriveOperator {
 
     //Google Account api
     public GoogleSignInClient mGoogleSignInClient;
-    public GoogleSignInAccount account;
+    public GoogleSignInAccount account=null;
     private String serverClientId;
     public String authCode;
 
@@ -43,10 +43,7 @@ public class GDriveOperator {
         this.ActivityContext = mcontext;
         this.serverClientId = mServerClientId;
 //        mGoogleSignInClient = buildGoogleSignInClient();
-        account = GoogleSignIn.getLastSignedInAccount(ActivityContext);
-        if(account==null){
-            mGoogleSignInClient = buildGoogleSignInClient();
-        }
+        mGoogleSignInClient = buildGoogleSignInClient();
     }
 
     public void HandleActivityOnResult(Task<GoogleSignInAccount> completedTask){
@@ -67,7 +64,7 @@ public class GDriveOperator {
     private GoogleSignInClient buildGoogleSignInClient() {
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                .requestScopes(Drive.SCOPE_FILE,Drive.SCOPE_APPFOLDER)
                 .requestServerAuthCode(serverClientId)
                 .requestEmail()
                 .build();

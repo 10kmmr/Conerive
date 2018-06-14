@@ -171,11 +171,11 @@ case REQUEST_CODE_SIGN_IN:
                                                                         Log.d(TAG, "account null");
                                                                         startActivityForResult(mGDriveOperator.GetIntent(), 0);
                                                                     }
-                                                                    else {
-                                                                        Log.d(TAG, "account not null");
-                                                                        Log.d(TAG, "onSuccess: " + " auth code :"+mGDriveOperator.account.getServerAuthCode());
-                                                                        serverCreateTripDriveFolder(tripName, mGDriveOperator.account.getServerAuthCode());
-                                                                    }
+//                                                                    else {
+//                                                                        Log.d(TAG, "account not null");
+//                                                                        Log.d(TAG, "onSuccess: " + " auth code :"+mGDriveOperator.account.getServerAuthCode());
+//                                                                        serverCreateTripDriveFolder(tripName, mGDriveOperator.account.getServerAuthCode());
+//                                                                    }
                                                                 }
                                                             })
                                                             .addOnFailureListener(new OnFailureListener() {
