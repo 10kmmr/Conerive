@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/popup_settings_linear_layout"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_gravity="center"
-    android:gravity="center_horizontal"
-    android:background="@color/wierdBlack"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content" >
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:background="@color/wierdBlack"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -15,9 +14,9 @@
 
         <TextView
             android:id="@+id/trip_name"
-            android:text="Trip name"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="Trip name" />
 
     </LinearLayout>
 
@@ -26,15 +25,15 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:text="Trip Radius : "
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="Trip Radius : " />
 
         <TextView
             android:id="@+id/trip_radius"
-            android:text="5"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="5" />
 
     </LinearLayout>
 
@@ -44,34 +43,46 @@
 
         <Button
             android:id="@+id/member_count"
-            android:minWidth="0dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:minWidth="0dp" />
 
         <Button
-            android:minWidth="0dp"
             android:id="@+id/image_count"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:minWidth="0dp" />
 
         <Button
-            android:minWidth="0dp"
             android:id="@+id/comment_count"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:minWidth="0dp" />
 
     </LinearLayout>
 
     <Button
-        android:id="@+id/leave_trip"
-        android:text="Leave trip"
+        android:id="@+id/invite_member"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="invite to trip" />
+
+    <Button
+        android:id="@+id/leave_trip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Leave trip" />
+
+    <Button
+        android:id="@+id/delete_trip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="delete trip" />
 
     <Button
         android:id="@+id/close"
-        android:text="close"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="close" />
 
 </LinearLayout>

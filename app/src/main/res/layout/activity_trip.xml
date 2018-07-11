@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    android:id="@+id/trip_relative_layout"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/trip_relative_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".TripActivity">
@@ -17,45 +16,106 @@
         android:layout_height="match_parent"
         tools:context=".TripActivity" />
 
-    <HorizontalScrollView
-        android:id="@+id/members_list_scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/wierdBlack"
-        android:scrollbarSize="2dp">
+    <FrameLayout
+        android:id="@+id/top_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
         <LinearLayout
-            android:id="@+id/members_list"
+            android:id="@+id/menu_bar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:background="@color/wierdBlack"
             android:orientation="horizontal"
-            android:isScrollContainer="true">
+            android:visibility="visible">
+
+            <Button
+                android:id="@+id/menu_home"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:text="home" />
+
+            <Button
+                android:id="@+id/menu_settings"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:text="stngs" />
+
+            <Button
+                android:id="@+id/menu_camera"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:text="cam" />
+
+            <Button
+                android:id="@+id/menu_members"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:text="memb" />
+
+            <Button
+                android:id="@+id/menu_comments"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:text="TAG" />
 
         </LinearLayout>
 
-    </HorizontalScrollView>
+        <HorizontalScrollView
+            android:id="@+id/members_bar_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/wierdBlack"
+            android:scrollbarSize="2dp"
+            android:visibility="visible">
+
+            <LinearLayout
+                android:id="@+id/members_bar_linear_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:isScrollContainer="true"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/members_bar_menu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="menu" />
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+        <RelativeLayout
+            android:id="@+id/comment_bar"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/wierdBlack">
+
+            <EditText
+                android:id="@+id/comment_bar_edittext"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@+id/comment_button"
+                android:hint="comment" />
+
+            <Button
+                android:id="@+id/comment_bar_button"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:text="->" />
+
+        </RelativeLayout>
+
+    </FrameLayout>
 
     <Button
-        android:layout_below="@+id/members_list_scroll_view"
-        android:id="@+id/scroll_view_expand"
-        android:layout_width="30dp"
-        android:layout_height="30dp" />
+        android:id="@+id/expand_bar"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_below="@+id/top_bar"
+        android:background="#ffffff" />
 
-    <Button
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:id="@+id/track_user"
-        android:text="loc"
-        android:textSize="10dp"
-        android:layout_width="50dp"
-        android:layout_height="wrap_content" />
-    <Button
-        android:layout_alignParentBottom="true"
-        android:layout_toLeftOf="@+id/track_user"
-        android:id="@+id/click_photo"
-        android:text="pic"
-        android:textSize="10dp"
-        android:layout_width="40dp"
-        android:layout_height="wrap_content" />
 
 </RelativeLayout>

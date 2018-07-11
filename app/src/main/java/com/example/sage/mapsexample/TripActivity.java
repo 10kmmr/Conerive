@@ -1,30 +1,34 @@
 package com.example.sage.mapsexample;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
-import android.location.Location;
-import android.location.LocationManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.MotionEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +42,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -47,65 +53,48 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.ListenerRegistration;
-import com.google.firebase.storage.UploadTask;
+import com.google.firebase.firestore.Transaction;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class TripActivity extends FragmentActivity implements OnMapReadyCallback {
-
-
     private static final String TAG = "TripActivity";
     private GoogleMap mMap;
-    private Marker ownerMarker;
-    private Marker destination;
-    private Circle tripCircle;
 
-    private HorizontalScrollView scrollview;
-    private LinearLayout membersListLL;
-    private LinearLayout popupLL;
-    private Button scrollViewExpandBT;
-    private Button leaveTripBT;
-    private Button goHomeBT;
-    private Button closePopBT;
-    private Button trackUserBT;
-    private Button clickPhotoBT;
-    private TextView tripNameTV;
-    private TextView tripRadiusTV;
-    private CircleImageView settingsBT;
-    private View settingsView;
-    private View popupView;
+    FirebaseDatabase firebaseDB;
+    FirebaseFirestore firestoreDB;
+    FirebaseAuth firebaseAuth;
+    DocumentSnapshot documentSnapshot;
+    ListenerRegistration documentListener;
 
-    private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-    private FirebaseDatabase database;
-    private FirebaseFirestore firestoreDB;
-    private DatabaseReference ownerReference;
-    private ListenerRegistration listener;
+    MenuBar menuBar;
+    CommentBar commentBar;
+    MembersBar membersBar;
+    Settings settings;
+    Centroid centroid;
+    Destination destination;
+    HashMap<String, Member> members;
+    HashMap<String, Image> images;
+    HashMap<String, Comment> comments;
+    Owner owner;
 
-    private PopupWindow popupWindow;
-    private PopupWindow currentPopupWindow;
-
-    private HashMap<String, Member> members;
-    private ArrayList<String> userIDs;
-    private String tripId;
-    private String tripName;
-    private String tripAdminId;
-    private boolean adminMode;
-    private double tripRadius;
-    private boolean trackUser;
-
+    Object currentPopup;
+    Object currentBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,118 +104,32 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.trip_map);
         mapFragment.getMapAsync(this);
 
-        adminMode = false;
-        trackUser = false;
-        tripId = getIntent().getStringExtra("tripId");
-        members = new HashMap<>();
-
-        scrollview = findViewById(R.id.members_list_scroll_view);
-        membersListLL = findViewById(R.id.members_list);
-        scrollViewExpandBT = findViewById(R.id.scroll_view_expand);
-        trackUserBT = findViewById(R.id.track_user);
-        clickPhotoBT = findViewById(R.id.click_photo);
-        popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip, null);
-        leaveTripBT = popupView.findViewById(R.id.leave_trip);
-
-        popupLL = popupView.findViewById(R.id.popup_settings_linear_layout);
-        goHomeBT = popupView.findViewById(R.id.go_home);
-        closePopBT = popupView.findViewById(R.id.close_popup);
-
-        tripNameTV = popupView.findViewById(R.id.trip_name);
-        tripRadiusTV = popupView.findViewById(R.id.trip_radius);
-        popupWindow = new PopupWindow(
-                popupView,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        popupWindow.setBackgroundDrawable(new BitmapDrawable());
-        popupWindow.setOutsideTouchable(false);
-        popupWindow.setFocusable(false);
-        if (Build.VERSION.SDK_INT >= 21) {
-            popupWindow.setElevation(50.0f);
-        }
-
-        ViewGroup.LayoutParams params = scrollview.getLayoutParams();
-        params.height = 0;
-        scrollview.setLayoutParams(params);
-        settingsView = getLayoutInflater().inflate(R.layout.settings_activity_trip, membersListLL, false);
-        settingsBT = settingsView.findViewById(R.id.settings);
-        membersListLL.addView(settingsView);
-
-        mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-        database = FirebaseDatabase.getInstance();
+        firebaseAuth = FirebaseAuth.getInstance();
+        firebaseDB = FirebaseDatabase.getInstance();
         firestoreDB = FirebaseFirestore.getInstance();
-        ownerReference = database.getReference("USERS/" + currentUser.getUid());
+        members = new HashMap<>();
+        images = new HashMap<>();
+        comments = new HashMap<>();
 
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        closePopBT.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.expand_bar).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                popupWindow.dismiss();
+                if (currentBar == null)
+                    menuBar.show();
+                else if (currentBar == menuBar)
+                    menuBar.close();
+                else if (currentBar == membersBar)
+                    membersBar.close();
+                else if (currentBar == commentBar)
+                    commentBar.close();
+
             }
         });
 
-        goHomeBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
+        menuBar = new MenuBar();
+        commentBar = new CommentBar();
+        membersBar = new MembersBar();
 
-        settingsBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(currentPopupWindow!=null && currentPopupWindow!=popupWindow)
-                    currentPopupWindow.dismiss();
-                popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
-                currentPopupWindow = popupWindow;
-            }
-        });
-
-        scrollViewExpandBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ViewGroup.LayoutParams params = scrollview.getLayoutParams();
-                if (params.height == 0) {
-                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                } else {
-                    params.height = 0;
-                }
-                scrollview.setLayoutParams(params);
-            }
-        });
-
-        trackUserBT.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_DOWN){
-                    Log.d(TAG, "onTouch: pressed");
-                    trackUser = true;
-                }
-
-                if(event.getAction() == MotionEvent.ACTION_UP) {
-                    Log.d(TAG, "onTouch: released");
-                    trackUser = false;
-                }
-                return false;
-            }
-        });
-
-        clickPhotoBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent, 0);
-            }
-        });
     }
 
     @Override
@@ -240,146 +143,97 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
-        resetCircle();
-        resetCamera();
-        ownerReference.child("Location").addValueEventListener(new OwnerLocationValueEventListener());
 
-        firestoreDB.collection("TRIPS").document(tripId)
-                .get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        centroid = new Centroid();
+        destination = new Destination();
+
+        documentListener = firestoreDB.collection("TRIPS")
+                .document(getIntent().getStringExtra("tripId"))
+                .addSnapshotListener(new EventListener<DocumentSnapshot>() {
                     @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-
-                        tripName = documentSnapshot.getString("Name");
-                        tripRadius = documentSnapshot.getDouble("Radius");
-                        tripAdminId = documentSnapshot.getString("AdminId");
-                        GeoPoint geoPoint = (GeoPoint) documentSnapshot.get("Destination");
-                        LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
-                        destination = mMap.addMarker(new MarkerOptions()
-                                .position(latLng)
-                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-                                .title("Destination"));
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-                        userIDs = (ArrayList<String>) documentSnapshot.get("Users");
-                        userIDs.remove(currentUser.getUid());
-                        Log.d(TAG, "after removal : " + userIDs);
-                        for (String userID : userIDs)
-                            members.put(userID, new Member(userID, false));
-
-                        if (currentUser.getUid().equals(tripAdminId)) {
-                            adminMode = true;
-                            View adminView = getLayoutInflater().inflate(R.layout.admin_activity_trip, popupLL, false);
-                            Button inviteBT = adminView.findViewById(R.id.go_to_trip_invite);
-                            inviteBT.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    Intent intent = new Intent(getApplicationContext(), TripInviteActivity.class);
-                                    intent.putExtra("tripId", tripId);
-                                    startActivity(intent);
-                                }
-                            });
-                            Button deleteTripBT = adminView.findViewById(R.id.delete_trip);
-                            deleteTripBT.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    deleteTrip();
-                                }
-                            });
-                            popupLL.addView(adminView, 2);
+                    public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(TAG, "Listen failed.", e);
                         }
 
-                        leaveTripBT.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if(userIDs.size() == 0){
-                                    deleteTrip();
-                                } else {
-                                    final Map<String, Object> updateMap = new HashMap<>();
-                                    if (adminMode) {
-                                        updateMap.put("AdminId", userIDs.get(0));
-                                    }
+                        if (TripActivity.this.documentSnapshot == null) {
+                            TripActivity.this.documentSnapshot = documentSnapshot;
+                            if (documentSnapshot.getString("AdminId").equals(firebaseAuth.getCurrentUser().getUid()))
+                                settings = new AdminSettings();
+                            else
+                                settings = new Settings();
+                            destination.update();
+                            settings.update();
+                            owner = new Owner();
+                            ArrayList<String> userIDs = (ArrayList<String>) documentSnapshot.get("Users");
+                            userIDs.remove(firebaseAuth.getCurrentUser().getUid());
+                            for (String userID : userIDs)
+                                members.put(userID, new Member(userID, false));
+                            return;
+                        }
+                        if (documentSnapshot.getData() == null) {
+                            Toast.makeText(TripActivity.this, "This trip has been deleted", Toast.LENGTH_SHORT).show();
+                            documentListener.remove();
+                            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                            startActivity(intent);
+                            finish();
+                            return;
+                        }
 
-                                    firestoreDB.collection("TRIPS").document(tripId)
-                                            .get()
-                                            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                                                @Override
-                                                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                                                    ArrayList<String> currentUsers = (ArrayList<String>) documentSnapshot.get("Users");
-                                                    currentUsers.remove(currentUser.getUid());
-                                                    updateMap.put("Users", currentUsers);
-                                                    firestoreDB.collection("TRIPS").document(tripId)
-                                                            .update(updateMap)
-                                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                                @Override
-                                                                public void onSuccess(Void aVoid) {
-                                                                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                                                                    startActivity(intent);
-                                                                    finish();
-                                                                }
-                                                            });
-                                                }
-                                            });
-
-                                }
+                        TripActivity.this.documentSnapshot = documentSnapshot;
+                        switch (documentSnapshot.getString("Event_one")) {
+                            case "USER_ADDED": {
+                                members.put(
+                                        documentSnapshot.getString("Stack"),
+                                        new Member(
+                                                documentSnapshot.getString("Stack"),
+                                                true
+                                        )
+                                );
+                                break;
                             }
-                        });
-
-                        tripNameTV.setText(tripName);
-                        tripRadiusTV.setText(Double.toString(tripRadius/1000.0) + "Km");
-
-                        listener = firestoreDB.collection("TRIPS").document(tripId)
-                                .addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                                    @Override
-                                    public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-
-                                        if (e != null) {
-                                            Log.w(TAG, "Listen failed.", e);
-                                            return;
-                                        }
-
-                                        if(documentSnapshot.getData() == null){
-                                            Toast.makeText(TripActivity.this, "This trip has been deleted", Toast.LENGTH_SHORT).show();
-                                            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
-                                            startActivity(intent);
-                                            finish();
-                                        }
-
-                                        try {
-                                            ArrayList<String> newUserIds = (ArrayList<String>) documentSnapshot.get("Users");
-                                            newUserIds.remove(currentUser.getUid());
-                                            if (newUserIds.size() > userIDs.size()) {
-                                                newUserIds.removeAll(userIDs);
-                                                String newUserId = newUserIds.get(0);
-                                                userIDs.add(newUserId);
-                                                members.put(newUserId, new Member(newUserId, true));
-
-                                            } else if (newUserIds.size() < userIDs.size()) {
-                                                ArrayList<String> temp = new ArrayList<>(userIDs);
-                                                temp.removeAll(newUserIds);
-                                                String toDeleteUserID = temp.get(0);
-                                                members.get(toDeleteUserID).delete();
-                                            }
-
-                                            if(documentSnapshot.getString("AdminId").equals(currentUser.getUid()) && !adminMode){
-                                                Toast.makeText(TripActivity.this, "You are now the admin", Toast.LENGTH_SHORT).show();
-                                                Intent intent = getIntent();
-                                                finish();
-                                                startActivity(intent);
-                                            }
-                                        } catch (Exception ex){
-                                            Log.d(TAG, "onEvent: " + ex);
-                                        }
+                            case "USER_REMOVED": {
+                                String userId = documentSnapshot.getString("Stack");
+                                if (userId.equals(firebaseAuth.getCurrentUser().getUid())) {
+                                    Toast.makeText(
+                                            TripActivity.this,
+                                            "You have been kicked from the trip",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                    Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                } else {
+                                    Member removedUser = members.get(userId);
+                                    removedUser.delete();
+                                    boolean one = documentSnapshot.getString("Event_two").equals("ADMIN_CHANGED");
+                                    boolean two = documentSnapshot.getString("AdminId").equals(firebaseAuth.getCurrentUser().getUid());
+                                    if (one && two) {
+                                        Toast.makeText(TripActivity.this, "You are now admin", Toast.LENGTH_SHORT).show();
+                                        settings = new AdminSettings();
                                     }
-                                });
+                                }
+                                break;
+                            }
+                            case "IMAGE_ADDED": {
+                                break;
+                            }
+                            case "IMAGE_REMOVED": {
+                                break;
+                            }
+                            case "COMMENT_ADDED": {
+                                break;
+                            }
+                            case "COMMENT_REMOVED": {
+                                break;
+                            }
+                        }
 
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "onFailure: " + e);
+
                     }
                 });
+
+
     }
 
     @Override
@@ -393,285 +247,808 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         // TODO - upload image to drive
     }
 
-    public class OwnerLocationValueEventListener implements ValueEventListener {
-        @Override
-        public void onDataChange(DataSnapshot dataSnapshot) {
-            LatLng location = new LatLng(
-                    dataSnapshot.child("Latitude").getValue(double.class),
-                    dataSnapshot.child("Longitude").getValue(double.class));
+    public class Centroid {
+        Circle centroidCircle;
 
-            if (ownerMarker == null) {
-                ownerMarker = mMap.addMarker(new MarkerOptions()
-                        .position(location)
-                        .title("You"));
-            } else {
-                ownerMarker.setPosition(location);
+        Centroid() {
+            LatLng latLng = new LatLng(0, 0);
+            centroidCircle = mMap.addCircle(new CircleOptions()
+                    .center(latLng)
+                    .radius(5)
+                    .strokeWidth(1)
+                    .strokeColor(Color.YELLOW)
+            );
+        }
+
+        LatLng calculateCentroid() {
+            double latSum = owner.ownerMarker.marker.getPosition().latitude;
+            double lngSum = owner.ownerMarker.marker.getPosition().longitude;
+            for (Map.Entry<String, Member> u : members.entrySet()) {
+                latSum += u.getValue().imageMarker.marker.getPosition().latitude;
+                lngSum += u.getValue().imageMarker.marker.getPosition().longitude;
+            }
+            return new LatLng(
+                    latSum / (members.size() + 1),
+                    lngSum / (members.size() + 1)
+            );
+        }
+
+        void update() {
+            LatLng latLng = calculateCentroid();
+            centroidCircle.setCenter(latLng);
+        }
+
+
+    }
+
+    class MenuBar {
+        LinearLayout menuLL;
+
+        MenuBar() {
+            menuLL = findViewById(R.id.menu_bar);
+            findViewById(R.id.menu_home).setOnClickListener(new MenuHomeOnClickListener());
+            findViewById(R.id.menu_settings).setOnClickListener(new MenuSettingsOnClickListener());
+            findViewById(R.id.menu_camera).setOnClickListener(new MenuCameraOnClickListener());
+            findViewById(R.id.menu_members).setOnClickListener(new MenuMembersOnClickListener());
+            findViewById(R.id.menu_comments).setOnClickListener(new MenuCommentsOnClickListener());
+        }
+
+        void show() {
+            ViewGroup.LayoutParams params = menuLL.getLayoutParams();
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            menuLL.setLayoutParams(params);
+            currentBar = this;
+        }
+
+        void close() {
+            ViewGroup.LayoutParams params = menuLL.getLayoutParams();
+            params.height = 0;
+            menuLL.setLayoutParams(params);
+            currentBar = null;
+        }
+
+        class MenuHomeOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                startActivity(intent);
+                finish();
             }
         }
 
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-            Log.d(TAG, "onCancelled: " + databaseError);
+        class MenuSettingsOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                if (currentPopup != null && currentPopup != settings)
+                    ((Member.Popup) currentPopup).close();
+                settings.show();
+            }
+        }
+
+        class MenuCameraOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, 0);
+            }
+        }
+
+        class MenuMembersOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                menuBar.close();
+                membersBar.show();
+            }
+        }
+
+        class MenuCommentsOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                menuBar.close();
+                commentBar.show();
+            }
         }
     }
 
-    void resetCamera(){
-        final Handler handler = new Handler();
-        handler.post(new Runnable() {
+    class CommentBar {
+        RelativeLayout commentRL;
+
+        CommentBar() {
+            commentRL = findViewById(R.id.comment_bar);
+            findViewById(R.id.comment_bar_button).setOnClickListener(new CommentOnClickListener());
+        }
+
+        class CommentOnClickListener implements View.OnClickListener {
             @Override
-            public void run() {
-                try{
-                    if(trackUser){
-                        LatLng location = ownerMarker.getPosition();
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15), 10, null);
-                    }
-                }catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    handler.postDelayed(this, 150);
-                }
+            public void onClick(View v) {
+                String commentText = ((EditText) findViewById(R.id.comment_bar_edittext)).getText().toString();
+                Toast.makeText(TripActivity.this, "Comment : " + commentText, Toast.LENGTH_SHORT).show();
+                // TODO - upload comment to DB
             }
-        });
-    }
-    void resetCircle(){
-        final Handler handler = new Handler();
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    // calculate midpoint
-                    double latSum = ownerMarker.getPosition().latitude;
-                    double lngSum = ownerMarker.getPosition().longitude;
-                    for(Map.Entry<String, Member> u : members.entrySet()){
-                        latSum += u.getValue().memberMarker.getPosition().latitude;
-                        lngSum += u.getValue().memberMarker.getPosition().longitude;
-                    }
-                    Location midPoint = new Location(LocationManager.GPS_PROVIDER);
-                    midPoint.setLatitude(latSum/(members.size()+1));
-                    midPoint.setLongitude(lngSum/(members.size()+1));
+        }
 
-                    // calculate radius
-                    Location ownerLocation = new Location(LocationManager.GPS_PROVIDER);
-                    ownerLocation.setLongitude(ownerMarker.getPosition().longitude);
-                    ownerLocation.setLatitude(ownerMarker.getPosition().latitude);
-                    double radius = midPoint.distanceTo(ownerLocation);
-                    for(Map.Entry<String, Member> u : members.entrySet()){
-                        Location temp = new Location(LocationManager.GPS_PROVIDER);
-                        temp.setLongitude(u.getValue().memberMarker.getPosition().longitude);
-                        temp.setLatitude(u.getValue().memberMarker.getPosition().latitude);
-                        double distance = midPoint.distanceTo(temp);
-                        if(distance>radius)
-                            radius = distance;
-                    }
+        void show() {
+            ViewGroup.LayoutParams params = commentRL.getLayoutParams();
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            commentRL.setLayoutParams(params);
+            currentBar = this;
+        }
 
-                    if(tripCircle==null){
-                        tripCircle = mMap.addCircle(new CircleOptions()
-                            .center(new LatLng(
-                                    midPoint.getLatitude(),
-                                    midPoint.getLongitude()
-                            ))
-                        );
-                    }
-
-                    tripCircle.setCenter(new LatLng(
-                            midPoint.getLatitude(),
-                            midPoint.getLongitude()
-                            )
-                    );
-
-                    tripCircle.setRadius(radius+100);
-                    if(radius>tripRadius){
-                        tripCircle.setStrokeColor(Color.RED);
-                    } else {
-                        tripCircle.setStrokeColor(Color.BLUE);
-                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    handler.postDelayed(this, 500);
-                }
-            }
-        });
+        void close() {
+            ViewGroup.LayoutParams params = commentRL.getLayoutParams();
+            params.height = 0;
+            commentRL.setLayoutParams(params);
+            currentBar = null;
+        }
     }
 
+    class MembersBar {
+        LinearLayout membersLL;
+        HorizontalScrollView membersSV;
 
-    void deleteTrip(){
-        firestoreDB.collection("TRIPS").document(tripId)
-                .delete()
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
+        MembersBar() {
+            membersLL = findViewById(R.id.members_bar_linear_layout);
+            membersSV = findViewById(R.id.members_bar_scroll_view);
+            findViewById(R.id.members_bar_menu).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    MembersBar.this.close();
+                    menuBar.show();
+                }
+            });
+        }
+
+        void show() {
+            ViewGroup.LayoutParams params = membersSV.getLayoutParams();
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            membersSV.setLayoutParams(params);
+            currentBar = this;
+        }
+
+        void close() {
+            ViewGroup.LayoutParams params = membersSV.getLayoutParams();
+            params.height = 0;
+            membersSV.setLayoutParams(params);
+            currentBar = null;
+        }
+    }
+
+    class AdminSettings extends Settings {
+
+        AdminSettings() {
+            popupView = getLayoutInflater().inflate(R.layout.popup_admin_settings_activity_trip, null);
+            popupView.findViewById(R.id.invite_member).setOnClickListener(new InviteMemberOnClickListener());
+            popupView.findViewById(R.id.leave_trip).setOnClickListener(new LeaveTripOnClickListener());
+            popupView.findViewById(R.id.delete_trip).setOnClickListener(new DeleteTripOnClickListener());
+            popupView.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    close();
+                }
+            });
+            popupWindow = new PopupWindow(
+                    popupView,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            popupWindow.setBackgroundDrawable(new BitmapDrawable());
+            popupWindow.setOutsideTouchable(false);
+            popupWindow.setFocusable(false);
+            if (Build.VERSION.SDK_INT >= 21) {
+                popupWindow.setElevation(50.0f);
+            }
+
+        }
+
+        private class LeaveTripOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                firestoreDB.runTransaction(new Transaction.Function<Void>() {
+                    @Nullable
+                    @Override
+                    public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                        DocumentReference tripReference = firestoreDB.collection("TRIPS").document(documentSnapshot.getId());
+                        DocumentReference userReference = firestoreDB.collection("USERS").document(firebaseAuth.getCurrentUser().getUid());
+
+                        DocumentSnapshot tripSnapshot = transaction.get(tripReference);
+                        DocumentSnapshot userSnapshot = transaction.get(userReference);
+
+                        ArrayList<String> users = (ArrayList<String>)tripSnapshot.get("Users");
+                        ArrayList<String> trips = (ArrayList<String>)userSnapshot.get("Trips");
+
+                        users.remove(firebaseAuth.getCurrentUser().getUid());
+                        trips.remove(documentSnapshot.getId());
+
+                        if (users.size() > 0) {
+                            HashMap<String, Object> tripMap = new HashMap<>();
+                            tripMap.put("Users", users);
+                            tripMap.put("Event_one", "USER_REMOVED");
+                            tripMap.put("Event_two", "ADMIN_CHANGED");
+                            tripMap.put("AdminId", users.get(0));
+                            tripMap.put("Stack", firebaseAuth.getCurrentUser().getUid());
+
+                            HashMap<String, Object> userMap = new HashMap<>();
+                            userMap.put("Trips", trips);
+                            userMap.put("Event_one", "TRIP_REMOVED");
+                            userMap.put("Stack", documentSnapshot.getId());
+
+                            transaction.update(tripReference, tripMap);
+                            transaction.update(userReference, userMap);
+                        } else {
+                            transaction.delete(tripReference);
+                        }
+                        return null;
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
                         Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
                         startActivity(intent);
                         finish();
                     }
-                })
-                .addOnFailureListener(new OnFailureListener() {
+                }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "onFailure: " + e);
+                        Log.d(TAG, "onFailure: " + "Failed to quit " + e.toString());
                     }
                 });
+            }
+        }
+
+        private class InviteMemberOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), TripInviteActivity.class);
+                intent.putExtra("tripId", documentSnapshot.getId());
+                startActivity(intent);
+            }
+        }
+
+        private class DeleteTripOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                firestoreDB.collection("TRIPS").document(documentSnapshot.getId())
+                        .delete()
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                // TODO - kill all the listeners
+                                Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e.toString());
+                    }
+                });
+            }
+        }
     }
 
-    public class Member {
-        String memberName;
-        String memberID;
-        String memberPhone;
-        String memberEmail;
-        String memberImageURL;
-        Marker memberMarker;
-        View memberViewItem;
-        View memberPopupView;
-        PopupWindow memberPopupWindow;
-        ValueEventListener valueEventListener;
+    class Settings {
+        View popupView;
+        PopupWindow popupWindow;
 
-        public Member(final String memberID, final boolean realtimeUpdate) {
-            this.memberID = memberID;
+        Settings() {
+            popupView = getLayoutInflater().inflate(R.layout.popup_settings_activity_trip, null);
+            popupView.findViewById(R.id.leave_trip).setOnClickListener(new LeaveTripOnClickListener());
+            popupView.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    close();
+                }
+            });
+            popupWindow = new PopupWindow(
+                    popupView,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            popupWindow.setBackgroundDrawable(new BitmapDrawable());
+            popupWindow.setOutsideTouchable(false);
+            popupWindow.setFocusable(false);
+            if (Build.VERSION.SDK_INT >= 21) {
+                popupWindow.setElevation(50.0f);
+            }
 
-            firestoreDB.collection("USERS").document(memberID)
-                    .get()
-                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        }
+
+        void update() {
+            ((TextView) popupView.findViewById(R.id.trip_name)).setText(documentSnapshot.getString("Name"));
+            ((TextView) popupView.findViewById(R.id.trip_radius)).setText(
+                    Double.toString(documentSnapshot.getDouble("Radius") / 1000.0) + "Km"
+            );
+            ((Button) popupView.findViewById(R.id.member_count)).setText(
+                    Integer.toString(
+                            ((ArrayList<String>) documentSnapshot.get("Users")).size()
+                    )
+            );
+            ((Button) popupView.findViewById(R.id.image_count)).setText(
+                    Integer.toString(
+                            ((ArrayList<String>) documentSnapshot.get("Images")).size()
+                    )
+            );
+            ((Button) popupView.findViewById(R.id.comment_count)).setText(
+                    Integer.toString(
+                            ((ArrayList<String>) documentSnapshot.get("Comments")).size()
+                    )
+            );
+        }
+
+        void show() {
+            popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+            currentPopup = this;
+        }
+
+        void close() {
+            popupWindow.dismiss();
+            currentPopup = null;
+        }
+
+        private class LeaveTripOnClickListener implements View.OnClickListener {
+            @Override
+            public void onClick(View v) {
+                firestoreDB.runTransaction(new Transaction.Function<Void>() {
+                    @Nullable
+                    @Override
+                    public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                        DocumentReference tripReference = firestoreDB.collection("TRIPS").document(documentSnapshot.getId());
+                        DocumentReference userReference = firestoreDB.collection("USERS").document(firebaseAuth.getCurrentUser().getUid());
+
+                        DocumentSnapshot tripDocumentSnapshot = transaction.get(tripReference);
+                        DocumentSnapshot userDocumentSnapshot = transaction.get(userReference);
+
+                        ArrayList<String> users = (ArrayList<String>)tripDocumentSnapshot.get("Users");
+                        ArrayList<String> trips = (ArrayList<String>)userDocumentSnapshot.get("Trips");
+
+                        users.remove(firebaseAuth.getCurrentUser().getUid());
+                        trips.remove(documentSnapshot.getId());
+
+                        HashMap<String, Object> tripMap = new HashMap<>();
+                        tripMap.put("Users", users);
+                        tripMap.put("Event_one", "USER_REMOVED");
+                        tripMap.put("Stack", firebaseAuth.getCurrentUser().getUid());
+
+                        HashMap<String, Object> userMap = new HashMap<>();
+                        userMap.put("Trips", trips);
+                        userMap.put("Event_one", "TRIP_REMOVED");
+                        userMap.put("Stack", documentSnapshot.getId());
+
+                        transaction.update(tripReference, tripMap);
+                        transaction.update(userReference, userMap);
+                        return null;
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + "Failed to quit");
+                    }
+                });
+            }
+        }
+    }
+
+    class Destination {
+        Marker marker;
+
+        Destination() {
+            marker = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(0, 0))
+                    .title("Destination")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+        }
+
+        void update() {
+            GeoPoint geoPoint = (GeoPoint) documentSnapshot.get("Destination");
+            LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
+            marker.setPosition(latLng);
+        }
+    }
+
+    class Owner {
+        DocumentSnapshot documentSnapshot;
+        ListenerRegistration documentListener;
+        ValueEventListener locationListener;
+        OwnerMarker ownerMarker;
+        CentralLine centralLine;
+        BarItem barItem;
+
+        Owner() {
+            ownerMarker = new OwnerMarker();
+            centralLine = new CentralLine();
+            barItem = new BarItem();
+
+            documentListener = firestoreDB.collection("USERS")
+                    .document(firebaseAuth.getCurrentUser().getUid())
+                    .addSnapshotListener(new EventListener<DocumentSnapshot>() {
                         @Override
-                        public void onSuccess(DocumentSnapshot documentSnapshot) {
-                            memberEmail = documentSnapshot.getString("Email");
-                            memberName = documentSnapshot.getString("Name");
-                            memberPhone = documentSnapshot.getString("Phone");
-                            memberImageURL = documentSnapshot.getString("ImageURL");
-
-                            memberViewItem = getLayoutInflater().inflate(R.layout.member_activity_trip, membersListLL, false);
-                            ((TextView) memberViewItem.findViewById(R.id.name)).setText(memberName);
-                            if (realtimeUpdate)
-                                Toast.makeText(TripActivity.this, "Now tracking " + memberName, Toast.LENGTH_SHORT).show();
-                            ImageView imageView = memberViewItem.findViewById(R.id.image);
-                            imageView.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    mMap.animateCamera(
-                                            CameraUpdateFactory.newLatLng(memberMarker.getPosition()),
-                                            500,
-                                            null
-                                    );
-                                }
-                            });
-
-                            imageView.setOnLongClickListener(new View.OnLongClickListener() {
-                                @Override
-                                public boolean onLongClick(View v) {
-                                    if(currentPopupWindow!=null && currentPopupWindow!=memberPopupWindow)
-                                        currentPopupWindow.dismiss();
-                                    memberPopupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
-                                    currentPopupWindow = memberPopupWindow;
-                                    return false;
-                                }
-                            });
-
-                            if (memberImageURL != null) {
-                                Picasso.get()
-                                        .load(memberImageURL)
-                                        .into(imageView);
-                            }
-                            membersListLL.addView(memberViewItem);
-
-
-                            //POPUP
-                            memberPopupView = getLayoutInflater().inflate(R.layout.popup_member_activity_trip, null);
-                            if (memberImageURL != null) {
-                                Picasso.get()
-                                        .load(memberImageURL)
-                                        .into((ImageView)memberPopupView.findViewById(R.id.display_picture));
-                            }
-                            ArrayList<String> memberFriends;
-                            if(documentSnapshot.contains("Friends"))
-                                memberFriends = (ArrayList<String>) documentSnapshot.get("Friends");
-                            else
-                                memberFriends = new ArrayList<>();
-                            if(memberFriends.contains(currentUser.getUid())){
-                                memberPopupView.findViewById(R.id.friend_status).setBackgroundResource(R.color.wierdRed);
-                            } else {
-                                memberPopupView.findViewById(R.id.friend_status).setBackgroundResource(R.color.wierdGreen);
-
-                            }
-                            ((TextView) memberPopupView.findViewById(R.id.name)).setText(memberName);
-                            ((TextView) memberPopupView.findViewById(R.id.phone_number)).setText(memberPhone);
-                            ((TextView) memberPopupView.findViewById(R.id.email_id)).setText(memberEmail);
-
-                            memberPopupView.findViewById(R.id.call).setOnClickListener(new View.OnClickListener() {
-                                @SuppressLint("MissingPermission")
-                                @Override
-                                public void onClick(View v) {
-                                    Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + memberPhone));
-                                    startActivity(intent);
-                                }
-                            });
-
-                            memberPopupView.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    memberPopupWindow.dismiss();
-                                }
-                            });
-
-                            memberPopupWindow = new PopupWindow(
-                                    memberPopupView,
-                                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                                    ViewGroup.LayoutParams.WRAP_CONTENT
-                            );
-                            memberPopupWindow.setBackgroundDrawable(new BitmapDrawable());
-                            memberPopupWindow.setOutsideTouchable(false);
-                            memberPopupWindow.setFocusable(false);
-                            if (Build.VERSION.SDK_INT >= 21) {
-                                memberPopupWindow.setElevation(50.0f);
-                            }
-
-                            valueEventListener = database.getReference("USERS/" + memberID).child("Location")
-                                    .addValueEventListener(new ValueEventListener() {
-
-                                        public void onDataChange(DataSnapshot dataSnapshot) {
-                                            LatLng location = new LatLng(
-                                                    dataSnapshot.child("Latitude").getValue(double.class),
-                                                    dataSnapshot.child("Longitude").getValue(double.class)
-                                            );
-
-                                            if (memberMarker == null) {
-                                                memberMarker = mMap.addMarker(new MarkerOptions()
-                                                        .position(location)
-                                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
-                                                        .title(memberName));
-                                            } else {
-                                                memberMarker.setPosition(location);
-                                            }
-
-                                        }
-
-                                        @Override
-                                        public void onCancelled(DatabaseError databaseError) {
-                                            Log.d(TAG, "onCancelled: " + databaseError);
-                                        }
-                                    });
+                        public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+                            Owner.this.documentSnapshot = documentSnapshot;
+                            update();
                         }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
+                    });
+
+            locationListener = firebaseDB.getReference("USERS/" + firebaseAuth.getCurrentUser().getUid())
+                    .child("Location")
+                    .addValueEventListener(new ValueEventListener() {
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            LatLng location = new LatLng(
+                                    dataSnapshot.child("Latitude").getValue(double.class),
+                                    dataSnapshot.child("Longitude").getValue(double.class)
+                            );
+                            ownerMarker.marker.setPosition(location);
+                            centroid.update();
+                            centralLine.update();
+                        }
+
                         @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.d(TAG, "onFailure: " + e);
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.d(TAG, "onCancelled: " + databaseError);
                         }
                     });
         }
 
-        void delete() {
-            Toast.makeText(TripActivity.this, memberName + "has left the trip", Toast.LENGTH_SHORT).show();
-            membersListLL.removeView(memberViewItem);
-            if (valueEventListener != null)
-                database.getReference("USERS/" + memberID)
-                        .child("Location")
-                        .removeEventListener(valueEventListener);
-            if (memberMarker != null)
-                memberMarker.remove();
+        void update() {
+            barItem.update();
+        }
 
-            members.remove(memberID);
+        class OwnerMarker {
+            Marker marker;
+
+            OwnerMarker() {
+                LatLng location = new LatLng(0, 0);
+                marker = mMap.addMarker(new MarkerOptions()
+                        .position(location)
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+            }
+        }
+
+        class CentralLine {
+            Circle circle;
+            Polyline line;
+
+            CentralLine() {
+                // TODO - change colour of line and circle
+                line = mMap.addPolyline(new PolylineOptions()
+                        .width(1)
+                        .color(Color.RED));
+
+                circle = mMap.addCircle(new CircleOptions()
+                        .center(new LatLng(0, 0))
+                        .radius(5)
+                        .strokeWidth(1)
+                        .strokeColor(Color.RED));
+            }
+
+            void update() {
+                ArrayList<LatLng> points = new ArrayList<>();
+                points.add(ownerMarker.marker.getPosition());
+                points.add(centroid.centroidCircle.getCenter());
+                line.setPoints(points);
+                circle.setCenter(ownerMarker.marker.getPosition());
+            }
+        }
+
+        class BarItem {
+            View barView;
+
+            BarItem() {
+                barView = getLayoutInflater().inflate(R.layout.member_activity_trip, membersBar.membersLL, false);
+                ImageView imageView = barView.findViewById(R.id.image);
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mMap.animateCamera(
+                                CameraUpdateFactory.newLatLng(ownerMarker.marker.getPosition()),
+                                500,
+                                null
+                        );
+                    }
+                });
+                membersBar.membersLL.addView(barView, 1);
+            }
+
+            void update() {
+                ((TextView) barView.findViewById(R.id.name)).setText(documentSnapshot.getString("Name"));
+                if (documentSnapshot.getString("ImageURL") != null) {
+                    Picasso.get()
+                            .load(documentSnapshot.getString("ImageURL"))
+                            .into((ImageView) barView.findViewById(R.id.image));
+                }
+            }
+        }
+
+    }
+
+    class Member {
+        DocumentSnapshot documentSnapshot;
+        ListenerRegistration documentListener;
+        ValueEventListener locationListener;
+        ImageMarker imageMarker;
+        CentralLine centralLine;
+        Popup popup;
+        BarItem barItem;
+
+        Member(String memberID, Boolean realtimeUpdate) {
+            // TODO - Handle real time update better
+            if (realtimeUpdate)
+                Toast.makeText(TripActivity.this, "Now Tracking new user", Toast.LENGTH_SHORT).show();
+
+            popup = new Popup();
+            barItem = new BarItem();
+            centralLine = new CentralLine();
+            imageMarker = new ImageMarker();
+
+            documentListener = firestoreDB.collection("USERS")
+                    .document(memberID)
+                    .addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                        @Override
+                        public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+                            Member.this.documentSnapshot = documentSnapshot;
+                            update();
+                        }
+                    });
+
+            locationListener = firebaseDB.getReference("USERS/" + memberID)
+                    .child("Location")
+                    .addValueEventListener(new ValueEventListener() {
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            LatLng location = new LatLng(
+                                    dataSnapshot.child("Latitude").getValue(double.class),
+                                    dataSnapshot.child("Longitude").getValue(double.class)
+                            );
+                            imageMarker.marker.setPosition(location);
+                            centroid.update();
+                            centralLine.update();
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.d(TAG, "onCancelled: " + databaseError);
+                        }
+                    });
 
         }
+
+        void delete() {
+            Toast.makeText(TripActivity.this,
+                    documentSnapshot.getString("Name") + "has left the trip",
+                    Toast.LENGTH_SHORT
+            ).show();
+            if (currentPopup == popup)
+                popup.close();
+            if (locationListener != null)
+                firebaseDB.getReference("USERS/" + documentSnapshot.getId())
+                        .child("Location")
+                        .removeEventListener(locationListener);
+            if (documentListener != null)
+                documentListener.remove();
+            barItem.delete();
+            imageMarker.delete();
+            centralLine.delete();
+            members.remove(documentSnapshot.getId());
+        }
+
+        void update() {
+            popup.update();
+            barItem.update();
+            imageMarker.update();
+        }
+
+        class ImageMarker {
+            Marker marker;
+            View markerView;
+
+            public ImageMarker() {
+                markerView = getLayoutInflater().inflate(R.layout.marker_member, null);
+                markerView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                markerView.layout(0, 0, markerView.getMeasuredWidth(), markerView.getMeasuredHeight());
+                markerView.buildDrawingCache();
+                LatLng location = new LatLng(0, 0);
+                marker = mMap.addMarker(new MarkerOptions()
+                        .position(location)
+                        .icon(BitmapDescriptorFactory.fromBitmap(getMarkerBitmapFromView(markerView))));
+            }
+
+            void update() {
+                if (documentSnapshot.getString("ImageURL") != null) {
+                    Picasso.get()
+                            .load(documentSnapshot.getString("ImageURL"))
+                            .into(markerView.findViewById(R.id.image), new Callback() {
+                                @Override
+                                public void onSuccess() {
+                                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(getMarkerBitmapFromView(markerView)));
+                                }
+
+                                @Override
+                                public void onError(Exception e) {
+                                    // TODO - handle image loading error
+                                }
+                            });
+                }
+            }
+
+            void delete() {
+                marker.remove();
+            }
+
+            private Bitmap getMarkerBitmapFromView(View view) {
+                Bitmap returnedBitmap = Bitmap.createBitmap(view.getMeasuredWidth(), view.getMeasuredHeight(),
+                        Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(returnedBitmap);
+                canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC_IN);
+                Drawable drawable = view.getBackground();
+                if (drawable != null)
+                    drawable.draw(canvas);
+                view.draw(canvas);
+                return returnedBitmap;
+            }
+
+        }
+
+        class CentralLine {
+            Circle circle;
+            Polyline line;
+
+            CentralLine() {
+                // TODO - change colour of line and circle
+                line = mMap.addPolyline(new PolylineOptions()
+                        .width(1)
+                        .color(Color.RED));
+
+                circle = mMap.addCircle(new CircleOptions()
+                        .center(new LatLng(0, 0))
+                        .radius(5)
+                        .strokeWidth(1)
+                        .strokeColor(Color.RED));
+            }
+
+            void update() {
+                ArrayList<LatLng> points = new ArrayList<>();
+                points.add(imageMarker.marker.getPosition());
+                points.add(centroid.centroidCircle.getCenter());
+                line.setPoints(points);
+                circle.setCenter(imageMarker.marker.getPosition());
+            }
+
+            void delete() {
+                circle.remove();
+                line.remove();
+            }
+        }
+
+        class Popup {
+            View popupView;
+            PopupWindow popupWindow;
+
+            public Popup() {
+                popupView = getLayoutInflater().inflate(R.layout.popup_member_activity_trip, null);
+                popupView.findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        close();
+                    }
+                });
+                popupWindow = new PopupWindow(
+                        popupView,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                );
+                popupWindow.setBackgroundDrawable(new BitmapDrawable());
+                popupWindow.setOutsideTouchable(false);
+                popupWindow.setFocusable(false);
+                if (Build.VERSION.SDK_INT >= 21) {
+                    popupWindow.setElevation(50.0f);
+                }
+            }
+
+            void update() {
+                if (documentSnapshot.getString("ImageURL") != null) {
+                    Picasso.get()
+                            .load(documentSnapshot.getString("ImageURL"))
+                            .into((ImageView) popupView.findViewById(R.id.display_picture));
+                }
+                ArrayList<String> memberFriends;
+                if (documentSnapshot.contains("Friends"))
+                    memberFriends = (ArrayList<String>) documentSnapshot.get("Friends");
+                else
+                    memberFriends = new ArrayList<>();
+                if (memberFriends.contains(firebaseAuth.getCurrentUser().getUid()))
+                    popupView.findViewById(R.id.friend_status).setBackgroundResource(R.color.wierdRed);
+                else
+                    popupView.findViewById(R.id.friend_status).setBackgroundResource(R.color.wierdGreen);
+                ((TextView) popupView.findViewById(R.id.name)).setText(documentSnapshot.getString("Name"));
+                ((TextView) popupView.findViewById(R.id.phone_number)).setText(documentSnapshot.getString("Phone"));
+                ((TextView) popupView.findViewById(R.id.email_id)).setText(documentSnapshot.getString("Email"));
+                popupView.findViewById(R.id.call).setOnClickListener(new View.OnClickListener() {
+                    @SuppressLint("MissingPermission")
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + documentSnapshot.getString("Phone")));
+                        startActivity(intent);
+                    }
+                });
+            }
+
+            void show() {
+                popupWindow.showAtLocation(findViewById(R.id.trip_relative_layout), Gravity.CENTER, 0, 0);
+                currentPopup = this;
+            }
+
+            void close() {
+                popupWindow.dismiss();
+                currentPopup = null;
+            }
+        }
+
+        class BarItem {
+            View barView;
+
+            public BarItem() {
+                barView = getLayoutInflater().inflate(R.layout.member_activity_trip, membersBar.membersLL, false);
+                ImageView imageView = barView.findViewById(R.id.image);
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mMap.animateCamera(
+                                CameraUpdateFactory.newLatLng(imageMarker.marker.getPosition()),
+                                500,
+                                null
+                        );
+                    }
+                });
+                imageView.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        if (currentPopup == null || currentPopup == popup)
+                            return false;
+                        else if (currentPopup == settings)
+                            settings.close();
+                        else
+                            ((Member.Popup) currentPopup).close();
+                        popup.show();
+                        return false;
+                    }
+                });
+                membersBar.membersLL.addView(barView, 2);
+            }
+
+            void update() {
+                ((TextView) barView.findViewById(R.id.name)).setText(documentSnapshot.getString("Name"));
+                if (documentSnapshot.getString("ImageURL") != null) {
+                    Picasso.get()
+                            .load(documentSnapshot.getString("ImageURL"))
+                            .into((ImageView) barView.findViewById(R.id.image));
+                }
+            }
+
+            void delete() {
+                membersBar.membersLL.removeView(barView);
+            }
+        }
+
     }
+
+    class Image {
+        // TODO - build image upload and download
+        LatLng location;
+        String imageURL;
+        String comment;
+    }
+
+    class Comment {
+        // TODO - build comment upload and download
+        LatLng location;
+        String commentText;
+
+    }
+
 }

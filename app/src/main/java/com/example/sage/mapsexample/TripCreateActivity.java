@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 
@@ -35,7 +36,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.Transaction;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -72,15 +75,7 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
 
     private Marker tripDestinationMarker;
 
-    GDriveOperator mGDriveOperator;
-
     String tripName;
-    String tripidG;
-/*
-case REQUEST_CODE_SIGN_IN:
-                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                this.mGDriveOperator.HandleActivityOnResult(task);
-* */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,8 +85,6 @@ case REQUEST_CODE_SIGN_IN:
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.trip_create_map);
         mapFragment.getMapAsync(this);
-
-        mGDriveOperator = new GDriveOperator(getApplicationContext(),getString(R.string.server_client_id));
 
         tripNameET = findViewById(R.id.trip_name);
         notifRadiusSB = findViewById(R.id.notification_radius);
@@ -125,6 +118,7 @@ case REQUEST_CODE_SIGN_IN:
         createTripFAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 if(tripDestinationMarker!=null) {
                     startLoading();
                     tripName = tripNameET.getText().toString();
@@ -141,6 +135,8 @@ case REQUEST_CODE_SIGN_IN:
                     ArrayList<String> users = new ArrayList<>();
                     users.add(currentUser.getUid());
                     trip.put("Users",users);
+                    trip.put("Images", new ArrayList<>());
+                    trip.put("Comments", new ArrayList<>());
 
                     firestoreDB.collection("TRIPS").add(trip)
                             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -148,7 +144,6 @@ case REQUEST_CODE_SIGN_IN:
                                 public void onSuccess(DocumentReference documentReference) {
 
                                     final String tripId = documentReference.getId();
-                                    tripidG = tripId;
                                     firestoreDB.collection("USERS").document(currentUser.getUid())
                                             .get()
                                             .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -167,15 +162,10 @@ case REQUEST_CODE_SIGN_IN:
                                                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                 @Override
                                                                 public void onSuccess(Void aVoid) {
-                                                                    if(mGDriveOperator.account==null){
-                                                                        Log.d(TAG, "account null");
-                                                                        startActivityForResult(mGDriveOperator.GetIntent(), 0);
-                                                                    }
-//                                                                    else {
-//                                                                        Log.d(TAG, "account not null");
-//                                                                        Log.d(TAG, "onSuccess: " + " auth code :"+mGDriveOperator.account.getServerAuthCode());
-//                                                                        serverCreateTripDriveFolder(tripName, mGDriveOperator.account.getServerAuthCode());
-//                                                                    }
+                                                                    Intent intent = new Intent(getApplicationContext(), TripActivity.class);
+                                                                    intent.putExtra("tripId", tripId);
+                                                                    startActivity(intent);
+                                                                    finish();
                                                                 }
                                                             })
                                                             .addOnFailureListener(new OnFailureListener() {
@@ -242,49 +232,6 @@ case REQUEST_CODE_SIGN_IN:
         });
     }
 
-    @Override
-    protected void onActivityResult(final int requestCode, final int resultCode,Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case 0:
-                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                mGDriveOperator.HandleActivityOnResult(task);
-                serverCreateTripDriveFolder(tripName, mGDriveOperator.authCode);
-                //how do i do it here?0.o
-                break;
-
-        }
-    }
-
-    void serverCreateTripDriveFolder(String tripName, String authCode){
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        String url = "https://conerive-fcm.herokuapp.com/SetUpTrip";
-        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Log.d(TAG, "onResponse: " + response);
-                        Next();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d(TAG, error.toString());
-                    }
-                }
-        ) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("TripName", tripName);
-                params.put("AuthCode", authCode);
-                return params;
-            }
-        };
-        requestQueue.add(postRequest);
-    }
-
     void startLoading(){
         createTripFAB.setVisibility(View.INVISIBLE);
         progressBar.setVisibility(View.VISIBLE);
@@ -294,10 +241,5 @@ case REQUEST_CODE_SIGN_IN:
         createTripFAB.setVisibility(View.VISIBLE);
         progressBar.setVisibility(View.INVISIBLE);
     }
-    void Next(){
-        Intent intent = new Intent(getApplicationContext(), TripActivity.class);
-        intent.putExtra("tripId", tripidG);
-        startActivity(intent);
-        finish();
-    }
+
 }

@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,9 +40,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UserCreateActivity extends AppCompatActivity {
+import de.hdodenhof.circleimageview.CircleImageView;
 
+public class UserCreateActivity extends AppCompatActivity {
     private static final String TAG = "UserCreateActivity";
+    private static final int CAMERA_RETURN = 1;
+    private static final int GALLERY_RETURN = 2;
 
     // Firebase objects
     private FirebaseFirestore firestoreDB;
@@ -61,7 +65,8 @@ public class UserCreateActivity extends AppCompatActivity {
     private EditText emailET;
     private Button done;
     private Button chooseDisplayPicture;
-    private ImageView displayPicture;
+    private CircleImageView displayPicture;
+
 
     //----------------------------------------------------------------------------------------------
     //      ACTIVITY LIFECYCLE METHODS
@@ -80,32 +85,18 @@ public class UserCreateActivity extends AppCompatActivity {
         emailET = findViewById(R.id.email);
         done = findViewById(R.id.done);
         chooseDisplayPicture = findViewById(R.id.chooseDisplayPicture);
-        displayPicture = findViewById(R.id.displayPicture);
+        displayPicture = findViewById(R.id.display_picture);
 
         firebaseStorage = FirebaseStorage.getInstance();
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        done.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                userId = currentUser.getUid();
-                name = nameET.getText().toString();
-                email = emailET.getText().toString();
-                phone = currentUser.getUid();
-                dbCreateUser();
-            }
-        });
+        done.setOnClickListener(new CreateUserOnclickListener());
 
         chooseDisplayPicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 userId = currentUser.getUid();
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent, 0);
+                startActivityForResult(intent, CAMERA_RETURN);
             }
         });
 
@@ -121,63 +112,7 @@ public class UserCreateActivity extends AppCompatActivity {
     //----------------------------------------------------------------------------------------------
 
     public void dbCreateUser() {
-        Map<String, String> user = new HashMap<>();
-        user.put("Name", name);
-        user.put("Phone", phone);
-        user.put("Token",FirebaseInstanceId.getInstance().getToken());
-        if (email != null && email.length() > 0)
-            user.put("Email", email);
-        if (imageURL != null && imageURL.length() > 0)
-            user.put("ImageURL", imageURL);
 
-        firestoreDB.collection("USERS").document(currentUser.getUid())
-                .set(user)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "DocumentSnapshot successfully written!");
-                        Intent intent = new Intent(UserCreateActivity.this, HomeActivity.class);
-                        startActivity(intent);
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error writing document", e);
-                    }
-                });
-
-        firestoreDB.collection("GENERAL").document("ALLUSERS").get()
-                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                    @Override
-                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-                        ArrayList<String> listOfUserInApp;
-                        if(documentSnapshot.contains("Phone"))
-                            listOfUserInApp = (ArrayList<String>) documentSnapshot.get("Phone");
-                        else
-                            listOfUserInApp = new ArrayList<>();
-                        listOfUserInApp.add(phone);
-                        firestoreDB.collection("GENERAL").document("ALLUSERS")
-                                .update("Phone", listOfUserInApp)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        Log.w(TAG, "wrote to db");
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Log.w(TAG, "Error writing document", e);
-                                    }
-                                });
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.d(TAG, "onFailure: " + e);
-            }
-        });
     }
 
     //----------------------------------------------------------------------------------------------
@@ -186,32 +121,106 @@ public class UserCreateActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode == CAMERA_RETURN) {
+            super.onActivityResult(requestCode, resultCode, data);
+            final Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte[] imageByte = baos.toByteArray();
+            displayPicture.setImageBitmap(bitmap);
 
-        final Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        byte[] imageByte = baos.toByteArray();
-        //fireBase updating dp
-        UploadTask uploadTask = firebaseStorage.getReference()
-                .child("user_display_picture")
-                .child(userId + ".png")
-                .putBytes(imageByte);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                //TODO - Handle unsuccessful uploads
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                Log.d(TAG, "onSuccess: " + downloadUrl);
-                imageURL = downloadUrl.toString();
-                displayPicture.setImageBitmap(bitmap);
-            }
-        });
+            //fireBase updating dp
+            StorageReference storageReference = firebaseStorage.getReference()
+                    .child("user_display_picture")
+                    .child(userId + ".png");
+            storageReference.putBytes(imageByte)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    imageURL = uri.toString();
 
+                                }
+                            });
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(UserCreateActivity.this, "Failed to upload profile picture", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    class CreateUserOnclickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            userId = currentUser.getUid();
+            name = nameET.getText().toString();
+            email = emailET.getText().toString();
+            phone = currentUser.getUid();
+
+            Map<String, String> user = new HashMap<>();
+            user.put("Name", name);
+            user.put("Phone", phone);
+            user.put("Token",FirebaseInstanceId.getInstance().getToken());
+            if (email != null && email.length() > 0)
+                user.put("Email", email);
+            if (imageURL != null && imageURL.length() > 0)
+                user.put("ImageURL", imageURL);
+
+            firestoreDB.collection("USERS").document(currentUser.getUid())
+                    .set(user)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d(TAG, "DocumentSnapshot successfully written!");
+                            Intent intent = new Intent(UserCreateActivity.this, HomeActivity.class);
+                            startActivity(intent);
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error writing document", e);
+                        }
+                    });
+
+            // TODO - Handle general in transaction
+//        firestoreDB.collection("GENERAL").document("ALLUSERS").get()
+//                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+//                    @Override
+//                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+//                        ArrayList<String> listOfUserInApp;
+//                        if(documentSnapshot.contains("Phone"))
+//                            listOfUserInApp = (ArrayList<String>) documentSnapshot.get("Phone");
+//                        else
+//                            listOfUserInApp = new ArrayList<>();
+//                        listOfUserInApp.add(phone);
+//                        firestoreDB.collection("GENERAL").document("ALLUSERS")
+//                                .update("Phone", listOfUserInApp)
+//                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                    @Override
+//                                    public void onSuccess(Void aVoid) {
+//                                        Log.w(TAG, "wrote to db");
+//                                    }
+//                                })
+//                                .addOnFailureListener(new OnFailureListener() {
+//                                    @Override
+//                                    public void onFailure(@NonNull Exception e) {
+//                                        Log.w(TAG, "Error writing document", e);
+//                                    }
+//                                });
+//                    }
+//                }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                Log.d(TAG, "onFailure: " + e);
+//            }
+//        });
+        }
     }
 
 }

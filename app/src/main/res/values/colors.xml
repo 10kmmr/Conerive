@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#dfd2ae</color>
-    <color name="colorPrimaryDark">#ebe3cd</color>
-    <color name="colorAccent">#e98d58</color>
+    <color name="colorPrimary">#1565c0</color>
+    <color name="colorPrimaryLight">#5e92f3</color>
+    <color name="colorPrimaryDark">#003c8f</color>
+
+    <color name="colorAccent">#1b1b1b</color>
     <color name="buttonAndTextYellowColor">#dfd2ae</color>
     <color name="buttonAndTextOrangeColor">#e98d58</color>
     <color name="wierdBlack">#212121</color>

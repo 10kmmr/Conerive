@@ -39,6 +39,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.Transaction;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class NotificationsActivity extends AppCompatActivity {
     private static final String TAG = "NotificationsActivity";
@@ -209,7 +210,7 @@ public class NotificationsActivity extends AppCompatActivity {
         firestoreDB.runTransaction(new Transaction.Function<Void>() {
             @Nullable
             @Override
-            public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException{
+            public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
                 DocumentReference tripReference = firestoreDB.collection("TRIPS").document(tripId);
                 DocumentReference userReference = firestoreDB.collection("USERS").document(currentUser.getUid());
 
@@ -225,6 +226,16 @@ public class NotificationsActivity extends AppCompatActivity {
                 else
                     trips = new ArrayList<>();
                 trips.add(tripId);
+
+                HashMap<String, Object> tripMap = new HashMap<>();
+                tripMap.put("Users", users);
+                tripMap.put("Event_one", "USER_ADDED");
+                tripMap.put("Stack", mAuth.getCurrentUser().getUid());
+
+                HashMap<String, Object> userMap = new HashMap<>();
+                userMap.put("Trips", trips);
+                userMap.put("Event_one", "TRIP_ADDED");
+                userMap.put("Stack", tripId);
 
                 transaction.update(tripReference,"Users", users);
                 transaction.update(userReference,"Trips", trips);
