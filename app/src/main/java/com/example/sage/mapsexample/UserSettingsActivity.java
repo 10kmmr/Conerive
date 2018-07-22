@@ -20,6 +20,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,7 +96,9 @@ public class UserSettingsActivity extends AppCompatActivity {
 
                                 }
                                 if (document.contains("ImageURL")) {
-                                    downloadDisplayPicture();
+                                    Picasso.get()
+                                            .load(document.getString("ImageURL"))
+                                            .into(displayPicture);
                                 }
                             } else {
                                 Log.d(TAG, "No such document");
@@ -113,26 +116,7 @@ public class UserSettingsActivity extends AppCompatActivity {
 
     void downloadDisplayPicture() {
 
-        StorageReference ref = displayPictureReference.child(currentUser.getUid() + ".jpg");
-        try {
-            final File localFile = File.createTempFile("Images", "jpg");
-            ref.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    Log.d(TAG, "onSuccess: " + "some stuff");
-                    Bitmap image;
-                    image = BitmapFactory.decodeFile(localFile.getAbsolutePath());
-                    displayPicture.setImageBitmap(image);
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.d(TAG, "onFailure: " + e.toString());
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
 }

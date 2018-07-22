@@ -4,6 +4,10 @@
     <color name="colorPrimaryLight">#5e92f3</color>
     <color name="colorPrimaryDark">#003c8f</color>
 
+    <color name="colorSecondary">#00838f</color>
+    <color name="colorSecondaryLight">#4fb3bf</color>
+    <color name="colorSecondaryDark">#005662</color>
+
     <color name="colorAccent">#1b1b1b</color>
     <color name="buttonAndTextYellowColor">#dfd2ae</color>
     <color name="buttonAndTextOrangeColor">#e98d58</color>

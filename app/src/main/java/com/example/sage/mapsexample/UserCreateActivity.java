@@ -7,7 +7,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.ArraySet;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -24,12 +30,19 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Transaction;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -46,6 +59,7 @@ public class UserCreateActivity extends AppCompatActivity {
     private static final String TAG = "UserCreateActivity";
     private static final int CAMERA_RETURN = 1;
     private static final int GALLERY_RETURN = 2;
+    private static final int GOOGLE_RETURN = 3;
 
     // Firebase objects
     private FirebaseFirestore firestoreDB;
@@ -59,12 +73,17 @@ public class UserCreateActivity extends AppCompatActivity {
     private String email;
     private String phone;
     private String imageURL;
+    private byte[] imageByte;
+    private boolean nameValid;
+    private boolean emailValid;
 
     // View objects
     private EditText nameET;
     private EditText emailET;
     private Button done;
-    private Button chooseDisplayPicture;
+
+    private FloatingActionButton chooseDisplayPicture;
+    private FloatingActionButton googleBT;
     private CircleImageView displayPicture;
 
 
@@ -81,14 +100,19 @@ public class UserCreateActivity extends AppCompatActivity {
         currentUser = mAuth.getCurrentUser();
         firestoreDB = FirebaseFirestore.getInstance();
 
+        nameValid = false;
+        emailValid = true;
+
         nameET = findViewById(R.id.name);
         emailET = findViewById(R.id.email);
-        done = findViewById(R.id.done);
+        done = findViewById(R.id.sign_up);
         chooseDisplayPicture = findViewById(R.id.chooseDisplayPicture);
+        googleBT = findViewById(R.id.google);
         displayPicture = findViewById(R.id.display_picture);
 
         firebaseStorage = FirebaseStorage.getInstance();
 
+        googleBT.setOnClickListener(new GoogleSignInOnClickListener());
         done.setOnClickListener(new CreateUserOnclickListener());
 
         chooseDisplayPicture.setOnClickListener(new View.OnClickListener() {
@@ -100,6 +124,9 @@ public class UserCreateActivity extends AppCompatActivity {
             }
         });
 
+        // TODO - implement text watchers to check if email and name are valid
+        nameET.addTextChangedListener(new NameTextWatcher());
+        emailET.addTextChangedListener(new EmailTextWatcher());
     }
 
     @Override
@@ -107,27 +134,48 @@ public class UserCreateActivity extends AppCompatActivity {
         Log.d(TAG, "onBackPressed: " + "Dont do anything");
     }
 
-    //----------------------------------------------------------------------------------------------
-    //      MEMBER METHODS
-    //----------------------------------------------------------------------------------------------
-
-    public void dbCreateUser() {
-
-    }
-
-    //----------------------------------------------------------------------------------------------
-    //      PHOTO METHODS
-    //----------------------------------------------------------------------------------------------
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(resultCode == CAMERA_RETURN) {
-            super.onActivityResult(requestCode, resultCode, data);
-            final Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-            byte[] imageByte = baos.toByteArray();
-            displayPicture.setImageBitmap(bitmap);
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG, "onActivityResult: " + "Result code : " + resultCode + "\n Request code : "+requestCode);
+        switch (requestCode) {
+            case CAMERA_RETURN: {
+                final Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                imageByte = baos.toByteArray();
+                displayPicture.setImageBitmap(bitmap);
+                break;
+            }
+            case GOOGLE_RETURN: {
+                GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
+                if (TextUtils.isEmpty(nameET.getText().toString()))
+                    nameET.setText(account.getDisplayName());
+                if (TextUtils.isEmpty(emailET.getText().toString()))
+                    emailET.setText(account.getEmail());
+                break;
+            }
+            case GALLERY_RETURN : {
+                // TODO - implement getting image from gallery
+                break;
+            }
+        }
+    }
+
+    void startLoading() {
+        done.setVisibility(View.INVISIBLE);
+        chooseDisplayPicture.setEnabled(false);
+    }
+
+    void stopLoading() {
+        done.setVisibility(View.VISIBLE);
+        chooseDisplayPicture.setEnabled(true);
+    }
+
+    class CreateUserOnclickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            startLoading();
 
             //fireBase updating dp
             StorageReference storageReference = firebaseStorage.getReference()
@@ -141,7 +189,52 @@ public class UserCreateActivity extends AppCompatActivity {
                                 @Override
                                 public void onSuccess(Uri uri) {
                                     imageURL = uri.toString();
+                                    userId = currentUser.getUid();
+                                    name = nameET.getText().toString();
+                                    email = emailET.getText().toString();
+                                    phone = currentUser.getPhoneNumber();
 
+                                    Map<String, Object> user = new HashMap<>();
+                                    user.put("Name", name);
+                                    user.put("Phone", phone);
+                                    user.put("Token", FirebaseInstanceId.getInstance().getToken());
+                                    if (email != null && email.length() > 0)
+                                        user.put("Email", email);
+                                    if (imageURL != null && imageURL.length() > 0)
+                                        user.put("ImageURL", imageURL);
+                                    user.put("Friends", new ArrayList<>());
+                                    user.put("Trips", new ArrayList<>());
+                                    user.put("PendingFriends", new ArrayList<>());
+
+                                    firestoreDB.runTransaction(new Transaction.Function<Void>() {
+                                        @Nullable
+                                        @Override
+                                        public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+                                            DocumentReference userReference = firestoreDB.collection("USERS").document(currentUser.getUid());
+                                            DocumentReference generalReference = firestoreDB.collection("GENERAL").document("AllUsers");
+
+                                            DocumentSnapshot generalSnapshot = transaction.get(generalReference);
+                                            ArrayList<String> appUsers = (ArrayList<String>) generalSnapshot.get("Phone");
+                                            appUsers.add(phone);
+                                            transaction.update(generalReference, "Phone", appUsers);
+                                            transaction.set(userReference, user);
+                                            return null;
+                                        }
+                                    }).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+                                            startActivity(intent);
+                                            finish();
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.d(TAG, "onFailure: " + e);
+                                            stopLoading();
+                                            Toast.makeText(UserCreateActivity.this, "Failed to create user", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -154,73 +247,59 @@ public class UserCreateActivity extends AppCompatActivity {
         }
     }
 
-    class CreateUserOnclickListener implements View.OnClickListener {
+    class GoogleSignInOnClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            userId = currentUser.getUid();
-            name = nameET.getText().toString();
-            email = emailET.getText().toString();
-            phone = currentUser.getUid();
-
-            Map<String, String> user = new HashMap<>();
-            user.put("Name", name);
-            user.put("Phone", phone);
-            user.put("Token",FirebaseInstanceId.getInstance().getToken());
-            if (email != null && email.length() > 0)
-                user.put("Email", email);
-            if (imageURL != null && imageURL.length() > 0)
-                user.put("ImageURL", imageURL);
-
-            firestoreDB.collection("USERS").document(currentUser.getUid())
-                    .set(user)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Log.d(TAG, "DocumentSnapshot successfully written!");
-                            Intent intent = new Intent(UserCreateActivity.this, HomeActivity.class);
-                            startActivity(intent);
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error writing document", e);
-                        }
-                    });
-
-            // TODO - Handle general in transaction
-//        firestoreDB.collection("GENERAL").document("ALLUSERS").get()
-//                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-//                    @Override
-//                    public void onSuccess(DocumentSnapshot documentSnapshot) {
-//                        ArrayList<String> listOfUserInApp;
-//                        if(documentSnapshot.contains("Phone"))
-//                            listOfUserInApp = (ArrayList<String>) documentSnapshot.get("Phone");
-//                        else
-//                            listOfUserInApp = new ArrayList<>();
-//                        listOfUserInApp.add(phone);
-//                        firestoreDB.collection("GENERAL").document("ALLUSERS")
-//                                .update("Phone", listOfUserInApp)
-//                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                    @Override
-//                                    public void onSuccess(Void aVoid) {
-//                                        Log.w(TAG, "wrote to db");
-//                                    }
-//                                })
-//                                .addOnFailureListener(new OnFailureListener() {
-//                                    @Override
-//                                    public void onFailure(@NonNull Exception e) {
-//                                        Log.w(TAG, "Error writing document", e);
-//                                    }
-//                                });
-//                    }
-//                }).addOnFailureListener(new OnFailureListener() {
-//            @Override
-//            public void onFailure(@NonNull Exception e) {
-//                Log.d(TAG, "onFailure: " + e);
-//            }
-//        });
+            GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getApplicationContext());
+            if (account == null) {
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestEmail()
+                        .build();
+                GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(getApplicationContext(), gso);
+                Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+                startActivityForResult(signInIntent, GOOGLE_RETURN);
+            } else {
+                if (TextUtils.isEmpty(nameET.getText().toString()))
+                    nameET.setText(account.getDisplayName());
+                if (TextUtils.isEmpty(emailET.getText().toString()))
+                    emailET.setText(account.getEmail());
+            }
         }
     }
+
+    class NameTextWatcher implements TextWatcher {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+
+        }
+    }
+
+    class EmailTextWatcher implements TextWatcher {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+
+        }
+    }
+
 
 }

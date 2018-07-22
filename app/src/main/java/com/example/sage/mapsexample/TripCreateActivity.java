@@ -135,9 +135,12 @@ public class TripCreateActivity extends FragmentActivity implements OnMapReadyCa
                     ArrayList<String> users = new ArrayList<>();
                     users.add(currentUser.getUid());
                     trip.put("Users",users);
+                    trip.put("Events", new ArrayList<>());
+                    trip.put("Stack", new ArrayList<>());
                     trip.put("Images", new ArrayList<>());
                     trip.put("Comments", new ArrayList<>());
 
+                    // TODO - perform transaction here instead of chained calls
                     firestoreDB.collection("TRIPS").add(trip)
                             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                                 @Override

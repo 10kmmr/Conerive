@@ -87,7 +87,9 @@
         <activity android:name=".NotificationsActivity" />
         <activity android:name=".FriendsActivity" />
         <activity android:name=".TripCreateActivity" />
-        <activity android:name=".TripActivity" />
+        <activity
+            android:name=".TripActivity"
+            android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".Email_auth"
             android:label="@string/title_activity_email_auth"

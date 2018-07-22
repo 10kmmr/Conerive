@@ -105,27 +105,30 @@ public class NotificationsActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        for(DocumentSnapshot notification : queryDocumentSnapshots){
+                        for (DocumentSnapshot notification : queryDocumentSnapshots) {
                             NotificationType notificationType = NotificationType.valueOf(notification.getString("Type"));
-                            switch (notificationType){
-                                case FRIEND_REQUEST: friendRequests.add(new FriendRequest(
-                                        notification.getId(),
-                                        notification.getString("Sender_id"),
-                                        notification.getString("Sender_name"),
-                                        notification.getString("Sender_image_url")
-                                ));
-                                break;
+                            switch (notificationType) {
+                                case FRIEND_REQUEST:
+                                    friendRequests.add(new FriendRequest(
+                                            notification.getId(),
+                                            notification.getString("Sender_id"),
+                                            notification.getString("Sender_name"),
+                                            notification.getString("Sender_image_url")
+                                    ));
+                                    break;
 
-                                case TRIP_INVITE: tripInvites.add(new TripInvite(
-                                        notification.getId(),
-                                        notification.getString("Sender_id"),
-                                        notification.getString("Sender_name"),
-                                        notification.getString("Trip_id"),
-                                        notification.getString("Trip_name")
-                                ));
-                                break;
+                                case TRIP_INVITE:
+                                    tripInvites.add(new TripInvite(
+                                            notification.getId(),
+                                            notification.getString("Sender_id"),
+                                            notification.getString("Sender_name"),
+                                            notification.getString("Trip_id"),
+                                            notification.getString("Trip_name")
+                                    ));
+                                    break;
 
-                                default: break;
+                                default:
+                                    break;
                             }
                         }
                     }
@@ -158,15 +161,14 @@ public class NotificationsActivity extends AppCompatActivity {
         });
     }
 
-
-    void dbCreateFriendship(final String firstUserId, final String secondUserId, final FriendRequest friendRequest){
+    void dbCreateFriendship(final String firstUserId, final String secondUserId, final FriendRequest friendRequest) {
 
         firestoreDB.runTransaction(new Transaction.Function<Void>() {
             @Nullable
             @Override
             public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
-                DocumentReference firstUserReference =  firestoreDB.collection("USERS").document(firstUserId);
-                DocumentReference secondUserReference =  firestoreDB.collection("USERS").document(secondUserId);
+                DocumentReference firstUserReference = firestoreDB.collection("USERS").document(firstUserId);
+                DocumentReference secondUserReference = firestoreDB.collection("USERS").document(secondUserId);
 
                 DocumentSnapshot firstUserSnapshot = transaction.get(firstUserReference);
                 DocumentSnapshot secondUserSnapshot = transaction.get(secondUserReference);
@@ -205,7 +207,7 @@ public class NotificationsActivity extends AppCompatActivity {
 
     }
 
-    void dbCreateTripMembership(final String tripId, final TripInvite tripInvite){
+    void dbCreateTripMembership(final String tripId, final TripInvite tripInvite) {
 
         firestoreDB.runTransaction(new Transaction.Function<Void>() {
             @Nullable
@@ -220,35 +222,41 @@ public class NotificationsActivity extends AppCompatActivity {
                 ArrayList<String> users = (ArrayList<String>) tripSnapshot.get("Users");
                 users.add(currentUser.getUid());
 
-                ArrayList<String> trips;
-                if (userSnapshot.contains("Trips"))
-                    trips = (ArrayList<String>) userSnapshot.get("Trips");
-                else
-                    trips = new ArrayList<>();
+                ArrayList<String> trips = (ArrayList<String>) userSnapshot.get("Trips");
                 trips.add(tripId);
 
                 HashMap<String, Object> tripMap = new HashMap<>();
                 tripMap.put("Users", users);
-                tripMap.put("Event_one", "USER_ADDED");
-                tripMap.put("Stack", mAuth.getCurrentUser().getUid());
+                ArrayList<String> tripEvents = new ArrayList<>();
+                tripEvents.add("USER_ADDED");
+                tripMap.put("Events", tripEvents);
+                ArrayList<String> tripStack = new ArrayList<>();
+                tripStack.add(currentUser.getUid());
+                tripMap.put("Stack", tripStack);
 
                 HashMap<String, Object> userMap = new HashMap<>();
                 userMap.put("Trips", trips);
-                userMap.put("Event_one", "TRIP_ADDED");
-                userMap.put("Stack", tripId);
+                ArrayList<String> userEvents = new ArrayList<>();
+                userEvents.add("TRIP_ADDED");
+                userMap.put("Events", userEvents);
+                ArrayList<String> userStack = new ArrayList<>();
+                userStack.add(tripId);
+                userMap.put("Stack", userStack);
 
-                transaction.update(tripReference,"Users", users);
-                transaction.update(userReference,"Trips", trips);
+                transaction.update(tripReference, tripMap);
+                transaction.update(userReference, userMap);
                 return null;
             }
         }).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
+                //TODO - handle trip join success better
                 tripInvite.stopLoading(true);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
+                //TODO - handle trip join failure better
                 tripInvite.stopLoading(false);
                 Log.d(TAG, "onFailure: " + e);
             }
@@ -310,14 +318,14 @@ public class NotificationsActivity extends AppCompatActivity {
             notificationsLL.addView(notificationView);
         }
 
-        void startLoading(){
+        void startLoading() {
             idleLL.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.VISIBLE);
         }
 
-        void stopLoading(boolean success){
+        void stopLoading(boolean success) {
             progressBar.setVisibility(View.INVISIBLE);
-            if(success){
+            if (success) {
                 successTV.setVisibility(View.VISIBLE);
             } else {
                 idleLL.setVisibility(View.VISIBLE);
@@ -325,7 +333,7 @@ public class NotificationsActivity extends AppCompatActivity {
             }
         }
 
-        void deleteNotification(){
+        void deleteNotification() {
             notificationsLL.removeView(notificationView);
         }
     }
@@ -380,14 +388,14 @@ public class NotificationsActivity extends AppCompatActivity {
 
         }
 
-        void startLoading(){
+        void startLoading() {
             idleLL.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.VISIBLE);
         }
 
-        void stopLoading(boolean success){
+        void stopLoading(boolean success) {
             progressBar.setVisibility(View.INVISIBLE);
-            if(success){
+            if (success) {
                 Toast.makeText(NotificationsActivity.this, "You have joined the trip", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getApplicationContext(), TripActivity.class);
                 intent.putExtra("tripId", tripId);
@@ -398,7 +406,7 @@ public class NotificationsActivity extends AppCompatActivity {
             }
         }
 
-        void deleteNotification(){
+        void deleteNotification() {
             notificationsLL.removeView(notificationView);
         }
     }

@@ -12,57 +12,69 @@
         android:layout_height="200dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="50dp"
         app:civ_border_width="5dp"
-        app:civ_border_color="#666"
+        app:civ_border_color="@color/colorPrimary"
         android:src="@drawable/download" />
 
     <EditText
         android:id="@+id/name"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/google"
-        android:layout_alignStart="@+id/email"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="227dp"
+        android:layout_marginStart="26dp"
         android:hint="Name"
         android:inputType="textPersonName" />
-
 
     <EditText
         android:id="@+id/email"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/done"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="159dp"
+        android:layout_alignStart="@+id/name"
+        android:layout_marginBottom="149dp"
         android:hint="E-mail ID"
         android:inputType="textPersonName" />
 
     <Button
-        android:id="@+id/done"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/sign_up"
+        android:layout_width="112dp"
+        android:layout_height="73dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="41dp"
         android:text="done" />
 
-    <Button
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/google"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/email"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="21dp"
-        android:text="Google" />
+        android:layout_below="@+id/name"
+        android:layout_marginTop="-227dp"
+        android:layout_toEndOf="@+id/display_picture"
+        android:src="@drawable/google_icon"
+        app:fabSize="mini" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/chooseDisplayPicture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="174dp"
+        android:layout_marginTop="186dp"
         android:layout_toEndOf="@+id/name"
-        android:text="take DP" />
+        android:src="@drawable/camera_icon_white"
+        android:text="take DP"
+        app:fabSize="normal"
+        app:rippleColor="@color/wierdBlack" />
 
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="52dp" />
 
 </RelativeLayout>

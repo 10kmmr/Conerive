@@ -32,6 +32,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -65,6 +66,7 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +76,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class TripActivity extends FragmentActivity implements OnMapReadyCallback {
     private static final String TAG = "TripActivity";
+    private static final double ZOOM_THRESHOLD = 16;
+
     private GoogleMap mMap;
 
     FirebaseDatabase firebaseDB;
@@ -181,19 +185,22 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         }
 
                         TripActivity.this.documentSnapshot = documentSnapshot;
-                        switch (documentSnapshot.getString("Event_one")) {
+                        ArrayList<String> events = (ArrayList<String>) documentSnapshot.get("Events");
+                        switch (events.get(0)) {
                             case "USER_ADDED": {
+                                ArrayList<String> stack = (ArrayList<String>) documentSnapshot.get("Stack");
                                 members.put(
-                                        documentSnapshot.getString("Stack"),
+                                        stack.get(0),
                                         new Member(
-                                                documentSnapshot.getString("Stack"),
+                                                stack.get(0),
                                                 true
                                         )
                                 );
                                 break;
                             }
                             case "USER_REMOVED": {
-                                String userId = documentSnapshot.getString("Stack");
+                                ArrayList<String> stack = (ArrayList<String>) documentSnapshot.get("Stack");
+                                String userId = stack.get(0);
                                 if (userId.equals(firebaseAuth.getCurrentUser().getUid())) {
                                     Toast.makeText(
                                             TripActivity.this,
@@ -206,7 +213,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                                 } else {
                                     Member removedUser = members.get(userId);
                                     removedUser.delete();
-                                    boolean one = documentSnapshot.getString("Event_two").equals("ADMIN_CHANGED");
+                                    boolean one = events.get(1).equals("ADMIN_CHANGED");
                                     boolean two = documentSnapshot.getString("AdminId").equals(firebaseAuth.getCurrentUser().getUid());
                                     if (one && two) {
                                         Toast.makeText(TripActivity.this, "You are now admin", Toast.LENGTH_SHORT).show();
@@ -276,8 +283,11 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         void update() {
             LatLng latLng = calculateCentroid();
             centroidCircle.setCenter(latLng);
+            owner.centralLine.update();
+            for (Map.Entry<String, Member> member : members.entrySet()) {
+                member.getValue().centralLine.update();
+            }
         }
-
 
     }
 
@@ -350,7 +360,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    class CommentBar {
+    class CommentBar { // TODO - create comment creation proc
         RelativeLayout commentRL;
 
         CommentBar() {
@@ -443,6 +453,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         private class LeaveTripOnClickListener implements View.OnClickListener {
             @Override
             public void onClick(View v) {
+                // TODO - FIGURE OUT WHY THIS TRANSACTION IS NOT WORKING
                 firestoreDB.runTransaction(new Transaction.Function<Void>() {
                     @Nullable
                     @Override
@@ -450,27 +461,34 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         DocumentReference tripReference = firestoreDB.collection("TRIPS").document(documentSnapshot.getId());
                         DocumentReference userReference = firestoreDB.collection("USERS").document(firebaseAuth.getCurrentUser().getUid());
 
-                        DocumentSnapshot tripSnapshot = transaction.get(tripReference);
-                        DocumentSnapshot userSnapshot = transaction.get(userReference);
+                        DocumentSnapshot tripDocumentSnapshot = transaction.get(tripReference);
+                        DocumentSnapshot userDocumentSnapshot = transaction.get(userReference);
 
-                        ArrayList<String> users = (ArrayList<String>)tripSnapshot.get("Users");
-                        ArrayList<String> trips = (ArrayList<String>)userSnapshot.get("Trips");
+                        ArrayList<String> users = (ArrayList<String>) tripDocumentSnapshot.get("Users");
+                        ArrayList<String> trips = (ArrayList<String>) userDocumentSnapshot.get("Trips");
 
                         users.remove(firebaseAuth.getCurrentUser().getUid());
                         trips.remove(documentSnapshot.getId());
-
-                        if (users.size() > 0) {
+                        if(users.size()>0) {
                             HashMap<String, Object> tripMap = new HashMap<>();
                             tripMap.put("Users", users);
-                            tripMap.put("Event_one", "USER_REMOVED");
-                            tripMap.put("Event_two", "ADMIN_CHANGED");
+                            ArrayList<String> tripEvents = new ArrayList<>();
+                            tripEvents.add("USER_REMOVED");
+                            tripEvents.add("ADMIN_CHANGED");
+                            tripMap.put("Events", tripEvents);
                             tripMap.put("AdminId", users.get(0));
-                            tripMap.put("Stack", firebaseAuth.getCurrentUser().getUid());
+                            ArrayList<String> tripStack = new ArrayList<>();
+                            tripStack.add(firebaseAuth.getCurrentUser().getUid());
+                            tripMap.put("Stack", tripStack);
 
                             HashMap<String, Object> userMap = new HashMap<>();
                             userMap.put("Trips", trips);
-                            userMap.put("Event_one", "TRIP_REMOVED");
-                            userMap.put("Stack", documentSnapshot.getId());
+                            ArrayList<String> userEvents = new ArrayList<>();
+                            userEvents.add("TRIP_REMOVED");
+                            userMap.put("Events", userEvents);
+                            ArrayList<String> userStack = new ArrayList<>();
+                            userStack.add(documentSnapshot.getId());
+                            userMap.put("Stack", userStack);
 
                             transaction.update(tripReference, tripMap);
                             transaction.update(userReference, userMap);
@@ -489,7 +507,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "onFailure: " + "Failed to quit " + e.toString());
+                        Log.d(TAG, "onFailure: " + "Failed to quit");
                     }
                 });
             }
@@ -507,6 +525,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
         private class DeleteTripOnClickListener implements View.OnClickListener {
             @Override
             public void onClick(View v) {
+                documentListener.remove();
                 firestoreDB.collection("TRIPS").document(documentSnapshot.getId())
                         .delete()
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -599,21 +618,30 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                         DocumentSnapshot tripDocumentSnapshot = transaction.get(tripReference);
                         DocumentSnapshot userDocumentSnapshot = transaction.get(userReference);
 
-                        ArrayList<String> users = (ArrayList<String>)tripDocumentSnapshot.get("Users");
-                        ArrayList<String> trips = (ArrayList<String>)userDocumentSnapshot.get("Trips");
+                        ArrayList<String> users = (ArrayList<String>) tripDocumentSnapshot.get("Users");
+                        ArrayList<String> trips = (ArrayList<String>) userDocumentSnapshot.get("Trips");
 
                         users.remove(firebaseAuth.getCurrentUser().getUid());
                         trips.remove(documentSnapshot.getId());
 
                         HashMap<String, Object> tripMap = new HashMap<>();
                         tripMap.put("Users", users);
-                        tripMap.put("Event_one", "USER_REMOVED");
-                        tripMap.put("Stack", firebaseAuth.getCurrentUser().getUid());
+                        ArrayList<String> tripEvents = new ArrayList<>();
+                        tripEvents.add("USER_REMOVED");
+                        tripEvents.add("ADMIN_UNCHANGED");
+                        tripMap.put("Events", tripEvents);
+                        ArrayList<String> tripStack = new ArrayList<>();
+                        tripStack.add(firebaseAuth.getCurrentUser().getUid());
+                        tripMap.put("Stack", tripStack);
 
                         HashMap<String, Object> userMap = new HashMap<>();
                         userMap.put("Trips", trips);
-                        userMap.put("Event_one", "TRIP_REMOVED");
-                        userMap.put("Stack", documentSnapshot.getId());
+                        ArrayList<String> userEvents = new ArrayList<>();
+                        userEvents.add("TRIP_REMOVED");
+                        userMap.put("Events", userEvents);
+                        ArrayList<String> userStack = new ArrayList<>();
+                        userStack.add(documentSnapshot.getId());
+                        userMap.put("Stack", userStack);
 
                         transaction.update(tripReference, tripMap);
                         transaction.update(userReference, userMap);
@@ -650,6 +678,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
             GeoPoint geoPoint = (GeoPoint) documentSnapshot.get("Destination");
             LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
             marker.setPosition(latLng);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, (float)(ZOOM_THRESHOLD+0.1)));
         }
     }
 
@@ -686,7 +715,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             );
                             ownerMarker.marker.setPosition(location);
                             centroid.update();
-                            centralLine.update();
                         }
 
                         @Override
@@ -807,7 +835,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                             );
                             imageMarker.marker.setPosition(location);
                             centroid.update();
-                            centralLine.update();
                         }
 
                         @Override
@@ -835,6 +862,7 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
             imageMarker.delete();
             centralLine.delete();
             members.remove(documentSnapshot.getId());
+            centroid.update();
         }
 
         void update() {
@@ -1008,11 +1036,12 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
                 imageView.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
                     public boolean onLongClick(View v) {
-                        if (currentPopup == null || currentPopup == popup)
+                        // TODO - handle this checking better
+                        if (currentPopup == popup)
                             return false;
                         else if (currentPopup == settings)
                             settings.close();
-                        else
+                        else if (currentPopup != null)
                             ((Member.Popup) currentPopup).close();
                         popup.show();
                         return false;
@@ -1045,7 +1074,6 @@ public class TripActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     class Comment {
-        // TODO - build comment upload and download
         LatLng location;
         String commentText;
 
